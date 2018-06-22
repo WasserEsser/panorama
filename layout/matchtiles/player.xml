@@ -1,0 +1,29 @@
+<root>
+	<styles>
+		<include src="file://{resources}/styles/csgostyles.css" />
+		<include src="file://{resources}/styles/mainmenu_watch.css" />
+        <include src="file://{resources}/styles/matchtile.css" />
+	</styles>
+	<scripts>
+	</scripts>
+
+    <Panel class="MatchTile MatchTile--Collapse">
+        <Panel>
+            <Panel class="MatchTile">
+                <Panel class="MatchMap MatchTile--Spacing">
+                    <Image id="mapicon" class="MatchMap__Icon"/>
+                    <Label id="mapname" class="MatchInfo MatchInfo__MapName" text="Map Name"/>
+                </Panel>
+                <Panel class="MatchInfoContainer MatchTile--Spacing">
+                    <Panel class="left-right-flow">
+                        <Label id="score_team0" class="MatchInfo__Score"/>
+                        <Label id="vs" text="-"/>
+                        <Label id="score_team1" class="MatchInfo__Score"/>
+                    </Panel>
+                    <Label id="timestamp" class="MatchInfo"/>
+                    <Label id="outcome" class="MatchInfo MiniTrophy" html="true"/>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+</root>

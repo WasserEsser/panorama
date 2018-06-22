@@ -1,0 +1,96 @@
+                                                  
+
+                                                                 
+                                                                 
+                                                                 
+
+.RadioHeading
+{
+    x: 0px;
+    y: 0px;
+}
+
+.RadioGroup
+{
+	flow-children: down;
+	font-family: Stratum2, 'Arial Unicode MS';
+}
+
+.RadioHeadingBackground
+{
+	background-color: gradient( linear, 0% 0%, 120% 0%, from( #222222FF ), to( #000000FF ) );
+	height: 48px;
+   	margin-left: 2px;
+	margin-right: 2px;
+	margin-top: 2px;
+	margin-bottom: 14px;
+
+}
+
+.RadioTextHeading
+{
+	horizontal-align: center;
+	margin-left: 10px;
+	margin-right: 18px;
+	margin-top: 4px;
+	margin-bottom: 4px;
+
+	font-size: 32px;
+	font-weight: bold;
+	color: white;
+}
+
+.RadioTextOptions
+{
+	horizontal-align: left;
+
+	flow-children: right;
+	font-size: 24px;
+	font-weight: light;
+	margin-left: 12px;
+	margin-right: 12px;
+	margin-top: 0px;
+	margin-bottom: -5px;
+	color: #CCCCCC;
+}
+
+.RadioTextOptionsExit
+{
+	padding-top: 24px;
+}
+
+                                                                          
+                                                                         
+                                                                          
+
+CSGOHudRadio
+{
+	width: fit-children;
+	opacity: 0.0;
+
+	transition-property: opacity;
+	transition-timing-function: ease-in-out;
+	transition-duration: 0.1s;
+}
+
+.ShowHudRadio
+{
+	opacity: 1.0;
+	transition-duration: 0.2s;
+}
+
+#RadioPanelBG
+{
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 1.0;
+}
+
+#RadioPanel
+{
+	width: fit-children;
+	flow-children: down;
+    opacity: 1.0;
+	padding-bottom: 32px;
+}
