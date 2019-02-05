@@ -10,13 +10,13 @@ var EOM_Voting = (function () {
 
 	var _m_elVoteItemPanels = {};
 	var _m_updateJob = undefined;
-	var _m_InRandomSequence = false;
+	var m_randIdx = 0;
 	
-	function _DisplayMe() {
+	function _DisplayMe ()
+	{
 
 		if ( GameStateAPI.IsDemoOrHltv() )
 		{
-			_End();
 			return false;
 		}
 
@@ -24,16 +24,19 @@ var EOM_Voting = (function () {
 		var oTime = GameStateAPI.GetTimeDataJSO();
 
 		if ( !oTime )
+		{ 
 			return false;
-
+		}
+		
 		_m_pauseBeforeEnd = oTime[ "time" ];
 
 		                        
 		var oMatchEndVoteData = _m_cP.NextMatchVotingData;
 
+		$.DispatchEvent( 'PlaySoundEffect', 'UIPanorama.submenu_leveloptions_slidein', 'MOUSE' );
+
 		if ( !oMatchEndVoteData || !oMatchEndVoteData[ "voting_options" ] )
 		{
-			_End();
 			return false;
 		}
 
@@ -55,7 +58,7 @@ var EOM_Voting = (function () {
 			}
 			else
 			{
-				var text = "undefined";
+				var text;
 
 				var elVoteItem = $.CreatePanel( "RadioButton", elMapSelectionList, "id-vote-item--" + key );
 				elVoteItem.BLoadLayoutSnippet( "MapGroupSelection" );
@@ -67,7 +70,7 @@ var EOM_Voting = (function () {
 				{
 					var skirmishId = oMatchEndVoteData[ "voting_options" ][ key ][ "id" ];
 
-					var text = $.Localize( GameTypesAPI.GetSkirmishName( skirmishId ) );
+					text = $.Localize( GameTypesAPI.GetSkirmishName( skirmishId ) );
 
 					var cfg = GameTypesAPI.GetConfig();
 					if ( cfg )
@@ -79,9 +82,15 @@ var EOM_Voting = (function () {
 							{
 								var elMapImage = $.CreatePanel( 'Panel', elVoteItem.FindChildInLayoutFile( 'MapGroupImagesCarousel' ), 'MapSelectionScreenshot' + i );
 								elMapImage.AddClass( 'map-selection-btn__screenshot' );
-								elMapImage.style.backgroundImage = 'url("file://{images}/map_icons/screenshots/360p/' + map + '.png")';
-								elMapImage.style.backgroundPosition = '50% 0%';
-								elMapImage.style.backgroundSize = 'auto 100%';
+
+								var image = 'url("file://{images}/map_icons/screenshots/360p/' + map + '.png")';
+
+								if ( map in cfg.maps )
+								{
+									elMapImage.style.backgroundImage = image;
+									elMapImage.style.backgroundPosition = '50% 0%';
+									elMapImage.style.backgroundSize = 'auto 100%';
+								}
 							} );
 						}
 					}
@@ -96,21 +105,26 @@ var EOM_Voting = (function () {
 				else if ( type == "map" )
 				{
 					var internalName = oMatchEndVoteData[ "voting_options" ][ key ][ "name" ];
+					text = GameTypesAPI.GetFriendlyMapName( internalName );
 
-					var text = GameTypesAPI.GetFriendlyMapName( internalName );
+					var image;
 					
-					                                                           
-					var image = 'url("file://{images}/map_icons/screenshots/360p/' + internalName + '.png")';
-
 					var elMapImage = $.CreatePanel( 'Panel', elVoteItem.FindChildInLayoutFile( 'MapGroupImagesCarousel' ), 'MapSelectionScreenshot' );
 					elMapImage.AddClass( 'map-selection-btn__screenshot' );
 	
-					if ( image )
+					var cfg = GameTypesAPI.GetConfig();
+					if ( cfg && ( 'maps' in cfg ) && ( internalName in cfg.maps ))
 					{
-						elMapImage.style.backgroundImage = image;
-						elMapImage.style.backgroundPosition = '50% 0%';
-						elMapImage.style.backgroundSize = 'auto 100%';
+						image = 'url("file://{images}/map_icons/screenshots/360p/' + internalName + '.png")';			
 					}	
+					else
+					{
+						image = 'url("file://{images}/map_icons/screenshots/360p/random.png")';
+					}
+					
+					elMapImage.style.backgroundImage = image;
+					elMapImage.style.backgroundPosition = '50% 0%';
+					elMapImage.style.backgroundSize = 'auto 100%';		
 				}
 				else
 				{
@@ -118,6 +132,7 @@ var EOM_Voting = (function () {
 				}
 
 				elVoteItem.FindChildTraverse( "MapGroupName" ).text = text;
+				elVoteItem.m_name = text;
 
 
 				                  
@@ -127,17 +142,21 @@ var EOM_Voting = (function () {
 
 					                       
 					elMapSelectionList.FindChildrenWithClassTraverse( "map-selection-btn" ).forEach( btn => btn.enabled = false );
-				}
+					$.DispatchEvent( 'PlaySoundEffect', 'UIPanorama.submenu_leveloptions_select', 'MOUSE' );
+
+					                                                                 
+				};
 
 				elVoteItem.SetPanelEvent( 'onactivate', onActivate.bind( undefined, elVoteItem ) );
 
 				_m_elVoteItemPanels[ index ] = elVoteItem;
-
-			}	
+			}
 
 		});
 
 		_UpdateVotes();
+
+		_m_cP.SetFocus();
 
 		return true;
 
@@ -146,12 +165,14 @@ var EOM_Voting = (function () {
 	var _UpdateVotes = function() {
 
 		        
+
+		if ( !_m_cP || !_m_cP.IsValid() )
+			return;
+		
 		var oMatchEndVoteData = _m_cP.NextMatchVotingData;
 
 		if ( !oMatchEndVoteData )
-		{
-			_Shutdown();
-			
+		{	
 			return;
 		}
 
@@ -212,28 +233,65 @@ var EOM_Voting = (function () {
 					if ( _m_elVoteItemPanels[ winningIndex ] )
 					{
 						                          
-						var elCheckmark =  _m_elVoteItemPanels[ winningIndex ].FindChildTraverse('id-map-selection-btn__winner' );
-						elCheckmark.AddClass( "appear" );
+						var elCheckmark = _m_elVoteItemPanels[ winningIndex ].FindChildTraverse( 'id-map-selection-btn__winner' );
+						
+						if ( !elCheckmark.BHasClass( 'appear' ) )
+						{
+							elCheckmark.AddClass( "appear" );
+							$.DispatchEvent( 'PlaySoundEffect', 'mainmenu_press_GO', 'MOUSE' );
+						}
 					}
-
 				}
 				else
 				{
 					var arrWinners = _GetWinningMaps();
 
+					if ( arrWinners.length == 0 )
+						return;
+
 					                 
-					var randIdx = Math.floor( Math.random() * arrWinners.length );
+					                                                              
+
+					var randIdx;
+
+					if ( arrWinners.length > 2 )
+					{
+						randIdx = Math.floor( Math.random() * arrWinners.length );
+					}
+
+					                                                        
+					if ( randIdx == m_randIdx )
+					{
+						m_randIdx++;
+
+						                    
+						if ( m_randIdx >= arrWinners.length )
+						{
+							m_randIdx = 0;
+						}
+					}
+					else
+					{
+						m_randIdx = randIdx;
+					}
 
 					var elMapSelectionList = _m_cP.FindChildInLayoutFile( 'id-map-selection-list' );
 
-					var elVoteItem = elMapSelectionList.FindChildTraverse( "id-vote-item--" + arrWinners[ randIdx ] );
+					var voteidx = arrWinners[ m_randIdx ];
+
+					var elVoteItem = _m_elVoteItemPanels[ voteidx ];
+
+					if ( !elVoteItem || !elVoteItem.IsValid() )
+						return;
+					
 					var panelToHilite = elVoteItem.FindChildTraverse( "id-map-selection-btn__gradient" );
 					
-					$.Schedule( 0, function() { panelToHilite.AddClass( "map-selection-btn__gradient--whiteout" ); });
-					$.Schedule( .5, function() { panelToHilite.RemoveClass( "map-selection-btn__gradient--whiteout" ); } );
+					if ( !panelToHilite || !panelToHilite.IsValid() )
+						return;
 					
-					_m_updateJob = $.Schedule( 0.3, _UpdateVotes );
-					return;
+					panelToHilite.RemoveClass( "map-selection-btn__gradient--whiteout" );
+					panelToHilite.AddClass( "map-selection-btn__gradient--whiteout" );
+					$.DispatchEvent('PlaySoundEffect', 'buymenu_select', elVoteItem.id );
 				}
 			}
 			else
@@ -250,25 +308,21 @@ var EOM_Voting = (function () {
 					var votes = oVoteOptions[ "votes" ];
 					var votesNeeded = oMatchEndVoteData[ "votes_to_succeed" ];
 
+					if ( votes > 0 && votes !== elVoteCountLabel.Data().votecount )
+					{
+						$.DispatchEvent('PlaySoundEffect', 'tab_settings_settings', elVoteItem.id );
+						elVoteCountLabel.Data().votecount = votes;
+					}
+
 					elVoteCountLabel.text = "<font color='#ffc130'>" + votes + '</font>/' + votesNeeded;
-
-
 				});
 			}
 
-			_m_updateJob = $.Schedule( 0.1, _UpdateVotes );
-
+			_m_updateJob = $.Schedule( 0.2, _UpdateVotes );
 		}
 
 	}
 
-	function _Shutdown()
-	{
-		if ( _m_updateJob )
-			$.CancelScheduled( _m_updateJob );
-	
-		_m_updateJob = undefined;
-	}
 
                                                          
                                                                       
@@ -282,8 +336,6 @@ var EOM_Voting = (function () {
 		{
 			EndOfMatch.SwitchToPanel( 'eom-voting' );
 
-			EndOfMatch.StartDisplayTimer( _m_pauseBeforeEnd );
-			
 			$.Schedule( _m_pauseBeforeEnd, _End );
 		}
 		else
@@ -295,17 +347,14 @@ var EOM_Voting = (function () {
 
 	function _End() 
 	{
-  		            
-
 		$.DispatchEvent( 'EndOfMatch_ShowNext' );
 	}
 
 
                       
 return {
-
+    name: 'eom-voting',
 	Start: _Start,
-	Shutdown: _Shutdown,
 	
 };
 

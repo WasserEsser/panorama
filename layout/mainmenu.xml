@@ -7,17 +7,20 @@
 		<include src="file://{resources}/scripts/mainmenu.js" />
 		<include src="file://{resources}/scripts/common/characteranims.js" />
 		<include src="file://{resources}/scripts/common/iteminfo.js" />
+		<include src="file://{resources}/scripts/common/licenseutil.js" />
 		<include src="file://{resources}/scripts/popups/popup_acknowledge_item.js" />
 	</scripts>
 
 	<snippets>
 		<snippet name="MainMenuMovieSnippet">
 			<Panel>
+				                                 
+				                                                                                                              
 				<Movie class="mainmenu-movie MainMenuModeOnly" 
 					id="MainMenuMovie"
-					src="file://{resources}/videos/nuke.webm" 
-					sound="UIPanorama.BG_Nuke"
-					controls="none" 
+					src=""
+					sound=""
+					controls="none"
 					repeat="true"
 					hittest="false">
 				</Movie>
@@ -29,29 +32,33 @@
 								class="mainmenu-vanity hidden MainMenuModeOnly"
 								manifest="resource/ui/econ/ItemModelPanelCharMainMenu.res"
 								item="models/player/custom_player/legacy/ctm_sas.mdl"
-								mouse_rotate="true"
+								mouse_rotate="false"
 								hittest="false">
 				</ItemPreviewPanel>
 			</Panel>
 		</snippet>
 	</snippets>
 
-
 	<CSGOMainMenu class="InitialDisplay MainMenuRootPanel" hittest="false" useglobalcontext="true" oncancel="MainMenu.OnEscapeKeyPressed();">
 		<Panel id="MainMenuContainerPanel" class="MainMenuContainer">
 			<Panel	id="NotificationsContainer"
 					class="MainMenuNotification hidden MainMenuModeOnly"
 					onmouseover="MainMenu.ShowNotificationBarTooltip();"
-					onmouseout="UiToolkitAPI.HideTextTooltip();"> >
+					onmouseout="UiToolkitAPI.HideTextTooltip();">
 				<Label id="MainMenuNotificationTitle"/>
 			</Panel>
 			<Panel id="MainMenuInput">                                              
 				
-				<CSGOBlurTarget id="MainMenuCore" blurrects="ChatContainer mainmenu-sidebar__blur-target CSGOLoadingScreen JsMainMenuNavBar eom-winner">
-					<CSGOBlurTarget id="MainMenuBackground" blurrects= "mainmenu-content__blur-target JsNewsPanel JsStorePanel">
+				<CSGOBlurTarget id="MainMenuCore" blurrects="ChatLinesContainerBg mainmenu-sidebar__blur-target CSGOLoadingScreen JsMainMenuNavBar eom-winner">
+					<CSGOBlurTarget id="MainMenuBackground" blurrects= "mainmenu-content__blur-target JsNewsPanel JsStorePanel JsStreamPanel">
 						<Panel class="mainmenu-vanity__vignette" hittest="false"/>
 						                                                      
 						<CSGOBackbufferImagePanel class="full-width full-height PauseMenuModeOnly" />
+
+						            
+						                                                       
+						            
+						
 						            
 						<Panel id="MainMenuMovieParent">
 							                                                                                      
@@ -74,6 +81,7 @@
 					</Panel >
 				</CSGOBlurTarget>
 
+
 				<CSGOBlurTarget id="MainMenuNavBarLeft" class="mainmenu-navbar-container" blurrects="CSGOLoadingScreen">
 	
 					<Panel id="JsMainMenuNavBar" class="mainmenu-navbar">
@@ -81,7 +89,7 @@
 						<RadioButton id="MainMenuNavBarHome"
 									class="mainmenu-navbar__btn-small mainmenu-navbar__btn-home MainMenuModeOnly"
 									group="NavBar"
-									onactivate="MainMenu.OnHomeButtonPressed(); $.DispatchEvent( 'PlaySoundEffect', 'mainmenu_press_home', 'MOUSE' ); $.DispatchEvent('PlayMainMenuMusic', true, true); GameInterfaceAPI.SetConVarIntValue('panorama_play_movie_ambient_sound', 1);"
+									onactivate="MainMenu.OnHomeButtonPressed(); $.DispatchEvent( 'PlaySoundEffect', 'mainmenu_press_home', 'MOUSE' ); $.DispatchEvent('PlayMainMenuMusic', true, true); GameInterfaceAPI.SetSettingString('panorama_play_movie_ambient_sound', '1');"
 									onmouseover="UiToolkitAPI.ShowTextTooltip('MainMenuNavBarHome', '#tooltip_navbar_home');"
 									onmouseout="UiToolkitAPI.HideTextTooltip();">
 							<Image textureheight="32" texturewidth="-1" src="file://{images}/icons/ui/csgologo.svg" />
@@ -112,15 +120,31 @@
 							<Image textureheight="40" texturewidth="-1" src="file://{images}/icons/ui/VoteTeamSwitch.svg" />
 						</Button>
 						                                                   
-						<RadioButton id="MainMenuNavBarVote"
+						<Button id="MainMenuNavBarVote"
 									class="mainmenu-navbar__btn-small PauseMenuModeOnly"
-									group="NavBar"
 									onactivate="MainMenu.ShowVote()"
 									oncontextmenu="MainMenu.ShowVote()"
 									onmouseover="UiToolkitAPI.ShowTextTooltip( 'MainMenuNavBarVote', '#tooltip_navbar_vote' );"
 									onmouseout="UiToolkitAPI.HideTextTooltip();">
 							<Image textureheight="32" texturewidth="-1" src="file://{images}/icons/ui/check.svg" />
-						</RadioButton>
+						</Button>
+						                                                      
+						<Button id="MainMenuNavBarReportServer"
+									class="mainmenu-navbar__btn-small PauseMenuModeOnly"
+									onactivate="UiToolkitAPI.ShowCustomLayoutPopupParameters('', 'file://{resources}/layout/popups/popup_report_server.xml', '' );"
+									onmouseover="UiToolkitAPI.ShowTextTooltip( 'MainMenuNavBarReportServer', '#tooltip_navbar_report_server' );"
+									onmouseout="UiToolkitAPI.HideTextTooltip();">
+							<Image textureheight="32" texturewidth="-1" src="file://{images}/icons/ui/report_server.svg" />
+						</Button>
+						                                                      
+						<Button id="MainMenuNavBarShowCommunityServerBrowser"
+									class="mainmenu-navbar__btn-small PauseMenuModeOnly"
+									onactivate="GameInterfaceAPI.ConsoleCommand( 'gamemenucommand openserverbrowser' )"
+									oncontextmenu="GameInterfaceAPI.ConsoleCommand( 'gamemenucommand openserverbrowser' )"
+									onmouseover="UiToolkitAPI.ShowTextTooltip( 'MainMenuNavBarShowCommunityServerBrowser', '#play_setting_community' );"
+									onmouseout="UiToolkitAPI.HideTextTooltip();">
+							<Image textureheight="32" texturewidth="-1" src="file://{images}/icons/ui/servers.svg" />
+						</Button>
 						                           
 						<RadioButton id="MainMenuNavBarInventory"
 									class="mainmenu-navbar__btn-small"
@@ -149,7 +173,7 @@
 									onactivate="MainMenu.NavigateToTab('JsOverwatch', 'mainmenu_overwatch');"
 									onmouseover="UiToolkitAPI.ShowTextTooltip( 'MainMenuNavBarOverwatch', '#tooltip_navbar_overwatch' );"
 									onmouseout="UiToolkitAPI.HideTextTooltip();">
-							<Image textureheight="32" texturewidth="-1" src="file://{images}/icons/ui/shield.svg" />
+							<Image textureheight="32" texturewidth="-1" src="file://{images}/icons/ui/overwatch.svg" />
 							<Panel id="MainMenuOverwatchAlert" class="navbar-btn__notification overwatch">
 								<Label id="MainMenuOverwatchAlertText" class="navbar-btn__notification-text" text="+"/>
 							</Panel>
@@ -164,7 +188,7 @@
 							<Image textureheight="32" texturewidth="-1" src="file://{images}/icons/ui/settings.svg" />
 						</RadioButton>
 						                                          
-						            
+						               
 						                                        
 									                                                         
 									              
@@ -173,9 +197,9 @@
 									                                             
 							                                                                                     
 						              
-						            
+						               
 						                                   
-						            
+						               
 						                                    
 									                                                        
 									              
@@ -184,9 +208,9 @@
 									                                             
 							                                                                                       
 						              
-						            
+						               
 						                                         
-						            
+						               
 						                                          
 									                                                        
 									              
@@ -195,7 +219,7 @@
 									                                             
 							                                                                                     
 						              
-						            
+						               
 		
 						<Panel class="vertical-align-bottom horizontal-center">
 							                                            

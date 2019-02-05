@@ -8,13 +8,13 @@
 	</scripts>
 
     <Panel class="MatchTile MatchTile--Collapse">
-        <Panel>
+        <Panel class="full-width full-height">
             <Panel class="MatchTile">
-                <Panel class="MatchMap MatchTile--Spacing">
+                <Panel class="MatchMap">
                     <Image id="mapicon" class="MatchMap__Icon"/>
                     <Label id="mapname" class="MatchInfo MatchInfo__MapName" text="Map Name"/>
                 </Panel>
-                <Panel class="MatchInfoContainer MatchTile--Spacing">
+                <Panel class="MatchInfoContainer">
                     <Panel class="left-right-flow">
                         <Label id="score_team0" class="MatchInfo__Score"/>
                         <Label id="vs" text="-"/>
@@ -24,6 +24,7 @@
                     <Label id="outcome" class="MatchInfo MiniTrophy" html="true"/>
                 </Panel>
             </Panel>
+            <Panel id="id-download-state" class="MiniIcon download-animation vertical-align-bottom horizontal-align-right"/>
         </Panel>
     </Panel>
 </root>

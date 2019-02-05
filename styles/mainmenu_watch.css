@@ -85,7 +85,7 @@
 .MatchList
 {
 	height:100%;
-	width:336px;
+	width:360px;
 	flow-children:down;
 }
 
@@ -94,9 +94,9 @@
 	border-right:1px solid rgba(255, 255, 255, 0.05);
 }
 
-.MatchList VerticalScrollBar
+.mainmenu-content__container .MatchList VerticalScrollBar
 {
-	margin-right: 8px;
+	margin-right: 6px;
 }
 
 .InfoPanel
@@ -117,7 +117,7 @@
 
 .MatchList RadioButton
 {
-	margin: 2px 32px 1px 0px;
+	margin: 2px 20px 1px 0px;
 	horizontal-align: left;
 	vertical-align: middle;
 	background-color: gradient( linear, 0% 0%, 100% 0%, from( white ), color-stop( 0, white ), color-stop( 0, #30303048 ), color-stop( 0, #30303048 ), to( #30303000 ) );
@@ -143,6 +143,51 @@
 	sound: "UIPanorama.sidemenu_select";
 }
 
+.MatchTile.MatchVictory
+{
+    background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000), color-stop( 0, #00FF0025  ), color-stop( 0, #00FF0025  ), color-stop( 0, #00FF0025  ), to( #00FF0000 ) );
+}
+
+.MatchTile.MatchTied
+{
+    background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000), color-stop( 0, #00FF0010  ), color-stop( 0, #00FF0010  ), color-stop( 0, #00FF0010  ), to( #00FF0000 ) );
+}
+
+.MatchTile.MatchLoss
+{
+    background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000), color-stop( 0, #FF000010 ), color-stop( 0, #FF000010 ), color-stop( 0, #FF000010  ), to( #FF000000 ) );
+}
+
+.MatchTile.MatchLoss:enabled:hover
+{
+	background-color:gradient( linear, 0% 0%, 100% 0%, from( white ), color-stop( 0.0125, white ), color-stop( 0.0125, #ff000040 ), color-stop( 0.025, #FF000010 ), to( #FF000000 ) );
+}
+
+.MatchTile.MatchLoss:selected
+{
+	background-color:gradient( linear, 0% 0%, 100% 0%, from( white ), color-stop( 0.025, white ), color-stop( 0.025, #ff666640 ), color-stop( 0.053, #FFAAAA10 ), to( #FF000000 ) );
+}
+
+.MatchTile.MatchTied:enabled:hover
+{
+	background-color:gradient( linear, 0% 0%, 100% 0%, from( white ), color-stop( 0.0125, white ), color-stop( 0.0125, #66FF6640 ), color-stop( 0.025, #00FF0010 ), to( #00FF0000 ) );
+}
+
+.MatchTile.MatchTied:selected
+{
+	background-color:gradient( linear, 0% 0%, 100% 0%, from( white ), color-stop( 0.025, white ), color-stop( 0.025, #66FF6640 ), color-stop( 0.053, #AAFFAA10 ), to( #00FF0000 ) );
+}
+
+.MatchTile.MatchVictory:enabled:hover
+{
+	background-color:gradient( linear, 0% 0%, 100% 0%, from( white ), color-stop( 0.0125, white ), color-stop( 0.0125, #66FF6640 ), color-stop( 0.025, #00FF0025 ), to( #00FF0000 ) );
+}
+
+.MatchTile.MatchVictory:selected
+{
+	background-color:gradient( linear, 0% 0%, 100% 0%, from( white ), color-stop( 0.025, white ), color-stop( 0.025, #66FF6640 ), color-stop( 0.053, #AAFFAA25 ), to( #00FF0000 ) );
+}
+
 .StreamBox
 {
 	padding: 0px;
@@ -161,7 +206,7 @@
 .OtherTournaments {
 	width: fit-children;
 	height: fit-children;
-	overflow: squish scroll;
+	overflow: squish noclip;
 	flow-children: right-wrap;
 	horizontal-align: center;
 }
@@ -415,3 +460,9 @@
 	height:100%;
 	blur: fastgaussian( 8, 8, 5);
 }
+
+.content-navbar__tabs RadioButton.hidden
+{
+	visibility: collapse;
+}
+

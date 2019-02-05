@@ -190,19 +190,20 @@ var CapabilityNameable = ( function()
 
 	var _UpdateTextOnModel = function( itemId, hasName )
 	{
-		var currentName = ItemInfo.GetName( itemId );
-
 		if ( hasName )
-			m_elNameDisplay.text = currentName;
+			m_elNameDisplay.text = ItemInfo.GetName( itemId );
 		else
 			m_elNameDisplay.text = m_elTextEntry.text;
 	};
 
 	var _OnEntryChanged = function()
 	{
-		$.DispatchEvent( "PlaySoundEffect", "rename_teletype", "MOUSE" );
-		m_elNameDisplay.text = m_elTextEntry.text;
-		_UpdateAcceptState();
+		if ( m_elNameDisplay && m_elNameDisplay.IsValid() )
+		{
+			$.DispatchEvent( "PlaySoundEffect", "rename_teletype", "MOUSE" );
+			m_elNameDisplay.text = m_elTextEntry.text;
+			_UpdateAcceptState();
+		}
 	};
 
 	var _UpdateAcceptState = function()

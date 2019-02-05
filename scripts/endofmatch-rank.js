@@ -14,25 +14,15 @@ var EOM_Rank = (function () {
 	var _DisplayMe = function()
 	{
 
-		if ( GameStateAPI.IsDemoOrHltv() )
-		{
-			_End();
-			return false;
-		}
+		                                     
+		    
+		                                          
+		   	             
+		    
 
 		if ( !_m_cP.bXpDataReady )
 		{
-			                          
-			if ( _m_cP.Data().m_retries++ >= 2 )
-			{
-				_End();
-				return false;
-			}
-			else
-			{
-				$.Schedule( 1.0, _DisplayMe );
-			}
-			
+		                                                           
 			return false;
 		}
 
@@ -63,17 +53,20 @@ var EOM_Rank = (function () {
 		var arrPostRankXP = [];                                    
 		var totalXP = 0;
 
+		var maxLevel = InventoryAPI.GetMaxLevel();
+
 		               
 		var currentRank = oXpData[ "current_level" ];
+		currentRank = currentRank < maxLevel ? currentRank : maxLevel;
 
 		elCurrent.SetDialogVariableInt( "level", currentRank );
 		elCurrent.SetDialogVariable( 'name', $.Localize( '#XP_RankName_' + currentRank, elCurrent ) );
 	
 		_m_cP.FindChildInLayoutFile( "id-eom-rank__current__emblem" ).SetImage( "file://{images}/icons/xp/level" + currentRank + ".png" );
 
-
 		            
-		var newRank = currentRank + 1;
+		var newRank = currentRank < maxLevel ?  ( currentRank + 1 ) : maxLevel;
+		
 		elNew.SetDialogVariableInt( "level", newRank );
 		elNew.SetDialogVariable( 'rank_new_name', $.Localize( '#XP_RankName_' + newRank, elNew ) );
 		_m_cP.SetDialogVariable( 'rank_new_rank', $.Localize( '#XP_RankName_Display_Rank', elNew ) );
@@ -81,6 +74,8 @@ var EOM_Rank = (function () {
 		_m_cP.FindChildInLayoutFile( "id-eom-rank__new-reveal__emblem" ).SetImage( "file://{images}/icons/xp/level" + newRank + ".png" );
 
 		var elCurrentListerItem;
+
+		var _xpSoundNum = 1;
 
 		var xp = 0;
 
@@ -93,8 +88,19 @@ var EOM_Rank = (function () {
 
 			var duration = sPerXp * xp;
 
+			var sPerSoundTick = 0.082;
+			for ( var t = sPerSoundTick; t < duration; t += sPerSoundTick )
+			{
+				$.Schedule( animTime + t, function()
+				{
+					$.DispatchEvent( 'PlaySoundEffect', 'UIPanorama.XP.Ticker', 'eom-rank' );
+				});
+			}
+
 			$.Schedule( animTime, function()
 			{
+				if ( !elBar.IsValid() )
+					return 0;
 
 				var elRankSegment = $.CreatePanel( 'Panel', elBar, 'id-eom-rank__bar__segment' );
 				elRankSegment.AddClass( "eom-rank__bar__segment" );
@@ -105,15 +111,31 @@ var EOM_Rank = (function () {
 				        
 				var colorClass;
 				if ( reason == "old" )
+				{
 					colorClass = "eom-rank__blue";
+				}
 				else if ( reason == "levelup" )
+				{
 					colorClass = "eom-rank__purple";
+				}
 				else if ( reason == "6" || reason == "7" )
+				{
 					colorClass = "eom-rank__yellow";
+				}
 				else if ( reason == "9" || reason == "10" || reason == "59" )
+				{
 					colorClass = "eom-rank__yellow";
+				}
 				else
+				{
 					colorClass = "eom-rank__green";
+				}
+
+				$.DispatchEvent( 'PlaySoundEffect', 'UIPanorama.XP.Milestone_0' + _xpSoundNum.toString(), 'eom-rank' );
+				if ( _xpSoundNum < 4 )
+				{
+					_xpSoundNum++;
+				}
 
 				elRankSegment.AddClass( colorClass );
 
@@ -121,7 +143,10 @@ var EOM_Rank = (function () {
 
 				$.Schedule( 0.0, function()
 				{
-					elRankSegment.style.width = ( xp / xPPerLevel * 70 ) + '%;';                               
+					if ( elRankSegment.IsValid() )
+					{
+						elRankSegment.style.width = ( xp / xPPerLevel * 70 ) + '%;';                               
+					}
 				} );
 				
 				elRankSegment.style.transitionDuration = duration + "s";
@@ -140,7 +165,8 @@ var EOM_Rank = (function () {
 				elCurrentListerItem.RemoveClass( "eom-rank__lister__item--appear" );
 
 				var elAmtLabel = elCurrentListerItem.FindChildTraverse( 'id-eom-rank__lister__item__amt' );
-				elAmtLabel.text = xp + "xp";
+				elAmtLabel.SetDialogVariable( "xp", xp );
+				elAmtLabel.text = $.Localize( "#EOM_XP_Bar", elAmtLabel );
 				elAmtLabel.AddClass( colorClass );
 
 				var elDescLabel = elCurrentListerItem.FindChildTraverse( 'id-eom-rank__lister__item__desc' );
@@ -222,11 +248,11 @@ var EOM_Rank = (function () {
 		            
 		if ( totalXP >= xPPerLevel )
 		{
-
 			           
 			_AnimSequenceNext( function()
 			{
 
+				$.DispatchEvent( 'PlaySoundEffect', 'UIPanorama.XP.BarFull', 'eom-rank' );
 				_m_cP.FindChildTraverse( "id-eom-rank__bar--shine" ).AddClass( "eom-rank__bar--shine--on" );
 
 			}, 1 );
@@ -234,7 +260,8 @@ var EOM_Rank = (function () {
 			           
 			_AnimSequenceNext( function()
 			{
-				
+				$.DispatchEvent( 'PlaySoundEffect', 'UIPanorama.XP.NewRank', 'eom-rank' );
+
 				                             
 				if ( elCurrentListerItem )
 				{
@@ -353,7 +380,7 @@ var EOM_Rank = (function () {
 
 	                      
 	return {
-		
+	    name: 'eom-rank',
 		Start: _Start,
 		Shutdown: _Shutdown,
 	};

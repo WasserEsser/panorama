@@ -1,12 +1,13 @@
 <root>
 	<styles>
 		<include src="file://{resources}/styles/csgostyles.css" />
-		                                                                          
 		<include src="file://{resources}/styles/endofmatch.css" />
+		<include src="file://{resources}/styles/endofmatch-skillgroup.css" />
 		<include src="file://{resources}/styles/endofmatch-win.css" />
 	</styles>
 	<scripts>
 		<include src="file://{resources}/scripts/endofmatch-win.js" />
+		<include src="file://{resources}/scripts/common/gamerules_constants.js" />
 	</scripts>
 
                                                                                    
@@ -17,7 +18,7 @@
 				<Frame id="WinPlayersAvatar" class='' src="file://{resources}/layout/avatar.xml" />
 				<Panel class="top-bottom-flow vertical-center left-right-padding">
 					<Label id="WinPlacement" class="eom-win__player_title stratum-font" text="#SFUI_WinPanel_arsenal_first"/>
-					<Label id="WinPlayerName" class="eom-win__player_name" html="true" text="Really long name here isn sdfdfsdf"/>
+					<Label id="WinPlayerName" class="eom-win__player_name" html="true" text="{s:winner_name}"/>
 				</Panel>
 			</Panel>
 		</snippet>
@@ -32,7 +33,7 @@
 								item="models/inventory_items/scoreboard_logos/logo_ct.mdl"
 								mouse_rotate="true"/>
 
-			<Label id="WinTeamName" class="eom-win__text strat stratum-font" text=""/>
+			<Label id="WinTeamName" class="eom-win__text eom-skillgroup__info-label" text=""/>
 		</Panel>
 
 		<Panel id='WinPlayers' class="full-width full-height top-padding-medium top-bottom-flow hidden">

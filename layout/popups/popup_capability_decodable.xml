@@ -10,9 +10,10 @@
 	</styles>
 	
 	<scripts>
-		 <include src="file://{resources}/scripts/popups/popup_capability_decodable.js" />
+		<include src="file://{resources}/scripts/common/formattext.js" />
 		<include src="file://{resources}/scripts/common/iteminfo.js" />
 		<include src="file://{resources}/scripts/itemtile.js" />
+		<include src="file://{resources}/scripts/popups/popup_capability_decodable.js" />
 	</scripts>
 
 	<snippets>
@@ -52,7 +53,7 @@
 						onload="CapabilityDecodable.Init();">
 
 		<Panel class="mainmenu-content__container mainmenu-content__container--inspect" hittest="true" >
-			<Panel class="full-width full-height">
+			<Panel id="PopUpInspectFullScreenHostContainer" class="full-width full-height">
 
 				<Frame id="PopUpInspectModelOrImage" hitest="false" src="file://{resources}/layout/popups/popup_inspect_model-image.xml" />
 				<Frame id="PopUpCapabilityHeader" class='hidden' src="file://{resources}/layout/popups/popup_capability_header.xml" />
@@ -64,8 +65,8 @@
 					</Panel>
 				</Panel>
 
-				<Panel id="DecodableItemsScroll" class="popup-decodable-opening hidden">
-					<Panel class="popup-decodable-opening__list" hittest="true">
+				<Panel id="DecodableItemsScroll" class="popup-decodable-opening hidden" hittest="false" hittestchildren="false">
+					<Panel class="popup-decodable-opening__list" hittest="false">
 						<Panel id="ScrollList" 
 								class="popup-decodable-opening-items-container"
 								hittest="false">
@@ -73,7 +74,7 @@
 						</Panel>
 					</Panel>
 
-					<Panel class="popup-decodable-opening__list popup-decodable-opening__list--magnified" hittest="true">
+					<Panel class="popup-decodable-opening__list popup-decodable-opening__list--magnified" hittest="false">
 						<Panel id="ScrollListMagnified" 
 								class="popup-decodable-opening-items-container"
 								hittest="false">

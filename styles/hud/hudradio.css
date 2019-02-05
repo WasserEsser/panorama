@@ -16,47 +16,42 @@
 	font-family: Stratum2, 'Arial Unicode MS';
 }
 
-.RadioHeadingBackground
-{
-	background-color: gradient( linear, 0% 0%, 120% 0%, from( #222222FF ), to( #000000FF ) );
-	height: 48px;
-   	margin-left: 2px;
-	margin-right: 2px;
-	margin-top: 2px;
-	margin-bottom: 14px;
-
-}
+  
+                       
+ 
+	                                                                                           
+	                          
+	                     
+	                         
+	             
+ 
+  
 
 .RadioTextHeading
 {
 	horizontal-align: center;
-	margin-left: 10px;
-	margin-right: 18px;
-	margin-top: 4px;
-	margin-bottom: 4px;
-
-	font-size: 32px;
+	margin: 10px 18px 10px 10px;
+	font-size: 24px;
 	font-weight: bold;
-	color: white;
+	color: #999999;
+	text-transform: uppercase;
+	letter-spacing: .5px;
 }
 
 .RadioTextOptions
 {
 	horizontal-align: left;
-
 	flow-children: right;
-	font-size: 24px;
-	font-weight: light;
-	margin-left: 12px;
-	margin-right: 12px;
-	margin-top: 0px;
-	margin-bottom: -5px;
+	font-size: 18px;
+	                      
+	margin: 0px 0px 0px 12px;
 	color: #CCCCCC;
+	                                                                                            
 }
 
 .RadioTextOptionsExit
 {
-	padding-top: 24px;
+	padding-top: 12px;
 }
 
                                                                           
@@ -67,10 +62,10 @@ CSGOHudRadio
 {
 	width: fit-children;
 	opacity: 0.0;
-
 	transition-property: opacity;
 	transition-timing-function: ease-in-out;
 	transition-duration: 0.1s;
+	padding: 60px 0px 0px 0px ;
 }
 
 .ShowHudRadio
@@ -83,8 +78,10 @@ CSGOHudRadio
 {
     width: 100%;
     height: 100%;
-    background-color: black;
-    opacity: 1.0;
+                                                                                                                                                                                                                           
+	background-color: #000000;
+	opacity: 0.45;
+	                     
 }
 
 #RadioPanel
@@ -92,5 +89,7 @@ CSGOHudRadio
 	width: fit-children;
 	flow-children: down;
     opacity: 1.0;
-	padding-bottom: 32px;
+	padding-bottom: 12px;
+	background-color: #000000b3;
+	margin: 8px;
 }

@@ -2,45 +2,64 @@
 
 "use strict";
 
+                                           
+  
+                         
+                                  
+               
+                                 
+               
+         
+      
+  
+                                                                                                     
+                                                                                                    
+                                                       
+   
+
+var CFormattedText = class {
+    constructor( strLocTag, mapDialogVars ) {
+        this.tag = strLocTag;
+
+                                                                 
+        this.vars = Object.assign({}, mapDialogVars);
+    }
+
+    SetOnLabel( elLabel ) {
+        FormatText.SetFormattedTextOnLabel(elLabel, this);
+    }
+};
+
 var FormatText = ( function ()
 {
-	var _RemoveItemTypeFromName = function ( name )
-	{
-		return _GetSectionOfStringAfterSpecifiedLocation( name, "| " );
-	}
-	
-	var _GetSectionOfStringAfterSpecifiedLocation = function ( originalString, location )
-	{
-		                                                    
-		                                          
-	
-		var index = originalString.indexOf( location );
-		return originalString.substring ( index + 1 );
-	}
+    var _SetFormattedTextOnLabel = function ( elLabel, fmtText ) {
+        _ClearFormattedTextFromLabel( elLabel );
 
-	var _GetInventoryDisplayStringFromName = function ( name )
-	{
-		                                                                                                                             
-		if ( name.indexOf("|  ") != -1 )
-			var nameParts = name.split("|  ", 2);
-		else if ( name.indexOf("| ") != -1 )
-			var nameParts = name.split("| ", 2);
-		else
-			var nameParts = new Array( name );
-		
-		return _GetSeperateNameString( nameParts );
-	}
+        elLabel.text = fmtText.tag;
+        elLabel.fmtTextVars = {};
+        for ( var varName in fmtText.vars )
+        {
+            elLabel.SetDialogVariable( varName, fmtText.vars[varName] );
+            elLabel.fmtTextVars[varName] = true;
+        }
+    }
 
-	function _GetSeperateNameString( nameParts )
-	{
-		if ( nameParts.length == 1 )
-		{
-			return '<span class=\"fontWeight-Bold\">' + nameParts[0] + '</span>';
-		}
-		else
-			return '<span class=\"fontWeight-Bold\">' + nameParts[0] + '</span>' + '<br>'+ nameParts[1];
-	}
-	
+    var _ClearFormattedTextFromLabel = function ( elLabel ) {
+        elLabel.text = '';
+
+        if( !elLabel.fmtTextVars )
+            return;
+
+        for( var varName in elLabel.fmtTextVars )
+        {
+                                                                            
+            elLabel.SetDialogVariable(varName, '');
+        }
+
+                     
+        delete elLabel.fmtTextVars;
+    }
+
 	                                
 
 	var _SecondsToDDHHMMSSWithSymbolSeperator = function( rawSeconds )
@@ -68,6 +87,9 @@ var FormatText = ( function ()
 
 	var _SecondsToSignificantTimeString = function( rawSeconds )
 	{
+		if ( rawSeconds < 60 )
+			return '1 ' + $.Localize( '#SFUI_Store_Timer_Min' );
+
 		var time = _ConvertSecondsToDaysHoursMinSec( rawSeconds );
 		var numComponentsReturned = 0;
 		var strResult = '';
@@ -133,29 +155,11 @@ var FormatText = ( function ()
 		return integer;
 	}
 
-	var _SignificantDigits = function( float, digits, char = '0' ) 
-	{ 
-		float = float.toPrecision( digits );
-
-		var integer = float.toPrecision( 0 );
-
-		var decimal = float - integer;
-
-		decimal = decimal.toString();
-
-		while ( decimal.length < digits + 2 ) 
-			decimal = decimal + char; 
-		
-		return integer.toString() + decimal;
-	}
-
 	return{
-		SecondsToDDHHMMSSWithSymbolSeperator		: _SecondsToDDHHMMSSWithSymbolSeperator,                    
+	    SetFormattedTextOnLabel                     : _SetFormattedTextOnLabel,                                                                 
+	    ClearFormattedTextFromLabel                 : _ClearFormattedTextFromLabel,                                                                 
+	    SecondsToDDHHMMSSWithSymbolSeperator		: _SecondsToDDHHMMSSWithSymbolSeperator,                    
 		SecondsToSignificantTimeString				: _SecondsToSignificantTimeString,                                               
-		RemoveItemTypeFromName						: _RemoveItemTypeFromName,                      
 		PadNumber									: _PadNumber,                                                                               
-		SignificantDigits							: _SignificantDigits,                                                                                   
-		GetSectionOfStringAfterSpecifiedLocation: _GetSectionOfStringAfterSpecifiedLocation,
-		GetInventoryDisplayStringFromName			: _GetInventoryDisplayStringFromName                                                  
 	};
 })();

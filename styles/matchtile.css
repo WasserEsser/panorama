@@ -1,6 +1,6 @@
 .MatchTile
 {
-    width: 300px;
+    width: 340px;
     height:110px;
     flow-children: right;
     vertical-align: center;
@@ -16,22 +16,7 @@
 
 .MatchTile.MatchTile--Tournament
 {
-	height: 120px;
-}
-
-.MatchTile.MatchVictory
-{
-    background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000), color-stop( 0, #00FF0025  ), color-stop( 0, #00FF0025  ), to( #00FF0000 ) );
-}
-
-.MatchTile.MatchTied
-{
-    background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000), color-stop( 0, #00FF0010  ), color-stop( 0, #00FF0010  ), to( #00FF0000 ) );
-}
-
-.MatchTile.MatchLoss
-{
-    background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000), color-stop( 0, #FF000010   ), color-stop( 0, #FF000010  ), to( #FF000000 ) );
+	height: 130px;
 }
 
 .MatchTile--Collapse
@@ -50,6 +35,7 @@
     flow-children: down;
     horizontal-align: center;
     vertical-align: center;
+    margin-left: 32px;
 }
 
 .MatchMap__Icon
@@ -62,8 +48,8 @@
 
 .MatchTile.MatchTile--Tournament .MatchMap__Icon
 {
-	max-width: 40px;
-	max-height: 40px;
+	max-width: 50px;
+	max-height: 50px;
 }
 
 .TeamIcon
@@ -93,6 +79,7 @@
 	height: fit-children;
     flow-children: down;
     vertical-align: center;
+    margin-left:16px;
 }
 
 .MatchInfo
@@ -116,9 +103,20 @@
 .MatchInfo__MapName
 {
     font-size: 12px;
+    margin-left: 8px;
+    width:120px;
+    height:20px;
+    text-overflow: ellipsis;
+    vertical-align: top;
+    text-align: left;
+}
+
+.MatchInfo__MapName--LiveTile
+{
+    font-size: 12px;
     margin-left: 0px;
-    width:100%;
-    height:22px;
+    width:120px;
+    height:20px;
     text-overflow: ellipsis;
     vertical-align: top;
     text-align: center;
@@ -142,7 +140,9 @@
 
 .MatchInfo__Tournament__SmallContainer
 {
-	margin-top: 5px;
+    margin-top: 5px;
+    width:fill-parent-flow(1);
+    margin-right: 28px;
 }
 
 .MatchInfo--Hide
@@ -158,6 +158,14 @@
     width: 15px;
     height: 15px;
     vertical-align:center;
+}
+
+.MiniIcon
+{
+    margin:12px;
+
+    width: 18px;
+    height: 18px;
 }
 
 .TileButton.PopupButton
@@ -236,6 +244,12 @@
 	horizontal-align: center;
 }
 
+.matchinfoviewers--TournamentTile
+{
+    vertical-align: middle;
+    horizontal-align: left;
+}
+
 .skillgroup
 {
 	margin: 0px 8px 5px 16px;
@@ -245,3 +259,39 @@
 	horizontal-align: center;
 }
 
+.download-animation
+{
+    opacity-mask: url( "file://{images}/icons/ui/downloaded.svg" );
+
+    animation-name: Download;
+    animation-duration: 1.25s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@keyframes 'Download'
+{
+    0%
+    {
+        background-color: gradient(linear, 0% 0%, 0% 100%, from(#aaaaaaff), color-stop(0, #aaaaaaff), color-stop(0, baseText), color-stop( 0.167, baseText), color-stop( 0.167, #aaaaaaff), to(#aaaaaaff) );
+    }
+    
+    100%
+    {
+        background-color: gradient(linear, 0% 0%, 0% 100%, from(#aaaaaaff), color-stop(0.833, #aaaaaaff), color-stop(0.833, baseText), color-stop( 1, baseText), color-stop( 1, #aaaaaaff), to(#aaaaaaff) );
+    }
+}
+
+.downloaded
+{
+    opacity-mask: url( "file://{images}/icons/ui/check.svg" );
+    background-color:positiveColor;
+}
+
+.watchlive
+{
+    opacity-mask: url( "file://{images}/icons/ui/map_onmap.svg" );
+    background-color:#ee0000;
+    width: 12px;
+    height: 12px;
+}

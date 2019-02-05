@@ -14,13 +14,25 @@
 
 .HudSpecplayerRoot
 {
-	flow-children: up;
+    flow-children: none;
 	                      
+	                
+	               
+	height: 100%;
+	width: 100%;
+	horizontal-align: center;
+    vertical-align: center;
+	visibility: collapse;
+}
+
+.HudSpecplayerParentContainer
+{
 	height: 260px;
 	width: 642px;
 	horizontal-align: center;
     vertical-align: bottom;
-	visibility: collapse;
+
+	flow-children: up;
 }
 
 .HudSpecplayerRoot--visible
@@ -54,6 +66,24 @@
     border: 2px solid #000000FF;
 }
 
+.HudSpecplayerRoot__playercolor
+{
+    visibility:collapse;
+
+    x: 0px;
+    y: 0px;
+    width: 32px;
+    height: 16px;
+    horizontal-align: center;
+    vertical-align: top;
+    img-shadow: 0px 0px 1px 1.0 #000000CC;
+}
+
+.HudSpecplayerRoot__playercolor--show
+{
+    visibility:visible;
+}
+
 .HudSpecplayerRoot__avatardefault
 {
     y: 4px;
@@ -73,17 +103,48 @@
 
 .HudSpecplayer__player-name
 {
-    font-size: 23px;
+    font-size: 22px;
     font-family: Stratum2, 'Arial Unicode MS';
     font-weight: medium;
 	vertical-align: bottom;
 	margin-left: 84px;
-    margin-bottom: 14px;
+    margin-bottom: 15px;
 	padding-right: 32px;
     text-shadow: 1px 1px 1px 1.5 #000000AA;
     text-overflow: shrink;
     color: white;
     white-space: nowrap;
+}
+
+.HudSpecplayer__Stats_DamageTaken
+{
+    width: HudSpecplayer_PanelWidth;
+    height: 22px;
+    horizontal-align: center;
+    background-color: gradient( linear, 50% 0%, 100% 0%, from( #000000EE ), to( #00000000 ) );
+                           
+    font-size: 16px;
+    padding-top: 1px;
+    padding-left: 6px;
+    text-align: left;
+    font-family: Stratum2, 'Arial Unicode MS';
+                          
+    text-shadow: 1px 1px 1px 1.0 black;
+    color: #DDDDDDFF;
+    text-overflow: shrink;
+}
+
+                                                                                                 
+                                                                         
+.Language_vietnamese .HudSpecplayer__player-name,
+.Language_vietnamese .HudSpecplayer__Stats_DamageTaken
+{
+	font-family: ForceStratum2, 'Arial Unicode MS';
+}
+
+.HudSpecplayer__Stats_DamageTaken--Hidden
+{
+	visibility: collapse;
 }
 
 #HudSpecplayer__Stats
@@ -148,27 +209,39 @@
     color: #AAAAAAFF;
 }
 
+   
+               
+                                                                              
+                                          
+   
 .HudSpecplayer__key-hints
 {
-	width: HudSpecplayer_PanelWidth;
+	width: fit-children;
     height: 30px;
     horizontal-align: center;
+    overflow: noclip;
+    flow-children: right;
 	                                                                                           
     visibility: visible;
 }
 
 .HudSpecplayer__key-hints-text
 {
-    width: HudSpecplayer_PanelWidth;
+    width: fit-children;
     font-family: Stratum2, 'Arial Unicode MS';
 	font-size: 14px;
-    text-align: center;
     text-shadow: 1px 1px 1px 2.0 black;
     color: #BBBBBBFF;
     margin-top: 7px;
     vertical-align: top;
+    padding-left: 10px;
 	                    
 	                       
+}
+
+.HudSpecplayer__key-hints-text--hidden
+{
+    visibility: collapse;
 }
 
 .HudSpecplayer__Item
@@ -186,6 +259,55 @@
                                                                        
       
     background-color: #00000000;
+}
+
+.HudSpecplayer__ReplayPlayerTag
+{
+    width: 512px;
+	height: 256px;
+	                                  
+	transform-origin: 50% 100%;
+	x: -256px;	                   
+	y: -256px; 	                
+
+                                  
+
+    visibility: visible;
+}
+
+.HudSpecplayer__ReplayPlayerArrow
+{
+    horizontal-align: center_nopixelsnap;
+	vertical-align: bottom;
+                                       
+    width: 42px;
+    height: 42px;
+
+    wash-color: #555555FF;
+}
+
+.HudSpecplayer__ReplayPlayerText
+{
+    height: 48px;
+
+    border: 2px solid #555555FF;
+
+    font-family: Stratum2, 'Arial Unicode MS';
+	font-size: 38px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px 2.0 black;
+    text-align: center;
+    color: #FFFFFFFF;
+
+    horizontal-align: center;
+    vertical-align: bottom;
+    margin-bottom: 32px;
+    padding-left: 16px;
+    padding-right: 16px;
+
+    background-color: #222222FF;
+
+    visibility: visible;
 }
 
 .HudSpecplayer__SponserLogos
@@ -412,7 +534,7 @@
 
 .HudSpecplayer__ItemName
 {
-    font-size: 14px;
+    font-size: 13px;
     font-family: Stratum2, 'Arial Unicode MS';
     font-weight: medium;
                               
@@ -422,4 +544,7 @@
     text-shadow: 1px 1px 1px 1.5 #000000AA;
                                                                                                
     padding-bottom: 1px;
+
+    text-overflow: shrink;
+    white-space: nowrap;
 }

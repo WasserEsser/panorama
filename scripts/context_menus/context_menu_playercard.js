@@ -42,7 +42,8 @@ var contextmenuPlayerCard = ( function (){
 			icon: 'invite',
 			AvailableForItem: function ( id ) {
 				                                                                                              
-				return !GameStateAPI.IsLocalPlayerPlayingMatch() && !( LobbyAPI.IsPartyMember( id ) ) && !_IsSelf( id) ;
+				return !GameStateAPI.IsLocalPlayerPlayingMatch() && !( LobbyAPI.IsPartyMember( id ) ) && !_IsSelf( id) &&
+					( 'purchased' === MyPersonaAPI.GetLicenseType() );
 			},
 			OnSelected:  function ( id ) {
 				FriendsListAPI.ActionInviteFriend( id, '' );
@@ -67,7 +68,8 @@ var contextmenuPlayerCard = ( function (){
 								return false;
 						}
 					}
-					return true;
+
+					return ( 'purchased' === MyPersonaAPI.GetLicenseType() );
 				}
 			},
 			OnSelected:  function ( id ) {
@@ -128,7 +130,7 @@ var contextmenuPlayerCard = ( function (){
 			name: 'leave_lobby',
 			icon: 'leave',
 			AvailableForItem: function ( id ) {
-				if( !GameStateAPI.IsLocalPlayerPlayingMatch() && id === MyPersonaAPI.GetXuid() && LobbyAPI.IsSessionActive() )
+				if( !GameStateAPI.IsLocalPlayerPlayingMatch() && _IsSelf( id ) && LobbyAPI.IsSessionActive() )
 				{
 					var party = LobbyAPI.GetSessionSettings().members;
 					return party.numPlayers > 1 ? true : false;
@@ -144,12 +146,23 @@ var contextmenuPlayerCard = ( function (){
 		{
 			name: 'message',
 			icon: 'message',
+			AvailableForItem: function ( id ) {	                                                                                           
+				return !_IsSelf( id );                                                                   
+			},
+			OnSelected:  function ( id ) {
+				SteamOverlayAPI.StartChatWithUser( id );
+				$.DispatchEvent( 'ContextMenuEvent', '' );
+			}
+		},
+		{
+			name: 'trade',
+			icon: 'trade',
 			AvailableForItem: function ( id ) {
 				return FriendsListAPI.GetFriendRelationship( id ) === "friend";
 
 			},
 			OnSelected:  function ( id ) {
-				SteamOverlayAPI.StartChatWithUser( id );
+				SteamOverlayAPI.StartTradeWithUser( id );
 				$.DispatchEvent( 'ContextMenuEvent', '' );
 			}
 		},
@@ -210,7 +223,7 @@ var contextmenuPlayerCard = ( function (){
 			AvailableForItem: function ( id ) {
 				if( MyPersonaAPI.GetLauncherType() === "perfectworld" )
 				{
-					if ( id === MyPersonaAPI.GetXuid() ) return false;
+					if ( _IsSelf( id ) ) return false;
 					var status = FriendsListAPI.GetFriendStatusBucket( id );
 					return status !== 'AwaitingRemoteAccept' && status !== 'AwaitingLocalAccept';
 				}
@@ -226,11 +239,10 @@ var contextmenuPlayerCard = ( function (){
 			name: 'request',
 			icon: 'addplayer',
 			AvailableForItem: function ( id ) {
-				var isSelf = id === MyPersonaAPI.GetXuid() ? true : false;
 				var status = FriendsListAPI.GetFriendStatusBucket( id );
 				var isRequest = status === 'AwaitingRemoteAccept' || status === 'AwaitingLocalAccept';
 				
-				return FriendsListAPI.GetFriendRelationship( id ) !== "friend" && !isSelf && !isRequest;
+				return FriendsListAPI.GetFriendRelationship( id ) !== "friend" && !_IsSelf( id ) && !isRequest;
 			},
 			OnSelected:  function ( id ) {
 				SteamOverlayAPI.InteractWithUser( id, 'friendadd' );
@@ -268,37 +280,34 @@ var contextmenuPlayerCard = ( function (){
 		},
 		{
 			name: 'mute',
-			icon: 'unmuted',
+			xml: 'file://{resources}/layout/mute_spinner.xml',
+			icon: null,                      
 			AvailableForItem: function ( id ) {
 				return GameStateAPI.IsLocalPlayerPlayingMatch() && 
 					!_IsSelf( id ) && 
-					!GameStateAPI.IsSelectedPlayerMuted( id ) &&
 					GameStateAPI.IsPlayerConnected( id );
 			},
-			OnSelected: function ( id ) {
-				GameStateAPI.ToggleMute( id );
-				$.DispatchEvent( 'ContextMenuEvent', '' );
-			}
+			OnSelected: null                      
 		},
-		{
-			name: 'unmute',
-			icon: 'muted',
-			AvailableForItem: function ( id ) {
-				return GameStateAPI.IsLocalPlayerPlayingMatch() && 
-					!_IsSelf( id ) && 
-					GameStateAPI.IsSelectedPlayerMuted( id ) &&
-					GameStateAPI.IsPlayerConnected( id );
-			},
-			OnSelected: function ( id ) {
-				GameStateAPI.ToggleMute( id );
-				$.DispatchEvent( 'ContextMenuEvent', '' );
-			}
-		},
+		    
+		   	               
+		   	              
+		   	                                   
+		   		                                                   
+		   			                  
+		   			                                           
+		   			                                     
+		   	  
+		   	                             
+		   		                              
+		   		                                          
+		   	 
+		     
 		{
 			name: 'report',
 			icon: 'alert',
 			AvailableForItem: function ( id ) {
-				return GameStateAPI.IsLocalPlayerPlayingMatch() &&
+				return ( GameStateAPI.IsLocalPlayerPlayingMatch() || GameStateAPI.GetGameModeInternalName( false ) === "survival" ) &&
 					!_IsSelf( id ) &&
 					GameStateAPI.IsPlayerConnected( id );
 			},
@@ -311,7 +320,7 @@ var contextmenuPlayerCard = ( function (){
 			name: 'commend',
 			icon: 'smile',
 			AvailableForItem: function ( id ) {
-				return GameStateAPI.IsLocalPlayerPlayingMatch() &&
+				return ( GameStateAPI.IsLocalPlayerPlayingMatch() || GameStateAPI.GetGameModeInternalName( false ) === "survival" ) &&
 					!_IsSelf( id ) &&
 					GameStateAPI.IsPlayerConnected( id );
 			},
@@ -323,17 +332,41 @@ var contextmenuPlayerCard = ( function (){
 		{
 			name: 'borrowmusickit',
 			icon: 'music_kit',
-			AvailableForItem: function ( id ) {
+			AvailableForItem: function ( id )
+			{
+				var borrowedPlayerIndex = parseInt( GameInterfaceAPI.GetSettingString( "cl_borrow_music_from_player_index" ) );
 				return GameStateAPI.IsLocalPlayerPlayingMatch() &&
-					!_IsSelf( id ) && _HasMusicKit( id ) &&
+					!_IsSelf( id ) &&
+					borrowedPlayerIndex !== GameStateAPI.GetPlayerIndex( id ) &&
+					_HasMusicKit( id ) &&
 					GameStateAPI.IsPlayerConnected( id );
 			},
 			OnSelected: function( id )
 			{
-				GameInterfaceAPI.ConsoleCommand( "cl_borrow_music_from_player_index " + GameStateAPI.GetPlayerIndex( id ) );
+				GameInterfaceAPI.SetSettingString( "cl_borrow_music_from_player_index", "" + GameStateAPI.GetPlayerIndex( id ) );
 				$.DispatchEvent( 'ContextMenuEvent', '' );
 			}
-		}
+		},
+		{
+			name: 'stopborrowmusickit',
+			icon: 'no_musickit',
+			AvailableForItem: function ( id )
+			{
+				var borrowedPlayerIndex = parseInt( GameInterfaceAPI.GetSettingString( "cl_borrow_music_from_player_index" ) );
+				if ( borrowedPlayerIndex === 0 )
+					return false;
+
+				return GameStateAPI.IsLocalPlayerPlayingMatch() &&
+					(	( _IsSelf( id ) && borrowedPlayerIndex !== 0 ) ||
+						( borrowedPlayerIndex === GameStateAPI.GetPlayerIndex( id ) ) ) &&
+					GameStateAPI.IsPlayerConnected( id );
+			},
+			OnSelected: function( id )
+			{
+				$.DispatchEvent('Scoreboard_UnborrowMusicKit');
+				$.DispatchEvent( 'ContextMenuEvent', '' );
+			}
+		},		
 	];
 
 	var _HasMusicKit = function( id )
@@ -355,34 +388,57 @@ var contextmenuPlayerCard = ( function (){
 		var items = [];
 		var xuid = $.GetContextPanel().GetAttributeString( "xuid", "(not found)" );
 
+		elContextMenuBtns.xuid = xuid;                                                                     
+
 		_ContextMenus.forEach( function( entry ) {
 			if ( entry.AvailableForItem( xuid )) 
 			{
 				                                                   
 				
-				                                   
-				var elEntryBtn = $.CreatePanel( 'Button', elContextMenuBtns, entry.name, { 
-					class: 'IconButton',
-					style: 'tooltip-position: bottom;'
-				} );
+				                                     
 
-				elEntryBtn.SetPanelEvent('onactivate', entry.OnSelected.bind( this, xuid ) );
+				var elEntryBtn;
 
-				var OnMouseOver = function ()
+				if ( 'xml' in entry )                                 
 				{
-					UiToolkitAPI.ShowTextTooltip( elEntryBtn.id, '#tooltip_' + entry.name );
+					elEntryBtn = $.CreatePanel( 'Panel', elContextMenuBtns, entry.name, { 
+						class: 'IconButton',
+						style: 'tooltip-position: bottom;'
+					} );
+					
+					elEntryBtn.BLoadLayout( entry.xml, false, false );
+				}
+				else                
+				{
+					elEntryBtn = $.CreatePanel( 'Button', elContextMenuBtns, entry.name, { 
+						class: 'IconButton',
+						style: 'tooltip-position: bottom;'
+					} );
+
+					$.CreatePanel( 'Image', elEntryBtn, entry.name, { src: 'file://{images}/icons/ui/' + entry.icon + '.svg' } );
+
+					elEntryBtn.SetPanelEvent( 'onactivate', entry.OnSelected.bind( this, xuid ) );
+
+					          
+					var OnMouseOver = function ()
+					{
+						UiToolkitAPI.ShowTextTooltip( elEntryBtn.id, '#tooltip_' + entry.name );
+					}
+
+					var OnMouseOut = function ()
+					{
+						UiToolkitAPI.HideTextTooltip();
+					}
+					
+					elEntryBtn.SetPanelEvent('onmouseover', OnMouseOver );
+					elEntryBtn.SetPanelEvent('onmouseout', OnMouseOut );
+
 				}
 
-				var OnMouseOut = function ()
-				{
-					UiToolkitAPI.HideTextTooltip();
-				}
-				
-				elEntryBtn.SetPanelEvent('onmouseover', OnMouseOver );
-				elEntryBtn.SetPanelEvent('onmouseout', OnMouseOut );
 
-				$.CreatePanel( 'Image', elEntryBtn, entry.name, { src: 'file://{images}/icons/ui/' + entry.icon + '.svg' });
-				
+
+
+
 				              
 					                                           
 					                                                           

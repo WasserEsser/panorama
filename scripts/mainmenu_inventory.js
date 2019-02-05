@@ -16,6 +16,14 @@ var InventoryPanel = ( function (){
 		_RunEveryTimeInventoryIsShown();
 		_CreateCategoriesNavBar();
 		_LoadEquipNotification();
+
+		                                           	
+		var vanityPanel = $( '#JsMainmenu_Vanity' );
+		if ( vanityPanel && UiToolkitAPI.IsPanoramaInECOMode() )
+		{
+			vanityPanel.Pause( true );
+		}
+				
 	};
 
 	var _RunEveryTimeInventoryIsShown = function()
@@ -158,7 +166,7 @@ var InventoryPanel = ( function (){
 			if ( nameToken )
 			{
 				$.CreatePanel( 'Label', elButton, '', {
-					text: nameToken
+					text: '#' + nameToken
 				} );
 			}
 			else
@@ -347,7 +355,7 @@ var InventoryPanel = ( function (){
 			}
 	
 			                        
-			elDropdown.SetSelected( InventoryAPI.GetSortMethodByIndex( 0 ) );
+			elDropdown.SetSelected( GameInterfaceAPI.GetSettingString( "cl_inventory_saved_sort2" ) );
 		}
 	};
 
@@ -364,6 +372,12 @@ var InventoryPanel = ( function (){
 				elDropdown.GetSelected().id,
 				''
 			);
+
+			if ( typeof elDropdown.GetSelected().id === "string" && elDropdown.GetSelected().id !== GameInterfaceAPI.GetSettingString( "cl_inventory_saved_sort2" ) )
+			{
+				GameInterfaceAPI.SetSettingString( "cl_inventory_saved_sort2", elDropdown.GetSelected().id );
+				GameInterfaceAPI.ConsoleCommand( "host_writeconfig" );
+			}
 		}
 	};
 
@@ -395,6 +409,27 @@ var InventoryPanel = ( function (){
 				_UpdateSearchPanelVisibility( true );
 			} );
 
+			_AddMarketLink( elParent );
+		}
+	};
+
+	var _AddMarketLink = function( elParent )
+	{
+		if ( MyPersonaAPI.GetLauncherType() === "perfectworld" )
+		{
+			return;
+		}
+		
+		var elMarketLink = $.CreatePanel( 'Panel', elParent, 'MarketLink' );
+		elMarketLink.BLoadLayoutSnippet( "MarketLinkSnippet" );
+		elMarketLink.SetPanelEvent( 'onactivate', onActivate );
+
+		var appId = SteamOverlayAPI.GetAppID();
+		var communityUrl = SteamOverlayAPI.GetSteamCommunityURL();
+		
+		function onActivate ()
+		{
+			SteamOverlayAPI.OpenURL( communityUrl + "/market/search?q=&appid=" + appId + "&lock_appid=" + appId );
 		}
 	};
 
@@ -432,8 +467,13 @@ var InventoryPanel = ( function (){
 	                                                                                                    
 	var _GetActiveCategoryLister = function( activePanel )
 	{
-		var elList = activePanel.FindChildInLayoutFile( _m_activeCategory + '-List' );
-		return ( elList ) ? elList : null;
+		if ( activePanel )
+		{
+			var elList = activePanel.FindChildInLayoutFile( _m_activeCategory + '-List' );
+			return ( elList ) ? elList : null;
+		}
+
+		return null;
 	};
 
 	var _GetSelectedSort = function( activePanel )
@@ -597,6 +637,13 @@ var InventoryPanel = ( function (){
 		_RunEveryTimeInventoryIsShown();
 		_UpdateActiveInventoryList();
 		_UpdateLoadoutButtonState();
+
+		                                           	
+		var vanityPanel = $( '#JsMainmenu_Vanity' );
+		if ( vanityPanel && UiToolkitAPI.IsPanoramaInECOMode() )
+		{
+			vanityPanel.Pause( true );
+		}
 	};
 
 	var _InventoryUpdated = function()

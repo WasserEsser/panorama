@@ -4,6 +4,12 @@ var AcknowledgeItems = ( function()
 {
 	var m_isCapabliltyPopupOpen = false;
 
+	var _OnLoad = function ()
+	{
+		$.RegisterForUnhandledEvent( 'PanoramaComponent_MyPersona_InventoryUpdated', AcknowledgeItems.Init );
+		_Init();
+	}
+
 	var _Init = function()
 	{
 		var items = _GetItems();
@@ -17,22 +23,25 @@ var AcknowledgeItems = ( function()
 		var numItems = items.length;
 		_AcknowledgeAllItems.SetItemsToSaveAsNew( items );
 
-		$.RegisterForUnhandledEvent( 'PanoramaComponent_MyPersona_InventoryUpdated', AcknowledgeItems.Init );
-
 		                                                                                                        
 		var elParent = $.GetContextPanel().FindChildInLayoutFile( 'AcknowledgeItemsCarousel' );
 		elParent.RemoveAndDeleteChildren();
 
 		for ( var i = 0; i < items.length; i++ )
 		{
-			_MakeItemPanel( items[i], i, numItems );
+			var elDelayLoadPanel = $.CreatePanel( 
+				'DelayLoadPanel', 
+				elParent, 
+				'carousel_delay_load_' + i,
+				{ class: 'Offscreen' } );
+
+			elDelayLoadPanel.SetLoadFunction( _MakeItemPanel.bind( null, items[i], i, numItems ) );
+			elDelayLoadPanel.ListenForClassRemoved( 'Offscreen' );
 		}
 	};
 
-	var _MakeItemPanel = function( item, index, numItems )
+	var _MakeItemPanel = function( item, index, numItems, elParent )
 	{
-		var elParent = $.GetContextPanel().FindChildInLayoutFile( 'AcknowledgeItemsCarousel' );
-
 		var elItemTile = $.CreatePanel( 'Panel', elParent, item.id );
 		elItemTile.BLoadLayoutSnippet( 'Item' );
 
@@ -69,10 +78,11 @@ var AcknowledgeItems = ( function()
 		elImage.visible = false;
 		elModel.visible = false;
 
-		if ( ItemInfo.GetSlot( id ) || ItemInfo.IsSpraySealed( id ) )
+		var modelPath = ItemInfo.GetModelPathFromJSONOrAPI( id );
+
+		if ( modelPath )
 		{
 			elModel.visible = true;
-			var modelPath = ItemInfo.GetModelPathFromJSONOrAPI( id );
 			
 			                                                  
 			elModel.SetAsActivePreviewPanel();
@@ -110,20 +120,18 @@ var AcknowledgeItems = ( function()
 	var _ShowSetPanel = function( elItemTile, id )
 	{
 		var elPanel = elItemTile.FindChildInLayoutFile( 'AcknowledgeItemSet' );
-
-		var setName = ItemInfo.GetSet( id );
-
-		if ( setName === '' )
+		var strSetName = InventoryAPI.GetTag( id, 'ItemSet' );
+		if ( !strSetName || strSetName === '0' )
 		{
-			elPanel.SetHasClass( 'hidden', true );
-			return;
+		    elPanel.SetHasClass( 'hidden', true );
+		    return;
 		}
 
 		var elLabel = elItemTile.FindChildInLayoutFile( 'AcknowledgeItemSetLabel' );
-		elLabel.text = $.Localize( '#CSGO_' + ItemInfo.GetSet( id ) );
+		elLabel.text = InventoryAPI.GetTagString( strSetName );
 
 		var elImage = elItemTile.FindChildInLayoutFile( 'AcknowledgeItemSetImage' );
-		elImage.SetImage( 'file://{images_econ}/econ/set_icons/' + setName + '_small.png' );
+		elImage.SetImage( 'file://{images_econ}/econ/set_icons/' + strSetName + '_small.png' );
 		elPanel.SetHasClass( 'hidden', false );
 	};
 
@@ -266,6 +274,7 @@ var AcknowledgeItems = ( function()
 
 	return {
 		Init				: _Init,
+		OnLoad 				: _OnLoad,
 		GetItems			: _GetItems,
 		AcknowledgeAllItems	: _AcknowledgeAllItems,
 		SetIsCapabilityPopUpOpen: _SetIsCapabilityPopUpOpen

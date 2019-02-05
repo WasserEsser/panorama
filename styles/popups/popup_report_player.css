@@ -3,10 +3,7 @@
 	width: 800px;
 }
 
-.popup-permissions-setting__text
+.PopupTitle
 {
-	margin: 0px 0px 0px 16px;
-	font-size: 16px;
-	color: disabledColor;
-	opacity: .7;
+	max-height: 64px;
 }

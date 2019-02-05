@@ -9,7 +9,7 @@ var InpsectPurchaseBar = ( function()
 
 	var _Init = function( elPanel, itemId, funcGetSettingCallback )
 	{
-		m_storeItemid= funcGetSettingCallback( "storeitemid", "" );
+		m_storeItemid = funcGetSettingCallback( "storeitemid", "" );
 		
 		                                                     
 		                                          
@@ -44,20 +44,21 @@ var InpsectPurchaseBar = ( function()
 	var _UpdateDecString = function ( ePanel )
 	{
 		var elDesc = m_elPanel.FindChildInLayoutFile( 'PurchaseItemName' );
-		if ( m_storeItemid )
+		if ( !m_storeItemid && m_showToolUpsell )
 		{
-			elDesc.text = ItemInfo.GetName( m_itemid );
-		}
-		else
-		{
-			elDesc.text = m_showToolUpsell ?
-				$.Localize( '#popup_capability_upsell', m_elPanel ) :
-				ItemInfo.GetName( m_itemid );
+		    elDesc.text = "#popup_capability_upsell";
+        }
+        else
+        {
+		    elDesc.text = "#popup_capability_use";
 		}
 	};
 
 	var _UpdatePurchasePrice = function ()
 	{
+		if ( !m_elPanel.IsValid() )
+			return;
+		
 		var elBtn = m_elPanel.FindChildInLayoutFile( 'PurchaseBtn' );
 		var elDropdown = m_elPanel.FindChildInLayoutFile( 'PurchaseCountDropdown' );
 		var qty = 1;
@@ -73,7 +74,7 @@ var InpsectPurchaseBar = ( function()
 		var salePrice = ItemInfo.GetStoreSalePrice( m_itemid, qty );
 		elBtn.text = salePrice;
 
-		_UpdateSalePrice( salePrice );
+		_UpdateSalePrice( ItemInfo.GetStoreOriginalPrice( m_itemid, qty ) );
 	};
 
 	var _isCoupon = function()
@@ -131,6 +132,8 @@ var InpsectPurchaseBar = ( function()
 
 	var _ClosePopup = function()
 	{
+		InventoryAPI.StopItemPreviewMusic();
+
 		$.DispatchEvent( 'HideSelectItemForCapabilityPopup' );
 		$.DispatchEvent( 'UIPopupButtonClicked', '' );
 		$.DispatchEvent( 'CapabilityPopupIsOpen', false );

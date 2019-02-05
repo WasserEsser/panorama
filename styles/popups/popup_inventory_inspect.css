@@ -31,7 +31,7 @@
 .popup-inspect-image
 {
 	width: height-percentage( 130% );
-	height: 300px;
+	height: 450px;
 	horizontal-align: center;
 	vertical-align: middle;
 
@@ -87,6 +87,7 @@
 .popup-char-model-controls DropDown
 {
 	min-width: 350px;
+	max-width: 370px;
 	background-color: gradient( linear, 100% 0%, 0% 0%, from( #00000035), color-stop( 1, #00000035 ), to( #00000035 ) );
 }
 
@@ -134,6 +135,11 @@
 	height: 6px;
 	box-shadow: shadowOffset;
 	margin: 8px 0px;
+}
+
+#PopUpInspectFullScreenHostContainer.solidbkgnd
+{
+	background-color: #000000EE;
 }
 
 #InspectActionButton

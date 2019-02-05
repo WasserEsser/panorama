@@ -18,19 +18,42 @@ CSGOSettingsSlider
 	vertical-align: center;
 }
 
-CSGOSettingsSlider:disabled Panel Label
+
+#SliderTrackProgress:parentdisabled,
+#SliderThumb:parentdisabled
 {
-    color: #333333;
+	visibility: collapse;
 }
 
-
-#Value
+TextEntry#Value
 {
-	width: 48px;
+	width: 80px;
 	text-align: right;
 	color: baseText;
-	                    
-	font-size: 18px;
+    font-family: Stratum2, notosans, 'Arial Unicode MS';
+	font-weight: bold;
+	font-size: 20px;
+	padding: 5px, 0px, 0px;
+	padding-left: 10px;
+	border-radius: 2px;
+	border: 2px solid #cccccc15;
+}
+
+TextEntry#Value:hover
+{
+	box-shadow: none;
+	background-color: gradient( linear, 100% 0%, 0% 0%, from( #000000ff), color-stop( 0, #00000000 ), to( #00000050 ) );
+}
+
+TextEntry#Value:focus
+{
+	box-shadow: none;
+	background-color: gradient( linear, 100% 0%, 0% 0%, from( #00000080), color-stop( 0, #00000060 ), to( #00000080 ) );
+}
+
+TextEntry#Value:parentdisabled
+{
+	visibility: collapse;
 }
 
              

@@ -5,12 +5,13 @@
 	</styles>
 
 	<snippets>
-		<snippet name="HudNotice">
+		<snippet name="HudNotice" >
 			<Panel class="AlertPanel">
-				<Panel class="AlertBg"/>
-				<Label class="AlertText"/>
+				<Panel class="AlertBg" />
+				<Label class="AlertText" clampfractionalpixelpositions="true"/>
 			</Panel>
 		</snippet>
+    
 		<snippet name="VoiceNotice">
 			<Panel class="VoiceNotice Hidden">
 				<Panel class="SoundAnim">
@@ -29,8 +30,8 @@
 		</snippet>
 	</snippets>
 
-	<CSGOHudVoiceStatus hittest="false">
-		<Panel class="StatusPanel" id ="StatusPanel">
+	<CSGOHudVoiceStatus hittest="false" >
+		<Panel class="StatusPanel" id ="StatusPanel" clampfractionalpixelpositions="false">
 			                                                   
 		</Panel>
 		<Panel class="VoicePanel" id ="VoicePanel">

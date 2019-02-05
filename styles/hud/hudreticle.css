@@ -1,15 +1,23 @@
                                            
 
-                                              	                                                        
-@define ScaleformOffsetX: translateX(0px); 
+                                                                       
+                                                               
+@define CrosshairPanelOffset: translate3d( 0.5px, 0.5px, 0px );
 
                              
-@define cppPipDefaultOffset: 7;
-@define cppArcDefaultOffset: 4.5;
-@define cppTargetIDDuration: 0.25;	                                                              
+@define cppPipDefaultOffset: 7;                                                                          
+                                                                                               
+                                                      
 
-                                                                                
-@define pipSize: 14px;
+@define cppBlackPipDefaultOffset: 2;                                                               
+                                                     
+
+@define cppArcDefaultOffset: 4.0;                                                             
+                                                                                                                                            
+                                                             
+
+@define cppTargetIDDuration: 0.25;		                                                              
+
 @define arcSize: 9px;
 
 @define crosshairGreenColor: #82b116;
@@ -23,6 +31,13 @@
 CSGOHudReticle Label
 {
 	font-family: Stratum2, 'Arial Unicode MS';
+}
+
+                                                                                                 
+                                                                         
+.Language_vietnamese CSGOHudReticle Label 
+{
+	font-family: ForceStratum2, 'Arial Unicode MS';
 }
 
                                                                                
@@ -48,7 +63,7 @@ CSGOHudReticle Label
 	width: 100%;
 	height: 100%;
 	
-	transform: ScaleformOffsetX;
+	transform: CrosshairPanelOffset;
 }
 
 .crosshair--hidden
@@ -60,9 +75,10 @@ CSGOHudReticle Label
 
 .crosshair__pip
 {
-	horizontal-align: center;
-	vertical-align: center;
-	overflow: noclip;
+	horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
+	overflow: noclip;	                                                                             
+						                                                                                                 
 }
 
 .crosshair--piphidden .crosshair__pip
@@ -72,22 +88,24 @@ CSGOHudReticle Label
 
 .crosshair__pip--green
 {
-	-s2-mix-blend-mode: screen;
+    -s2-mix-blend-mode: SRGBadditive;
+	opacity: 0.99;
 }
 
 .crosshair__pip--black
 {
-	wash-color-fast: #000000cc;
+	wash-color-fast: #000000AA;
 }
 
                                           
 
 .crosshair__arc
 {
-	horizontal-align: center;
-	vertical-align: center;
-	-s2-mix-blend-mode: screen;
-	overflow: noclip;
+	horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
+    -s2-mix-blend-mode: SRGBadditive;
+	overflow: noclip;	                                                                             
+						                                                                                                 
 }
 
 .crosshair--archidden .crosshair__arc
@@ -111,30 +129,44 @@ CSGOHudReticle Label
 
 .crosshair__dot
 {
-	width: 2px;
-	height: 2px;
-	horizontal-align: center;
-	vertical-align: center;
-	background-color: crosshairGreenColor;
-	-s2-mix-blend-mode: screen;
+	width: 1px;
+	height: 1px;
+
+                   
+
+	horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
+	overflow: noclip;	                                                                             
+						                                                                                                 
+	
+	wash-color-fast: crosshairGreenColor;
+    -s2-mix-blend-mode: SRGBadditive;
 }
 
                                                   
 
 .crosshair__blackcircle
 {
-	horizontal-align: center;
-	vertical-align: center;
-	wash-color-fast: #000000cc;
+	horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
+	overflow: noclip;	                                                                             
+						                                                                                                 
+
+	wash-color-fast: #00000088;
+	width: 7px;
+	height: 7px;
 }
 
                                             
 
 .crosshair__friend
 {
-	horizontal-align: center;
-	vertical-align: center;
-	-s2-mix-blend-mode: screen;
+	horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
+	overflow: noclip;	                                                                             
+						                                                                                                 
+
+	-s2-mix-blend-mode: SRGBadditive;
 }
 
 .crosshair__friend--hidden
@@ -365,14 +397,15 @@ CSGOHudReticle Label
 
 .playerid__icons
 {
-	horizontal-align: center;
+	horizontal-align: center_nopixelsnap;
     width: 100%;
 }
 
 .playerid__icon
 {
-	horizontal-align: center;
-	vertical-align: center;
+	horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
+
     width: 22px;
     height: 22px;
 }
@@ -384,10 +417,15 @@ CSGOHudReticle Label
 
 .playerid__icon--arrowfriend
 {
-    horizontal-align: center;
-	vertical-align: center;
+    horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
 
-	wash-color-fast: #4ede00BB;
+    width: 22px;
+    height: 22px;
+             
+             
+
+	wash-color-fast: #4ede0022;
 }
 
 .playerid__icon--chat
@@ -402,15 +440,22 @@ CSGOHudReticle Label
 
 .playerid__icon--arrow
 {
-    horizontal-align: center;
-	vertical-align: center;
+    horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
     -s2-mix-blend-mode: SRGBadditive;
+    width: 22px;
+    height: 22px;
+              
 }
 
 .playerid__icon--arrowborder
 {
-    horizontal-align: center;
-	vertical-align: center;
+    horizontal-align: center_nopixelsnap;
+	vertical-align: center_nopixelsnap;
+
+    width: 22px;
+    height: 22px;
+             
 }
 
                
@@ -438,4 +483,16 @@ CSGOHudReticle Label
 {
     -s2-mix-blend-mode: normal;
 	wash-color-fast: #eecb2aAA;
+}
+
+                     
+.playerid--team-survival .playerid__icon--arrow
+{
+	wash-color-fast: rgb(0, 195, 225);
+}
+
+.playerid--team-survival .playerid__icon--arrowborder
+{
+    -s2-mix-blend-mode: normal;
+	wash-color-fast: rgb(0, 100, 255);
 }

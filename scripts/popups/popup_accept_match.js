@@ -5,6 +5,7 @@ var PopupAcceptMatch = ( function(){
 
 	var m_hasPressedAccept = false;
 	var m_numPlayersReady = 0;
+	var m_numTotalClientsInReservation = 0;
 	var m_numSecondsRemaining = 0;
 	var m_isReconnect= false;
 	var m_isNqmmAnnouncementOnly = false;
@@ -36,6 +37,7 @@ var PopupAcceptMatch = ( function(){
 		m_lobbySettings = LobbyAPI.GetSessionSettings().game;
 
 		$.DispatchEvent( "ShowReadyUpPanel", "" );
+
 		
 		_SetMatchData( map );
 
@@ -65,7 +67,7 @@ var PopupAcceptMatch = ( function(){
 
 		if ( bShowPlayerSlots )
 		{
-			_UpdatePlayerSlots( elPlayerSlots, m_numPlayersReady );
+			_UpdatePlayerSlots( elPlayerSlots );
 			bHideTimer = true;
 		}
 
@@ -100,7 +102,7 @@ var PopupAcceptMatch = ( function(){
 		}
 	}
 
-	var _ReadyForMatch = function ( shouldShow, playersReadyCount )
+	var _ReadyForMatch = function ( shouldShow, playersReadyCount, numTotalClientsInReservation )
 	{
 		                                                             		
 		                                                
@@ -112,6 +114,7 @@ var PopupAcceptMatch = ( function(){
 				m_jsTimerUpdateHandle = false;
 			}
 
+			$.DispatchEvent( "CloseAcceptPopup" );
 			$.DispatchEvent( 'UIPopupButtonClicked', '' );
 			return;
 		}
@@ -122,21 +125,23 @@ var PopupAcceptMatch = ( function(){
 			$.DispatchEvent( 'PlaySoundEffect', 'popup_accept_match_person', 'MOUSE' );
 		}
 
+		if ( playersReadyCount == 1 && numTotalClientsInReservation == 1 && ( m_numTotalClientsInReservation > 1 ) )
+		{	                                                                                 
+			                                                                          
+			numTotalClientsInReservation = m_numTotalClientsInReservation;
+			playersReadyCount = m_numTotalClientsInReservation;
+		}
 		m_numPlayersReady = playersReadyCount;
+		m_numTotalClientsInReservation = numTotalClientsInReservation;
 		m_numSecondsRemaining = LobbyAPI.GetReadyTimeRemainingSeconds();
 		_UpdateUiState();
 
 		m_jsTimerUpdateHandle = $.Schedule( 1.0, _OnTimerUpdate );
 	}
 
-	var _UpdatePlayerSlots = function ( elPlayerSlots, playersReadyCount )
+	var _UpdatePlayerSlots = function ( elPlayerSlots )
 	{
-		var numSlots = 0;
-
-		if( m_lobbySettings )
-			numSlots = m_lobbySettings.mode === 'scrimcomp2v2' ? 4 : 10;
-
-		for( var i = 0; i < numSlots; i++ )
+		for( var i = 0; i < m_numTotalClientsInReservation; i++ )
 		{
 			var Slot = $.GetContextPanel().FindChildInLayoutFile( 'AcceptMatchSlot' + i );
 
@@ -146,18 +151,21 @@ var PopupAcceptMatch = ( function(){
 				Slot.BLoadLayoutSnippet( 'AcceptMatchPlayerSlot' );
 			}
 
-			Slot.SetHasClass ( 'accept-match__slots__player--accepted', ( i < playersReadyCount ));
+			Slot.SetHasClass ( 'accept-match__slots__player--accepted', ( i < m_numPlayersReady ) );
 		}
 
 		var labelPlayersAccepted = $.GetContextPanel().FindChildInLayoutFile( 'AcceptMatchPlayersAccepted' );
-		labelPlayersAccepted.SetDialogVariableInt( 'accepted', playersReadyCount );
-		labelPlayersAccepted.SetDialogVariableInt( 'slots', numSlots );
+		labelPlayersAccepted.SetDialogVariableInt( 'accepted', m_numPlayersReady );
+		labelPlayersAccepted.SetDialogVariableInt( 'slots', m_numTotalClientsInReservation );
 		labelPlayersAccepted.text = $.Localize( '#match_ready_players_accepted', labelPlayersAccepted );
 	}
 
 	                                                                                             
 	var _SetMatchData = function ( map )
 	{
+		if ( m_lobbySettings === undefined )
+			return;
+
 		var mode = $.Localize ( '#SFUI_GameMode_' + m_lobbySettings.mode );
 		var labelData = $.GetContextPanel().FindChildInLayoutFile ( 'AcceptMatchModeMap' );
 
@@ -165,8 +173,8 @@ var PopupAcceptMatch = ( function(){
 		labelData.SetDialogVariable ( 'map', $.Localize ( '#SFUI_Map_' + map ));
 		labelData.text = $.Localize( '#match_ready_match_data', labelData );
 
-		var imgMap = $.GetContextPanel().FindChildInLayoutFile ( 'AcceptMatchMapImage' );
-		imgMap.SetImage( 'file://{images}/map_icons/screenshots/360p/' + map + '.png');
+		var imgMap = $.GetContextPanel().FindChildInLayoutFile ( 'AcceptMatchMapImage' );		
+		imgMap.style.backgroundImage = 'url("file://{images}/map_icons/screenshots/360p/' + map + '.png")';
 	}
 
 	var _OnNqmmAutoReadyUp = function ()
@@ -174,6 +182,7 @@ var PopupAcceptMatch = ( function(){
 		m_jsTimerUpdateHandle = false;
 		$.DispatchEvent( 'PlaySoundEffect', 'popup_accept_match_confirmed', 'MOUSE' );
 		LobbyAPI.SetLocalPlayerReady( 'deferred' );
+		$.DispatchEvent( "CloseAcceptPopup" );
 		$.DispatchEvent( 'UIPopupButtonClicked', '' );
 	}
 
@@ -200,6 +209,7 @@ var PopupAcceptMatch = ( function(){
 	                                                                                                          
 	  
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_Lobby_ReadyUpForMatch', PopupAcceptMatch.ReadyForMatch );
+	$.RegisterForUnhandledEvent( 'MatchAssistedAccept', PopupAcceptMatch.OnAcceptMatchPressed );
 
 	  
 	           

@@ -27,6 +27,11 @@
 	flow-children: down;
 }
 
+.teamselect-blur
+{
+    brightness: 0.8;
+}
+
 .team-select-icon-title
 {
 	flow-children: down;

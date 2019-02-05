@@ -7,6 +7,8 @@
 	<scripts>
 		<include src="file://{resources}/scripts/common/formattext.js" />
 		<include src="file://{resources}/scripts/common/icon.js" />
+		<include src="file://{resources}/scripts/common/licenseutil.js" />
+		<include src="file://{resources}/scripts/common/sessionutil.js" />
 		<include src="file://{resources}/scripts/mainmenu_play.js" />
 	</scripts>
 
@@ -18,28 +20,30 @@
 					                                                
 				</Carousel>
 				<Panel class="map-selection-btn__gradient" hittest="false" />
+				<Label id="MapGroupNewTag" class="map-selection-info__new stratum-font hidden" text='#SFUI_Workshop_New_Map'/>
+				<Label id="MapGroupBetaTag" class="map-selection-info__new stratum-font hidden" text='#SFUI_Overwatch_Beta'/>
 				<Panel id="MapSelectionButton" class="map-selection-btn-container" hittest="false" >
 					<Panel id="MapSelectionTopRowIcons" class="map-selection-btn__top-icon-row">
 						<Image id="ActiveGroupIcon" texturewidth="24" textureheight="24" src="file://{images}/icons/ui/competitive.svg"/>
-	
 					</Panel>
-					<Image id="MapGroupCollectionIcon"
-							class="map-selection-btn__map-icon"
-							textureheight="116"
-							texturewidth="116"
-							defaultsrc="file://{images}/map_icons/map_icon_NONE.png"
-						/>
+					                           
+
 					<Panel id="MapGroupCollectionMultiIcons" class="map-selection-btn__groupmap-icons">
-	
+						                                       
 					</Panel>
 					<Panel class="map-selection-info">
-						<Panel id="MapGroupWaitTime" class="map-selection-info__wait-time-block Hidden">
+						<Panel id="MapGroupWaitTime" class="map-selection-info__wait-time-block hidden">
 							<Image class="map-selection-info__wait-icon" texturewidth="12" textureheight="12" src="file://{images}/icons/ui/recent.svg"/>
 							<Label id="MapGroupWaitTimeLabel" class="fontSize-s"/>
 						</Panel>
 						<Label id="MapGroupName" class="map-selection-info__map-name fontSize-l"/>
 					</Panel>
 				</Panel>
+			</Panel>
+		</snippet>
+		<snippet name="NoWorkshopMaps">
+			<Panel class="map-selection-no-subscriptions">
+				<Label class="map-selection-no-subscriptions-label" html="true" text="#CSGO_Workshop_No_Maps" />
 			</Panel>
 		</snippet>
 	</snippets>
@@ -52,15 +56,26 @@
 			<Panel class="content-navbar  content-navbar--short content-navbar--dropdown">
 				<Panel class="vertical-center left-right-flow">
 					<DropDown class="PopupButton" id="PlayTopNavDropdown" menuclass="DropDownMenu Width-300" oninputsubmit="PlayMenu.PlayTopNavDropdownChanged()">
-						<Label html="true" text="play_setting_online" id="Play-official" data-type="official" value="1"/>
-						<Label html="true" text="play_setting_offline" id="Play-listen" data-type="listen" value="2"/>
-						<Label html="true" text="play_setting_training_course" id="PlayTraining" data-type="training" value="3"/>
-						                                                                                                           
-						<Label html="true" text="play_setting_community" id="PlayCommunity" data-type="community" value="5"/>
+						<Label text="#play_setting_online" id="Play-official" data-type="official" value="1"/>
+						<Label text="#play_setting_offline" id="Play-listen" data-type="listen" value="2"/>
+						<Label text="#play_setting_training_course" id="PlayTraining" data-type="training" value="3"/>
+						<Label text="#play_setting_workshop" id="PlayWorkshop" data-type="workshop" value="4"/>
+						<Label text="#play_setting_community" id="PlayCommunity" data-type="community" value="5"/>
 					</DropDown>
+
+					<DropDown class="PopupButton play-menu__tournament-only" id="TournamentTeamDropdown" menuclass="DropDownMenu Width-300" />
+					<DropDown class="PopupButton play-menu__tournament-only" id="TournamentStageDropdown" menuclass="DropDownMenu Width-300" />
+
+					<Button id="PrimeStatusButton" class="PopupButton play-menu-get-prime" >
+						<Panel class="play-menu-primestatus" >
+							<Image class="play-menu-primestatus-image" texturewidth="-1" textureheight="28" src="file://{images}/icons/ui/prime.svg" />
+						</Panel>
+						<Label id="PrimeStatusButtonLabel" text="#SFUI_Elevated_Status_Title" html="true"/>
+					</Button>
+					
 				</Panel>
 			</Panel>
-
+			
 			<Panel class="content-navbar content-navbar--short">
 				<Panel id="GameModeSelectionRadios" class="content-navbar__tabs">
 					<RadioButton id='competitive' 
@@ -84,13 +99,18 @@
 							<Label text="#SFUI_GameModeScrimComp2v2"/>
 					</RadioButton>
 					            
-					                            
-								                   
-						                                      
-					              
+					<RadioButton id='survival'  
+								group="gamemodes" >
+						<Label text="#SFUI_GameModeSurvival"/>
+					</RadioButton>
 					            
 				</Panel>
-				<Panel class="vertical-center horizontal-align-right left-right-padding">
+
+				<Panel id="WorkshopSearchBar" class="content-navbar__tabs">
+					<TextEntry id="WorkshopSearchTextEntry" class="workshop-search-textentry" placeholder="#CSGO_Workshop_Search_Placeholder" onfocus="" />
+				</Panel>
+				
+				<Panel class="vertical-center left-right-flow horizontal-align-right left-right-padding">
 					<DropDown class="play-menu__botdifficulty PopupButton White hidden"  id="BotDifficultyDropdown" menuclass="DropDownMenu" oninputsubmit="PlayMenu.BotDifficultyChanged()">
 						<Label text="#SFUI_BotDifficulty0" id="0"/>
 						<Label text="#SFUI_BotDifficulty1" id="1"/>
@@ -99,8 +119,12 @@
 						<Label text="#SFUI_BotDifficulty4" id="4"/>
 						<Label text="#SFUI_BotDifficulty5" id="5"/>
 					</DropDown>
+					<Button class="PopupButton White" id="WorkshopVisitButton" onactivate="CSGOOpenSteamWorkshop()">
+						<Label text="#CSGO_Workshop_Visit" />
+					</Button>
 				</Panel>
 			</Panel>
+			
 			<Panel class="top-bottom-flow full-width full-height">
 				<Panel id="MapSelectionList" class="map-selection-list map-selection-list-all">
 					                                                                                                
@@ -112,18 +136,14 @@
 							<Image id="PermissionsSettingsImg" texturewidth="-1" textureheight="28" src="file://{images}/icons/ui/unlockedwide.svg" />
 							<Label id="PermissionsSettingsLabel" text="" />
 						</Button>
-						<Button id="PrimeStatusButton" class="PopupButton" >
-							<Image texturewidth="-1" textureheight="28" src="file://{images}/icons/ui/prime.svg" />
-							<Label text="#SFUI_Elevated_Status_Title" />
+						<Button id="PlayMenulLeaderboards" class="PopupButton" >
+							<Image texturewidth="-1" textureheight="28" src="file://{images}/icons/ui/info.svg" />
+							<Label text="#SFUI_LEADERBOARD" />
 						</Button>
-						<ToggleButton id="PrimeButton" class="PopupButton White" >
-							<Label id="JsPlayMenuPrimeLabel" text="#prime_only_label" />
-						</ToggleButton>
 					</Panel>
-					<Button id="StartMatchBtn" class="play-menu__playbtn  Positive" >
+					<Button id="StartMatchBtn" class="play-menu__playbtn play-menu__playbtn--startsearch Positive" >
 						<Label text="#SFUI_Lobby_StartMatchButton" />
 					</Button>
-
 					<Button id="PartyCancelBtn" class="play-menu__playbtn play-menu__playbtn--stopsearch"  >
 						<Label text="#SFUI_Lobby_Cancel_QueueMode_Search" />
 					</Button>

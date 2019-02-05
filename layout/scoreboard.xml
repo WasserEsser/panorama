@@ -6,6 +6,7 @@
 	<scripts>
 		<include src="file://{resources}/scripts/scoreboard.js" />
 		<include src="file://{resources}/scripts/common/formattext.js" />
+		<include src="file://{resources}/scripts/common/gamerules_constants.js" />
 	</scripts>
 
 	<snippets>
@@ -29,7 +30,8 @@
 					<Panel class="top-bottom-flow">
 						<Label id="id-sb-meta__labels__mode-map" text="" />
 						<Label id="id-sb-meta__labels__server" text="{s:server_name}" />
-						</Panel>
+						<Label id="id-viewers" class="hidden" text="#Scoreboard_Viewers" />
+					</Panel>
 				</Panel>
 
 				              
@@ -40,8 +42,10 @@
 
 				                  
 				<Panel id="id-sb-meta__musickit" class="hidden">
-					<Button id="id-sb-meta__musickit-unborrow" class="hidden" onactivate="$.DispatchEvent('Scoreboard_UnborrowMusicKit');" >
-						<Image src="file://{images}/icons/ui/cancel.svg"/>
+					<Button id="id-sb-meta__musickit-unborrow" class="hidden vertical-center" onactivate="$.DispatchEvent('Scoreboard_UnborrowMusicKit');" >
+						<TooltipPanel tooltip="#tooltip_stopborrowmusickit" style='tooltip-position: bottom;'>
+							<Image src="file://{images}/icons/ui/no_musickit.svg"/>
+						</TooltipPanel>
 					</Button>
 
 					<Image id="id-sb-meta__musickit-image" />
@@ -58,7 +62,7 @@
 						</Button>
 					</Panel>
 
-					            
+					               
 					                     
 					                                                                               
 						                                    
@@ -82,7 +86,7 @@
 							                                         
 						         
 					        
-					            
+					               
 				</Panel>
 
 
@@ -93,11 +97,11 @@
 
 		                              
 
-		<snippet name="snippet_scoreboard-deathmatch">
+		<snippet name="snippet_scoreboard--no-teams">
 			<Panel class="sb-main">
 
 					                       
-					<Panel id="id-sb-meta"/>
+					<Frame snippet="snippet_sb-meta"/>
 
 					               
 					<Panel id="id-sb-players-table__labels-row" class="sb-row--labels sb-row no-hover" />
@@ -115,17 +119,17 @@
 					</Panel>
 				</Panel>
 
+				               
+				<Frame snippet="snippet_sb-footer"/>
+
 			</Panel>
 		</snippet>
 
 
 		                                       
-		
-		<snippet name="snippet_scoreboard-classic">
-			<Panel class="sb-main">
 
-				                       
-				<Panel id="id-sb-meta"/>
+		<snippet name="snippet_scoreboard__classic-teams--CT">
+			<Panel class="top-bottom-flow" >
 
 				               
 				<Panel id="id-sb-label-container">
@@ -144,28 +148,19 @@
 						<Panel id="id-sb-team__info--ct" class="sb-team__info__score" >
 							<Label text="{d:sb_team_score--CT}" />
 						</Panel>
-						<Label class="sb-team__info__name"	text="{s:sb_team_name--CT}" />
+						<Label class="sb-team__info__name"		text="{s:sb_team_name--CT}" />
+						<Label class="sb-team__info__number"	text="#Scoreboard_Players_CT" />
 
-					</Panel>
-
-
-
-				</Panel>
-
-
-			                 
-				<Panel id="id-sb-timeline" class="sb-timeline" hittest="true" >
-
-					<Panel class="sb-timeline__bumper" />
-
-					<Panel style="width:100%;">
-						<Panel id="id-sb-timeline__segments" class="sb-timeline__segments" onmouseover="Scoreboard.Casualties_OnMouseOver()" onmouseout="Scoreboard.Casualties_OnMouseOut()"/>
-						                                            
 					</Panel>
 				</Panel>
 
+			</Panel>
+		</snippet>
 
-				               
+
+		<snippet name="snippet_scoreboard__classic-teams--TERRORIST">
+			<Panel>
+
 				<Panel id="id-sb-team--TERRORIST" class="sb-team sb-team--TERRORIST" cachepaintcmdlist="true">
 					<Panel class="sb-team__data sb-team__data--TERRORIST">
 						                       
@@ -176,75 +171,214 @@
 						<Panel id="id-sb-team__info--t" class="sb-team__info__score" >
 							<Label text="{d:sb_team_score--TERRORIST}" />
 						</Panel>
-						<Label class="sb-team__info__name"	text="{s:sb_team_name--TERRORIST}" />
+						<Label class="sb-team__info__name"		text="{s:sb_team_name--TERRORIST}" />
+						<Label class="sb-team__info__number"	text="#Scoreboard_Players_TERRORIST" />
 					</Panel>
 
-
-
 				</Panel>
+			</Panel>
+		</snippet>
+
+		<snippet name="snippet_scoreboard__classic-timeline--half-time-scores">
+			<Panel class="sb-timeline">
+
+				<Frame snippet="snippet_scoreboard-classic__half-time-scores" />
+
+				<Panel style="width:100%;">
+					<Label id="id-sb-timeline__round-label" class="sb-timeline__round-label hidden" text="#scoreboard_timeline_ot" hittest="false"/>
+					<Panel hittest="true" id="id-sb-timeline__segments" class="sb-timeline__segments" onmouseover="$.DispatchEvent('Scoreboard_Casualties_OnMouseOver')" onmouseout="$.DispatchEvent('Scoreboard_Casualties_OnMouseOut')"/>
+					                                            
+				</Panel>
+			</Panel>
+		</snippet>
+
+		<snippet name="snippet_scoreboard__classic-timeline--no-half-time-scores">
+			<Panel class="sb-timeline">
+
+				<Frame snippet="snippet_scoreboard-classic__no-half-time-scores" />
+
+				<Panel style="width:100%;">
+					<Panel hittest="true" id="id-sb-timeline__segments" class="sb-timeline__segments" onmouseover="$.DispatchEvent('Scoreboard_Casualties_OnMouseOver')" onmouseout="$.DispatchEvent('Scoreboard_Casualties_OnMouseOut')"/>
+					                                            
+				</Panel>
+			</Panel>
+		</snippet>
+
+		<snippet name="snippet_scoreboard__classic-spacer">
+			<Panel class="sb-timeline" />
+		</snippet>
 
 
-				                               
+		<snippet name="snippet_scoreboard__classic-teams--Spectator" >
+			<Panel>
 				<Panel id="id-sb-team--Spectator" class="sb-team sb-team--Spectator" cachepaintcmdlist="true">
 					<Panel class="sb-team__data sb-team__data--Spectator">
 							<Panel id="players-table-Spectator" class="sb-players-table" />
+							                              
 					</Panel>
+
+					                                                                         
+					<Panel class="sb-team__info" />
 				</Panel>
 
-				<Label id="id-sb-mouse-instructions" text="#Scoreboard_Mouse_Enable_Instruction" />
+
 
 			</Panel>
 		</snippet>
 
-		                                   
-		<snippet name="snippet_scoreboard-classic__timeline__segment--1">
-			<Panel class="sb-timeline__segment">
-				                                                                                          
+
+		<snippet name="snippet_sb-footer">
+			<Panel class="sb-footer-panel">
+				<Panel id="spec-button-group" class="sb-spectator-control-panel">
+					<Button id="spec-button1" class="IconButton sb-spectator-control-button" onactivate="$.DispatchEvent('Scoreboard_ToggleSetCasterIsCameraman');" 
+					onmouseover="UiToolkitAPI.ShowTextTooltip( 'spec-button1', '#CSGO_Scoreboard_CastButton_Camera_Tooltip' );"
+								onmouseout="UiToolkitAPI.HideTextTooltip();">
+					<Image src="file://{images}/icons/ui/camera.svg"/>
+					</Button>
+					<Button id="spec-button2" class="IconButton sb-spectator-control-button" onactivate="$.DispatchEvent('Scoreboard_ToggleSetCasterIsHeard');" 
+					onmouseover="UiToolkitAPI.ShowTextTooltip( 'spec-button2', '#CSGO_Scoreboard_CastButton_Voice_Tooltip' );"
+								onmouseout="UiToolkitAPI.HideTextTooltip();">
+					<Image src="file://{images}/icons/ui/unmuted.svg"/>
+					</Button>
+					<Button id="spec-button3" class="IconButton sb-spectator-control-button" onactivate="$.DispatchEvent('Scoreboard_ToggleSetCasterControlsXray');" 
+					onmouseover="UiToolkitAPI.ShowTextTooltip( 'spec-button3', '#CSGO_Scoreboard_CastButton_XRay_Tooltip' );"
+								onmouseout="UiToolkitAPI.HideTextTooltip();">
+					<Image src="file://{images}/icons/ui/ct_silhouette.svg"/>
+					</Button>
+					<Button id="spec-button4" class="IconButton sb-spectator-control-button" onactivate="$.DispatchEvent('Scoreboard_ToggleSetCasterControlsUI');" 
+					onmouseover="UiToolkitAPI.ShowTextTooltip( 'spec-button4', '#CSGO_Scoreboard_CastButton_UI_Tooltip' );"
+								onmouseout="UiToolkitAPI.HideTextTooltip();">
+					<Image src="file://{images}/icons/ui/menu.svg"/>
+					</Button>
+				</Panel>
+				<Button id="id-sb-footer-server-website" class="PopupButton hidden" onactivate="MatchStatsAPI.GetServerWebsiteURL( true );" >
+					<Label html="true" text="#CSGO_Watch_ServerWebsite" />
+					<Image src="file://{images}/icons/ui/link.svg"/>
+				</Button>
+				<Label id="id-sb-mouse-instructions" />
 			</Panel>
 		</snippet>
 
-		                                        
-		<snippet name="snippet_scoreboard-classic__timeline__segment--2">
-			<Panel class="sb-timeline__segment">
-				
+		
 
-				                                                                                          
+		                                          
+		<snippet name="snippet_scoreboard-classic--with-timeline--half-times">
+			<Panel class="sb-main">
 
-				<Panel id="id-sb-timeline__segment__score" class="sb-timeline__segment__score">
+				<Frame snippet="snippet_sb-meta"/>
 
-					<Panel id="id-sb-timeline__segment__score__ct" class="center sb-color--CT">
-						<Label  class="sb-timeline__segment__score__label" text="{d:sb_team_score_2--CT}" />
-					</Panel>
+				<Frame snippet="snippet_scoreboard__classic-teams--CT" />
 
-					<Label text="#gamephase_2_short" class="sb-timeline__segment__phase-label"/>
+				<Frame snippet="snippet_scoreboard__classic-timeline--half-time-scores" />
 
-					<Panel id="id-sb-timeline__segment__score__t" class="center sb-color--TERRORIST">
-						<Label  class="sb-timeline__segment__score__label" text="{d:sb_team_score_2--TERRORIST}" />
-					</Panel>
-				</Panel>
+				<Frame snippet="snippet_scoreboard__classic-teams--TERRORIST" />
+
+				<Frame snippet="snippet_scoreboard__classic-teams--Spectator" />
+
+				<Frame snippet="snippet_sb-footer"/>
+
 			</Panel>
 		</snippet>
 
-		                                         
-		<snippet name="snippet_scoreboard-classic__timeline__segment--3">
-			<Panel class="sb-timeline__segment">
-				
+		                                          
+		<snippet name="snippet_scoreboard-classic--with-timeline--no-half-times">
+			<Panel class="sb-main">
 
-				                                                                                          
-				
-				<Panel id="id-sb-timeline__segment__score" class="sb-timeline__segment__score">
+				<Frame snippet="snippet_sb-meta"/>
 
-					<Panel id="id-sb-timeline__segment__score__ct" class="center sb-color--CT">
-						<Label class="sb-timeline__segment__score__label" text="{d:sb_team_score_3--CT}"/>
+				<Frame snippet="snippet_scoreboard__classic-teams--CT" />
+
+				<Frame snippet="snippet_scoreboard__classic-timeline--no-half-time-scores" />
+
+				<Frame snippet="snippet_scoreboard__classic-teams--TERRORIST" />
+
+				<Frame snippet="snippet_scoreboard__classic-teams--Spectator" />
+
+				<Frame snippet="snippet_sb-footer"/>
+
+			</Panel>
+		</snippet>
+
+		                                     
+		<snippet name="snippet_scoreboard-classic--no-timeline">
+			<Panel class="sb-main">
+
+				<Frame snippet="snippet_sb-meta"/>
+
+				<Frame snippet="snippet_scoreboard__classic-teams--CT" />
+
+				<Frame snippet="snippet_scoreboard__classic-spacer" />
+
+				<Frame snippet="snippet_scoreboard__classic-teams--TERRORIST" />
+
+				<Frame snippet="snippet_scoreboard__classic-teams--Spectator" />
+
+				<Frame snippet="snippet_sb-footer"/>
+
+			</Panel>
+		</snippet>
+
+		<snippet name="snippet_scoreboard-classic__half-time-scores">
+			<Panel class="sb-timeline__half-time-scores">
+
+		                   
+				<Panel id="id-sb-timeline__score_1h" class="sb-timeline__score">
+
+					<Panel id="id-sb-timeline__score__ct" class="center sb-color--CT">
+						<Label  class="sb-timeline__score__label" text="{d:sb_team_score_2--CT}" />
 					</Panel>
 
-					<Label text="#gamephase_3_short" class="sb-timeline__segment__phase-label"/>
+					<Label text="#gamephase_2_short" class="sb-timeline__phase-label"/>
 
-					<Panel id="id-sb-timeline__segment__score__t" class="center sb-color--TERRORIST">						
-						<Label class="sb-timeline__segment__score__label" text="{d:sb_team_score_3--TERRORIST}"/>
+					<Panel id="id-sb-timeline__score__t" class="center sb-color--TERRORIST">
+						<Label  class="sb-timeline__score__label" text="{d:sb_team_score_2--TERRORIST}" />
+					</Panel>
+				</Panel>
+
+		                    
+				<Panel id="id-sb-timeline__score_2h" class="sb-timeline__score">
+
+					<Panel id="id-sb-timeline__score__ct" class="center sb-color--CT">
+						<Label class="sb-timeline__score__label" text="{d:sb_team_score_3--CT}"/>
+					</Panel>
+
+					<Label text="#gamephase_3_short" class="sb-timeline__phase-label"/>
+
+					<Panel id="id-sb-timeline__score__t" class="center sb-color--TERRORIST">						
+						<Label class="sb-timeline__score__label" text="{d:sb_team_score_3--TERRORIST}"/>
 					</Panel>
 
 				</Panel>
+
+		                 
+				<Panel id="id-sb-timeline__score_ot" class="sb-timeline__score fade hidden">
+
+					<Panel id="id-sb-timeline__score__ct" class="center sb-color--CT">
+						<Label class="sb-timeline__score__label" text="{d:sb_team_score_ot--CT}"/>
+					</Panel>
+
+					<Label text="#gamephase_ot_short" class="sb-timeline__phase-label"/>
+
+					<Panel id="id-sb-timeline__score__t" class="center sb-color--TERRORIST">						
+						<Label class="sb-timeline__score__label" text="{d:sb_team_score_ot--TERRORIST}"/>
+					</Panel>
+
+				</Panel>
+
+			</Panel>
+		</snippet>
+
+		<snippet name="snippet_scoreboard-classic__no-half-time-scores">
+			<Panel>
+				<Panel class="sb-timeline__bumper" />
+			</Panel>
+		</snippet>
+
+
+		<snippet name="snippet_scoreboard-classic__timeline__segment">
+			<Panel class="sb-timeline__segment">
+				<Panel id="id-sb-timeline__round-container" class="sb-timeline__round-container"/>
+				                                                                                          
 			</Panel>
 		</snippet>
 
@@ -267,7 +401,7 @@
 		                                      
 		<snippet name="snippet_scoreboard-classic__timeline__segment__round__data">
 			<Panel>
-				<Image id="result" class="sb-timeline__segment__round__result" scaling="stretch-to-fit-y-preserve-aspect"/>				
+				<Image id="result" class="sb-timeline__segment__round__result" scaling="stretch-to-fit-y-preserve-aspect"/>			
 				<Panel style="flow-children:none;">
 					<Panel id="casualties" data-casualty-mouse-over-toggle-transparency="true" class="sb-timeline__segment__round__casualties transparent">
 						<Image id="casualty-1" class="hidden" src="file://{images}/icons/ui/dash-bold.svg"/>
@@ -275,100 +409,238 @@
 						<Image id="casualty-3" class="hidden" src="file://{images}/icons/ui/dash-bold.svg"/>
 						<Image id="casualty-4" class="hidden" src="file://{images}/icons/ui/dash-bold.svg"/>
 						<Image id="casualty-5" class="hidden" src="file://{images}/icons/ui/dash-bold.svg"/>
-					</Panel>	
-					<Panel id="casualties--number" data-casualty-mouse-over-toggle-transparency="true" class="sb-timeline__segment__round__casualties--number transparent">
-						<Label id="casualties--number__label" class="hidden"/>
 					</Panel>
+					
 				</Panel>
 			</Panel>
 		</snippet>
 
+		<snippet name="stat--STATUS">
+			<Panel data-stat="status" class="spectator-hidden">
+				<Image id="image" class="sb-team-tint" scaling='stretch-to-fit-y-preserve-aspect' />
+			</Panel>
+		</snippet>
 
+		<snippet name="stat--PING">
+			<Panel data-stat="ping">
+				<Label id="label" />
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--RANK">
+			<Panel data-stat="rank" class="spectator-hidden">
+				<Image id="image" class="" scaling='stretch-to-fit-y-preserve-aspect' />
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--AVATAR">
+			<Panel data-stat="avatar">
+				<CSGOAvatarImage id="image" scaling='stretch-to-fit-y-preserve-aspect' >
+					<Image id='player-color' class="sb-row__cell--avatar__playercolor hidden"/>
+				</CSGOAvatarImage>
+				<Image id="mute-image" 
+					class="sb-row__cell--avatar__muted hidden" 
+					src="file://{images}/icons/ui/muted.svg" 
+					scaling='stretch-to-fit-y-preserve-aspect' />
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--NAME-W-COMMENDS">
+			<Panel	data-stat="name" >
+				<Panel id="id-sb-name__nameicons" class="spectator-hidden">
+					<Image id="id-sb-skillgroup-image" 
+						class="hidden" 
+						src="" 
+						textureheight='22'
+						texturewidth='55'
+						/>
+					<Image id="id-sb-name__commendations__leader" 
+						class="hidden sb-team-tint" 
+						src="file://{images}/icons/ui/leader.svg" />
+					<Image id="id-sb-name__commendations__teacher" 
+						class="hidden sb-team-tint" 
+						src="file://{images}/icons/ui/teacher.svg" />
+					<Image id="id-sb-name__commendations__friendly" 
+						class="hidden sb-team-tint" 
+						src="file://{images}/icons/ui/smile.svg" />
+					<Image id="id-sb-name__musickit" 
+						class="hidden sb-team-tint" 
+						src="file://{images}/icons/ui/music_kit.svg" />
+				</Panel>
+				<Label id='name' html='true' class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--NAME">
+			<Panel	data-stat="name" >
+				<Panel id="id-sb-name__nameicons" class="spectator-hidden">
+					<Image id="id-sb-skillgroup-image" 
+						class="hidden" 
+						src="" 
+						textureheight='22'
+						texturewidth='55'
+						/>
+					<Image id="id-sb-name__musickit" 
+						class="hidden sb-team-tint" 
+						src="file://{images}/icons/ui/music_kit.svg" />
+				</Panel>
+				<Label id='name' html='true' class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--FLAIR">
+			<Panel data-stat="flair" class="spectator-hidden">
+				<Image id="image" class="" scaling='stretch-to-fit-y-preserve-aspect' />
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--MONEY">
+			<Panel	data-stat="money" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--KILLS">
+			<Panel	data-stat="kills" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--ASSISTS">
+			<Panel	data-stat="assists" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--DEATHS">
+			<Panel	data-stat="deaths" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--MVPS">
+			<Panel	data-stat="mvps" class="spectator-hidden">
+				<Image id="star-image" 
+					class="sb-row__cell--mvps__star sb-team-tint hidden"
+					src="file://{images}/icons/ui/star.svg" 
+					scaling='stretch-to-fit-y-preserve-aspect' />
+				<Label id="star-count" class="sb-row__cell--mvps__count sb-team-tint hidden"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--HSP">
+			<Panel	data-stat="hsp" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--KDR">
+			<Panel	data-stat="kdr" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--ADR">
+			<Panel	data-stat="adr" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--UTILITYDAMAGE">
+			<Panel	data-stat="utilitydamage" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--ENEMIESFLASHED">
+			<Panel	data-stat="enemiesflashed" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--SCORE">
+			<Panel	data-stat="score" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
+
+		<snippet name="stat--GGLEADER">
+			<Panel	data-stat="ggleader" class="hidden spectator-hidden"/>
+		</snippet>
+
+		<snippet name="stat--GGLEVEL">
+			<Panel	data-stat="gglevel" class="spectator-hidden">
+				<Label id="label" class="sb-team-tint"/>
+			</Panel>
+		</snippet>
 
 		                          
 		<snippet name="snippet_scoreboard-classic__row--comp">
 			<Panel class="sb-row" cachepaintcmdlist="true" >
-				<Panel				data-stat="status" />
-				<Panel				data-stat="ping"/>
-				<Panel				data-stat="rank" />
-				<Panel				data-stat="avatar"/>
-				<Panel				data-stat="name" >	
-					<Panel id="id-sb-name__nameicons" class="sb-team-tint">
-						<Image id="id-sb-skillgroup-image" 
-							class="hidden" 
-							src="" 
-							textureheight='22'
-							texturewidth='55'
-							/>
-						<Image id="id-sb-name__commendations__leader" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/leader.svg" />
-						<Image id="id-sb-name__commendations__teacher" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/teacher.svg" />
-						<Image id="id-sb-name__commendations__friendly" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/smile.svg" />
-						<Image id="id-sb-name__musickit" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/music_kit.svg" />
-					</Panel>
-				</Panel>
-				<Panel				data-stat="flair" />					
-				<Panel				data-stat="money" 			data-set='0'/>
-				<Panel				data-stat="kills" 			data-set='0'/>
-				<Panel				data-stat="assists" 		data-set='0'/>
-				<Panel				data-stat="deaths" 			data-set='0'/>
-				<Panel				data-stat="mvps" 			data-set='0'/>
-				<Panel				data-stat="hsp" 			data-set='1'/>
-				<Panel				data-stat="kdr" 			data-set='1'/>
-				<Panel				data-stat="adr" 			data-set='1'/>			
-				<Panel				data-stat="utilitydamage" 	data-set='1'/>
-				<Panel				data-stat="enemiesflashed" 	data-set='1'/>
-				<Panel				data-stat="score" />
+				<Frame	snippet="stat--STATUS" />
+				<Frame	snippet="stat--PING" />
+				<Frame	snippet="stat--RANK" />
+				<Frame	snippet="stat--AVATAR"/>
+				<Frame	snippet="stat--NAME-W-COMMENDS"/>
+				<Frame	snippet="stat--FLAIR" />	
+				<Frame	snippet="stat--MONEY" data-set='0'/>	
+				<Frame	snippet="stat--KILLS" data-set='0' />
+				<Frame	snippet="stat--ASSISTS" data-set='0' />
+				<Frame	snippet="stat--DEATHS" data-set='0' />
+				<Frame	snippet="stat--MVPS" data-set='0' />
+				<Frame	snippet="stat--HSP" data-set='1'/>
+				<Frame	snippet="stat--KDR" data-set='1'/>				
+				<Frame	snippet="stat--ADR" data-set='1'/>
+				<Frame	snippet="stat--UTILITYDAMAGE" data-set='1'/>
+				<Frame	snippet="stat--ENEMIESFLASHED" data-set='1'/>
+				<Frame	snippet="stat--SCORE" />
+			</Panel>
+		</snippet>
 
 
-
-
+				                             
+		<snippet name="snippet_scoreboard-classic__row--wingman">
+			<Panel class="sb-row" cachepaintcmdlist="true" >
+				<Frame	snippet="stat--STATUS" />
+				<Frame	snippet="stat--PING" />
+				<Frame	snippet="stat--RANK" />
+				<Frame	snippet="stat--AVATAR"/>
+				<Frame	snippet="stat--NAME"/>
+				<Frame	snippet="stat--FLAIR" />	
+				<Frame	snippet="stat--MONEY" data-set='0'/>	
+				<Frame	snippet="stat--KILLS" data-set='0' />
+				<Frame	snippet="stat--ASSISTS" data-set='0' />
+				<Frame	snippet="stat--DEATHS" data-set='0' />
+				<Frame	snippet="stat--MVPS" data-set='0' />
+				<Frame	snippet="stat--HSP" data-set='1'/>
+				<Frame	snippet="stat--KDR" data-set='1'/>				
+				<Frame	snippet="stat--ADR" data-set='1'/>
+				<Frame	snippet="stat--UTILITYDAMAGE" data-set='1'/>
+				<Frame	snippet="stat--ENEMIESFLASHED" data-set='1'/>
+				<Frame	snippet="stat--SCORE" />
 			</Panel>
 		</snippet>
 
 		                            
 		<snippet name="snippet_scoreboard-classic__row--casual">
 			<Panel class="sb-row" cachepaintcmdlist="true">
-				<Panel				data-stat="status" />	
-				<Panel				data-stat="ping" />
-				<Panel				data-stat="rank" />				
-				<Panel				data-stat="avatar" />
-				<Panel				data-stat="name" >	
-					<Panel id="id-sb-name__nameicons" class="sb-team-tint">
-						<Image id="id-sb-name__commendations__leader" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/leader.svg" />
-						<Image id="id-sb-name__commendations__teacher" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/teacher.svg" />
-						<Image id="id-sb-name__commendations__friendly" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/smile.svg" />
-						<Image id="id-sb-name__musickit" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/music_kit.svg" />
-					</Panel>
-				</Panel>
-				<Panel				data-stat="flair" />
-				<Panel				data-stat="money" 			data-set='0'/>
-				<Panel				data-stat="kills" 			data-set='0'/>
-				<Panel				data-stat="assists" 		data-set='0'/>
-				<Panel				data-stat="deaths" 			data-set='0'/>
-				<Panel				data-stat="mvps" 			data-set='0'/>
-				<Panel				data-stat="hsp" 			data-set='1'/>
-				<Panel				data-stat="kdr" 			data-set='1'/>
-				<Panel				data-stat="adr" 			data-set='1'/>			
-				<Panel				data-stat="utilitydamage" 	data-set='1'/>
-				<Panel				data-stat="enemiesflashed" 	data-set='1'/>
-				<Panel				data-stat="score" />
-				
+				<Frame	snippet="stat--STATUS" />
+				<Frame	snippet="stat--PING" />
+				<Frame	snippet="stat--RANK" />
+				<Frame	snippet="stat--AVATAR"/>
+				<Frame	snippet="stat--NAME"/>
+				<Frame	snippet="stat--FLAIR" />	
+				<Frame	snippet="stat--MONEY" data-set='0'/>	
+				<Frame	snippet="stat--KILLS" data-set='0' />
+				<Frame	snippet="stat--ASSISTS" data-set='0' />
+				<Frame	snippet="stat--DEATHS" data-set='0' />
+				<Frame	snippet="stat--MVPS" data-set='0' />
+				<Frame	snippet="stat--HSP" data-set='1'/>
+				<Frame	snippet="stat--KDR" data-set='1'/>				
+				<Frame	snippet="stat--ADR" data-set='1'/>
+				<Frame	snippet="stat--UTILITYDAMAGE" data-set='1'/>
+				<Frame	snippet="stat--ENEMIESFLASHED" data-set='1'/>
+				<Frame	snippet="stat--SCORE" />
 			</Panel>
 		</snippet>
 
@@ -376,33 +648,20 @@
 		                                
 		<snippet name="snippet_scoreboard__row--demolition">
 			<Panel class="sb-row" cachepaintcmdlist="true">
-				<Panel				data-stat="status" />	
-				<Panel				data-stat="ping" />
-				<Panel				data-stat="rank" />				
-				<Panel				data-stat="avatar" />
-				<Panel				data-stat="name" >	
-					<Panel id="id-sb-name__nameicons" class="sb-team-tint">
-						<Image id="id-sb-name__commendations__leader" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/leader.svg" />
-						<Image id="id-sb-name__commendations__teacher" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/teacher.svg" />
-						<Image id="id-sb-name__commendations__friendly" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/smile.svg" />
-						<Image id="id-sb-name__musickit" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/music_kit.svg" />
-					</Panel>
-				</Panel>
-				<Panel				data-stat="flair" />
-				<Panel				data-stat="kills" />
-				<Panel				data-stat="assists" />
-				<Panel				data-stat="deaths" />
-				<Panel				data-stat="mvps" />
-				<Panel				data-stat="score" />
-				
+				<Frame	snippet="stat--STATUS" />
+				<Frame	snippet="stat--PING" />
+				<Frame	snippet="stat--RANK" />
+				<Frame	snippet="stat--AVATAR"/>
+				<Frame	snippet="stat--NAME"/>
+				<Frame	snippet="stat--FLAIR" />	
+				<Frame	snippet="stat--KILLS" />
+				<Frame	snippet="stat--ASSISTS" />
+				<Frame	snippet="stat--DEATHS" />
+				<Frame	snippet="stat--HSP"/>
+				<Frame	snippet="stat--KDR"/>				
+				<Frame	snippet="stat--ADR"/>				
+				<Frame	snippet="stat--MVPS" />
+				<Frame	snippet="stat--SCORE" />
 			</Panel>
 		</snippet>
 
@@ -410,76 +669,49 @@
 		                                
 		<snippet name="snippet_scoreboard__row--deathmatch">
 			<Panel class="sb-row" cachepaintcmdlist="true">
-				<Panel				data-stat="ping" />
-				<Panel				data-stat="rank" />
-				<Panel				data-stat="avatar" />
-				<Panel				data-stat="name" >	
-					<Panel id="id-sb-name__nameicons" class="sb-team-tint">
-						<Image id="id-sb-name__musickit" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/music_kit.svg" />
-					</Panel>
-				</Panel>	
-				<Panel				data-stat="flair" />	
-				<Panel				data-stat="kills" />
-				<Panel				data-stat="assists" />
-				<Panel				data-stat="deaths" />
-				<Panel				data-stat="score" />
+				<Frame	snippet="stat--STATUS" />
+				<Frame	snippet="stat--PING" />
+				<Frame	snippet="stat--RANK" />
+				<Frame	snippet="stat--AVATAR"/>
+				<Frame	snippet="stat--NAME"/>
+				<Frame	snippet="stat--FLAIR" />	
+				<Frame	snippet="stat--KILLS" />
+				<Frame	snippet="stat--ASSISTS"/>
+				<Frame	snippet="stat--DEATHS" />
+				<Frame	snippet="stat--SCORE" />
 			</Panel>
 		</snippet>
 
 				                                    
 		<snippet name="snippet_scoreboard__row--training">
 			<Panel class="sb-row" cachepaintcmdlist="true">
-				<Panel				data-stat="ping" />
-				<Panel				data-stat="rank" />
-				<Panel				data-stat="avatar" />
-				<Panel				data-stat="name" />		
-				<Panel				data-stat="flair" />	
+				<Frame	snippet="stat--PING" />
+				<Frame	snippet="stat--RANK" />
+				<Frame	snippet="stat--AVATAR"/>
+				<Frame	snippet="stat--NAME"/>
+				<Frame	snippet="stat--FLAIR" />	
 			</Panel>
 		</snippet>
 
 				                               
 		<snippet name="snippet_scoreboard__row--armsrace">
 			<Panel class="sb-row" cachepaintcmdlist="true">
-				<Panel				data-stat="ping" />
-				<Panel				data-stat="rank" />
-				<Panel				data-stat="avatar" />
-				<Panel				data-stat="name" >	
-					<Panel id="id-sb-name__nameicons" class="sb-team-tint">
-						<Image id="id-sb-name__musickit" 
-							class="hidden sb-team-tint" 
-							src="file://{images}/icons/ui/music_kit.svg" />
-					</Panel>
-				</Panel>	
-				<Panel				data-stat="flair" />	
-				<Panel				data-stat="kills" />
-				<Panel				data-stat="assists" />
-				<Panel				data-stat="deaths" />
-				<Panel				data-stat="score" />
-				<Panel				data-stat="ggleader" />
-				<Panel				data-stat="gglevel" />
+				<Frame	snippet="stat--STATUS" />
+				<Frame	snippet="stat--PING" />
+				<Frame	snippet="stat--RANK" />
+				<Frame	snippet="stat--AVATAR"/>
+				<Frame	snippet="stat--NAME"/>
+				<Frame	snippet="stat--FLAIR" />		
+				<Frame	snippet="stat--KILLS" />
+				<Frame	snippet="stat--DEATHS" />
+				<Frame	snippet="stat--SCORE" />
+				<Frame	snippet="stat--GGLEADER" />
+				<Frame	snippet="stat--GGLEVEL" />
 			</Panel>
 		</snippet>
 
-		            
-		                              
-		                                                  
-			                                                        
-				                                   
-					      				                   
-					      				                     
-					      				                   			
-					      				                    
-					      				                       
-				        
-			        
-		          
-		            
-
-
 	</snippets>
 
-	<CSGOScoreboard useglobalcontext="false"/>
+	<CSGOScoreboard useglobalcontext="true"/>
 
 </root>

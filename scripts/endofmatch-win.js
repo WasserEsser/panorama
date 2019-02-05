@@ -1,17 +1,9 @@
 'use strict';
 
-var dictRoundResultImage = {
-	"win_elimination"	: "file://{images}/icons/ui/elimination.svg",	
-	"win_rescue"		: "file://{images}/icons/ui/rescue.svg", 			
-	"win_defuse"		: "file://{images}/icons/equipment/defuser.svg",
-	"win_time"			: "file://{images}/icons/ui/timer.svg",		
-	"win_bomb"			: "file://{images}/icons/ui/bomb.svg",
-};
-
 var EOM_Win = ( function () {
 
 
-	var _m_pauseBeforeEnd = 7.0;
+	var _m_pauseBeforeEnd = 4.0;
 	var _m_cP = $.GetContextPanel();
 
                                                      
@@ -47,6 +39,8 @@ var EOM_Win = ( function () {
 			!_m_oScoreData[ "teamdata" ][ "CT" ] ||
 			!_m_oScoreData[ "teamdata" ][ "TERRORIST" ] )
 			return false;
+
+		$.DispatchEvent( 'PlaySoundEffect', 'UIPanorama.gameover_show', 'MOUSE' );
 
 		         
 		_m_cP.FindChildTraverse( 'WinTeam' ).RemoveClass( 'hidden' );
@@ -124,15 +118,20 @@ var EOM_Win = ( function () {
 			elAvatar.BLoadLayoutSnippet( 'AvatarPlayerCard' );
 
 			elPlayer.FindChildTraverse( 'WinPlacement' ).text = $.Localize( "#scoreboard_arsenal_" + i );
-			elPlayer.FindChildTraverse( 'WinPlayerName' ).text = GameStateAPI.GetPlayerName( _m_arrTopPlayerXuid[ i ] );
+			elPlayer.SetDialogVariable( 'winner_name', GameStateAPI.GetPlayerName( _m_arrTopPlayerXuid[ i ] ));
 
-			Avatar.Init( elAvatar, _m_arrTopPlayerXuid[ i ], 'playercard' );
+			var bIsBot = GameStateAPI.IsFakePlayer( _m_arrTopPlayerXuid[ i ] );
+			var xuidForAvatarLookup = bIsBot ? '0' : _m_arrTopPlayerXuid[ i ];
 
-			if ( GameStateAPI.IsFakePlayer( _m_arrTopPlayerXuid[ i ] ) )
+			Avatar.Init( elAvatar, xuidForAvatarLookup, 'playercard' );
+
+			if ( bIsBot )
 			{
 				var team = GameStateAPI.GetPlayerTeamName( _m_arrTopPlayerXuid[ i ] );
 				elAvatar.FindChildTraverse( 'JsAvatarImage' ).SetDefaultImage( 'file://{images}/icons/scoreboard/avatar-' + team + '.png' );
+				elAvatar.FindChildTraverse( 'JsAvatarImage' ).RemoveClass( 'hidden' );
 			}
+			
 
 			if ( i > 0 )
 			{
@@ -143,10 +142,6 @@ var EOM_Win = ( function () {
 
 	function _DisplayMe() 
 	{
-		if ( GameStateAPI.IsDemoOrHltv() )
-		{
-			return false;
-		}
 
    		                                                                        
 		  
@@ -214,7 +209,7 @@ var EOM_Win = ( function () {
 
 	                      
 	return	{
-
+        name: 'eom-win',
 		Start									: _Start,
 		GetFreeForAllTopThreePlayers_Response	: _GetFreeForAllTopThreePlayers_Response,
 		GetFreeForAllPlayerPosition_Response:    _GetFreeForAllPlayerPosition_Response,

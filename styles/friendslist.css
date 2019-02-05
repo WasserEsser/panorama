@@ -242,7 +242,6 @@
 	vertical-align: top;
 	horizontal-align: center;
 	margin-top: 128px;
-	flow-children: right;
 	opacity: 1;
 	visibility: visible;
 
@@ -256,7 +255,7 @@
 	height: 32px;
 	width: 32px;
 	vertical-align: top;
-	horizontal-align: center;
+	horizontal-align: left;
 	margin-left: 36px;
 	wash-color: baseText;
 }
@@ -264,10 +263,10 @@
 .friendslist-nodata-text
 {
 	vertical-align: top;
-	margin-left: 14px;
+	horizontal-align: left;
+	margin-left: 82px;
 	margin-right: 16px;
-	height: fit-children;
-	flow-Children: down;
+	flow-children: down;
 }
 
 .friendslist-nodata-text__title
@@ -452,7 +451,8 @@
 	height: 100%;
 	
 	wash-color: rgb(40, 161, 218);
-	
+	background-color: gradient( linear, 0% 0%, 100% 0%, from( #183342 ), to( #306988aa ) );
+
 	background-image: url( "file://{resources}/videos/search.webm" );
 	background-repeat: no-repeat;
 
@@ -463,12 +463,13 @@
 	                                                         
 	background-size: clip_then_cover;
 	background-position: 0% 50%;
+	background-img-opacity: 0.12;
 
 	                                                             
 	                       
 	                                 
 
-	transition-property: wash-color;
+	transition-property: wash-color, background-img-opacity;
 	transition-duration: .25s;
 	transition-timing-function: ease-in-out;
 }
@@ -476,8 +477,9 @@
 .party-list__bg--searching
 {
 	wash-color: rgb(9, 255, 152);
+	background-img-opacity: 1.0;
 
-	transition-property: wash-color;
+	transition-property: wash-color, background-img-opacity;
 	transition-duration: .25s;
 	transition-timing-function: ease-in-out;
 }
@@ -485,11 +487,13 @@
 .party-list__bg--warning
 {
 	wash-color: rgb(218, 201, 56);
+	background-img-opacity: 1.0;
 
-	transition-property: wash-color;
+	transition-property: wash-color, background-img-opacity;
 	transition-duration: .25s;
 	transition-timing-function: ease-in-out;
 }
+
 
 .party-members-list
 {
@@ -499,13 +503,7 @@
 }
 
 .party-list.hidden,
-.party-members-list.hidden,
-#MatchStatusContainer.hidden,
-#MatchStatusWait.hidden,
-#MatchStatusSearching.hidden,
-#MatchStatusWarning.hidden,
-#MatchStatusFailIcon.hidden,
-.party-status-time.hidden
+.party-members-list.hidden
 {
 	opacity: 0;
 	transform: scaleY(0);
@@ -516,16 +514,10 @@
 	transition-timing-function: ease-in-out;
 }
 
-.MainMenuRootPanel--PauseMenuMode .party-list
-{	                            
+.MainMenuRootPanel--PauseMenuMode .friendslist:not(.friendslist-party-searching) .party-list
+{	                                               
 	opacity: 0;
 	visibility: collapse;
-}
-
-.party-status-left
-{
-	width: 96px;
-	height: 64px;
 }
 
 .Spinner.additive
@@ -540,19 +532,6 @@
 	font-size: 24px;
 	text-align: center;
 	horizontal-align: center;
-	-s2-mix-blend-mode: SRGBadditive;
-}
-
-.party-status-header
-{
-	font-size: 18px;
-	font-weight: medium;
-	text-transform: none;
-	color:  rgb(175, 175, 175);
-	vertical-align: center;
-	min-width: 50px;
-	max-width: 256px;
-	font-family: Stratum2, 'Arial Unicode MS';
 	-s2-mix-blend-mode: SRGBadditive;
 }
 
@@ -575,13 +554,81 @@
 	color: rgb(175, 175, 175);
 }
 
+                                                                               
+                                                                               
+                                                                               
+.friendslist-incominginvites
+{
+	height: fit-children;
+	width: 100%;
+	flow-children: down;
+	border-top: 1px solid rgba(255, 255, 255, 0.281);
+
+	transition-property: position;
+	transition-duration: .5s;
+	transition-timing-function: ease-in-out;
+}
+.friendslist-incominginvites.hidden
+{
+	opacity: 0;
+	visibility: collapse;
+}
+
+.friendslist-incominginvites-container
+{
+	height: fit-children;
+	width: 100%;
+	flow-children: down;
+	background-color: rgba(10, 104, 33, 0.185);
+	background-color: gradient( linear, 0% 0%, 100% 0%, from( blueColor ), to( #2d692f00  ) );
+
+	animation-name: InvitePulse;
+	animation-duration: 2s;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+}
+
+@keyframes 'InvitePulse'
+{
+	0%
+	{
+		background-color: gradient( linear, 0% 0%, 100% 0%, from( blueColor ), to( #2d692f00  ) );
+	}
+	30%
+	{
+		background-color: gradient( linear, 0% 0%, 100% 0%, from( #2d692f00 ), to( #2d692f00  ) );
+	}
+	60%
+	{
+		background-color: gradient( linear, 0% 0%, 100% 0%, from( blueColor ), to( #2d692f00  ) );
+	}
+	100%
+	{
+		background-color: gradient( linear, 0% 0%, 100% 0%, from( blueColor ), to( #2d692f00  ) );
+	}
+}
+
+.friendslist-incominginvites-container .friendlobby
+{
+	border: 0px;
+}
 
 
-.MainMenuRootPanel--PauseMenuMode #JsLocalPlayercard.hidden
+.MainMenuRootPanel--PauseMenuMode .friendslist:not(.friendslist-party-searching) #JsLocalPlayercard.hidden
 {	                                                                  
 	opacity: 1;
 	visibility: visible;
 	height: fit-children;
 	transform: scaleY( 1 );
+}
+
+                                                                                     
+.steam-license-restricted .friendslist-incominginvites,
+.GameClientConnectingToGC #JsFriendsTab-lobbies,
+.steam-license-restricted #JsFriendsTab-lobbies,
+.GameClientConnectingToGC #JsFriendsTab-recents,
+.steam-license-restricted #JsFriendsTab-recents
+{
+	visibility: collapse;
 }
 

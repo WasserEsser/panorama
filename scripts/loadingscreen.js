@@ -8,10 +8,10 @@ var LoadingScreen = ( function() {
 
 		var elOverview = $('#LoadingScreenOverview');
 		elOverview.RemoveAndDeleteChildren();
-		elOverview.SetImage("file://{images}/overheadmaps/default.png");
+		                                                                  
 
 		$('#LoadingScreenMapName').text = "";
-		$('#LoadingScreenGameMode').text = $.Localize("#SFUI_LOADING");
+		$( '#LoadingScreenGameMode' ).SetLocalizationString( "#SFUI_LOADING" );
 		$('#LoadingScreenModeDesc').text = "";
 		$('#LoadingScreenGameModeIcon').SetImage("");
 
@@ -42,18 +42,25 @@ var LoadingScreen = ( function() {
 			$('#LoadingScreenIcon').SetImage('file://{images}/map_icons/map_icon_' + mapName + '.svg');
 			
 		                  
+			var mapOverviewLoaded = function () {
+			    $('#LoadingScreenOverview').visible = true;
+			}
+			$.RegisterEventHandler('ImageLoaded', $('#LoadingScreenOverview'), mapOverviewLoaded.bind(undefined));
+			var mapOverviewFailed = function () {
+			    $('#LoadingScreenOverview').visible = false;
+			}
+			$.RegisterEventHandler('ImageFailedLoad', $('#LoadingScreenOverview'), mapOverviewFailed.bind(undefined));
 
 			var elOverview = $( '#LoadingScreenOverview' );
-			elOverview.SetImage( 'file://{images_overviews}/'+ mapName + '_radar.dds' );
-			elOverview.AddClass('show');
-			                                                                                                                 
+			elOverview.SetImage('file://{images_overviews}/' + mapName + '_radar.dds');
+
 			$( '#LoadingScreenIcon' ).AddClass('show');
 			elBackgroundImage.AddClass('show');
 
-			if (prettyMapName != "")
-			    $('#LoadingScreenMapName').text = prettyMapName;
-            else
-			    $('#LoadingScreenMapName').text = $.Localize( GameStateAPI.GetMapDisplayNameToken(mapName) );	
+			if ( prettyMapName != "" )
+			    $( '#LoadingScreenMapName' ).SetProceduralTextThatIPromiseIsLocalizedAndEscaped( prettyMapName, false );
+			else
+			    $( '#LoadingScreenMapName' ).SetLocalizationString( GameStateAPI.GetMapDisplayNameToken( mapName ) );
 		}
 
 		var elInfoBlock = $('#LoadingScreenInfo' );
@@ -61,17 +68,17 @@ var LoadingScreen = ( function() {
 		if( gameMode )
 		{
 		    elInfoBlock.RemoveClass('hidden');
-		    if (prettyGameModeName != "")
-		        $('#LoadingScreenGameMode').text = prettyGameModeName;
+		    if ( prettyGameModeName != "" )
+		        $( '#LoadingScreenGameMode' ).SetProceduralTextThatIPromiseIsLocalizedAndEscaped( prettyGameModeName, false );
 		    else
-		        $('#LoadingScreenGameMode').text = $.Localize('#sfui_gamemode_' + gameMode);
+		        $( '#LoadingScreenGameMode' ).SetLocalizationString( '#sfui_gamemode_' + gameMode );
 			
 			$('#LoadingScreenGameModeIcon').SetImage('file://{images}/icons/ui/' + gameMode + '.svg');
 
-			if (descriptionText != "")
-			    $('#LoadingScreenModeDesc').text = descriptionText;
+			if ( descriptionText != "" )
+			    $( '#LoadingScreenModeDesc' ).SetProceduralTextThatIPromiseIsLocalizedAndEscaped( descriptionText, false );
 			else
-			    $('#LoadingScreenModeDesc').text = "";                                                
+			    $( '#LoadingScreenModeDesc' ).SetLocalizationString( "" );                                                 
 		}
 		else
 			elInfoBlock.AddClass( 'hidden' );
@@ -96,9 +103,9 @@ var LoadingScreen = ( function() {
 	                                                                                
 	function CreateMapIcon( overviewKV, elParent, name )
 	{
-		var X = overviewKV[ name+'_x' ];
-		var Y = overviewKV[ name+'_y' ];
-		if ( X && Y )
+	    var X = overviewKV[ name+'_x' ];
+	    var Y = overviewKV[ name+'_y' ];
+	    if (X != null && Y != null && parseFloat(X) && parseFloat(Y))
 		{
 			var elIcon = $.CreatePanel( "Image", elParent, name );
 			elIcon.style.position = Math.floor( X * 100 ).toString() + "% " + Math.floor( Y * 100 ).toString() + "% 0px;";
@@ -164,10 +171,8 @@ var LoadingScreen = ( function() {
 	$.RegisterForUnhandledEvent( 'PopulateLoadingScreen', LoadingScreen.UpdateLoadingScreenInfo );
 	$.RegisterForUnhandledEvent( 'QueueConnectToServer', LoadingScreen.Init );
 	$.RegisterForUnhandledEvent( 'OnMapConfigLoaded', LoadingScreen.OnMapConfigLoaded );
-	$.RegisterForUnhandledEvent('UnloadLoadingScreenAndReinit', LoadingScreen.Init);
+	$.RegisterForUnhandledEvent( 'UnloadLoadingScreenAndReinit', LoadingScreen.Init );
 		
-
 	              
 	                                                                                            
-
 })();

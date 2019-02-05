@@ -176,6 +176,7 @@ var ItemContextEntires = ( function (){
 				}
 				else
 				{
+					$.DispatchEvent( 'PlaySoundEffect', 'equip_musickit', 'MOUSE' );
 					EquipItem( id, [ 'noteam' ] );
 				}
 			}
@@ -183,10 +184,13 @@ var ItemContextEntires = ( function (){
 		{
 			name: 'open_watch_panel_pickem',
 			AvailableForItem: function ( id ) {
+				if ( GameStateAPI.GetMapBSPName() )	                                           
+					return false;
 				var tournament = 'tournament:' + NewsAPI.GetActiveTournamentEventID();
 				return PredictionsAPI.GetMyPredictionItemIDEventSectionIndex( tournament, id ) != undefined;
 			},
 			OnSelected:  function ( id ) {
+				$.DispatchEvent( 'OpenWatchMenu' );
 				$.DispatchEvent( 'ContextMenuEvent', '' );
 			}
 		},
@@ -426,6 +430,44 @@ var ItemContextEntires = ( function (){
 			}
 		},
 		{
+			name: 'usegift',
+			AvailableForItem: function ( id ) {
+				return ItemInfo.GetToolType( id ) === 'gift';
+			},
+			OnSelected: function ( id ) {
+				$.DispatchEvent( 'ContextMenuEvent', '' );
+
+				var CapDisabledMessage = InventoryAPI.GetItemCapabilityDisabledMessageByIndex( id, 0 );
+
+				if ( CapDisabledMessage === "" )
+				{
+					                                          
+					UiToolkitAPI.ShowCustomLayoutPopupParameters(
+						'',
+						'file://{resources}/layout/popups/popup_inventory_inspect.xml',
+						'itemid=' + id +                                                                                          
+						'&' + 'asyncworkitemwarning=no' +
+						'&' + 'asyncworktype=usegift'
+					);
+				}
+				else
+				{
+					var capDisabledMessage  = InventoryAPI.GetItemCapabilityDisabledMessageByIndex( id, 0 );
+					UiToolkitAPI.ShowGenericPopupOk(
+						$.Localize( '#inv_context_usegift' ),
+						$.Localize( capDisabledMessage ),
+						'',
+						function()
+						{
+						},
+						function()
+						{
+						}
+					);
+				}
+			}
+		},
+		{
 			name: 'sell',
 			style: function (id){
 				return 'TopSeparator';
@@ -458,6 +500,7 @@ var ItemContextEntires = ( function (){
 				);
 			}
 		}
+		
 	];
 
 	                                                                                                    

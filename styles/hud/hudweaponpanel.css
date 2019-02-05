@@ -22,6 +22,13 @@ CSGOHudWeaponPanel Label
     font-family: Stratum2, 'Arial Unicode MS';
 }
 
+                                                                                                 
+                                                                         
+.Language_vietnamese CSGOHudWeaponPanel Label 
+{
+	font-family: ForceStratum2, 'Arial Unicode MS';
+}
+
 #WeaponPanelBottom
 {
 	height: 54px;
@@ -115,7 +122,8 @@ CSGOHudWeaponPanel Label
 	opacity: 1.0;
 	flow-children: right;
 	horizontal-align: right;
-    background-color: gradient( linear, 100% 0%, 0% 0%, from( #00000000 ), color-stop( 0.1, #00000055 ) , color-stop(0.5, #000000DD), color-stop( 0.95, #00000055 ), to( #00000000 ) );
+                                                                                                                                                                                         
+    background-color: gradient( linear, 100% 0%, 0% 0%, from( #00000000 ), color-stop( 0.1, #000000BB ) , color-stop(0.4, #000000CC), color-stop( 0.7, #000000CC ), to( #00000000 ) );
 }
 
 #WeaponPanelBottomBGGradient {
@@ -330,12 +338,23 @@ CSGOHudWeaponPanel Label
 	opacity: 0.9;
 }
 
+.WeaponPanel--Simple .Ammo__Burst
+{
+    visibility: collapse;
+}
+
                                             
 
 .AmmoAnim
 {
 	width: 95px;
 	height: 100%;
+}
+
+.WeaponPanel--Simple .AmmoAnim
+{
+    opacity: 0;
+    margin-right: -60px;
 }
 
 .AmmoAnim__Bullets
@@ -505,20 +524,6 @@ CSGOHudWeaponPanel Label
 }
 
 .AmmoAnim_GrenadeIcon--Hidden
-{
-	visibility: collapse;
-}
-
-.AmmoAnim__HealthshotIcon
-{
-	height: 48px;
-	transform: rotateZ( 20deg );
-	wash-color-fast: defaultColor;
-	horizontal-align: center;
-	vertical-align: center;
-}
-
-.AmmoAnim_HealthshotIcon--Hidden
 {
 	visibility: collapse;
 }

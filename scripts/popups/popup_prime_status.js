@@ -4,47 +4,51 @@ var PopupPrimeStatus = ( function ()
 {
 	var m_bIsPerfectWorld = MyPersonaAPI.GetLauncherType() === "perfectworld" ? true : false;
 	var m_btnActivate = $( '#ActivateButton' );
+	var m_btnPurchase = $( '#PurchaseButton' );
 	var m_btnClose = $( '#CloseButton' );
 	var m_btnCheckStatus = $( '#CheckStatusButton' );
 	var m_elLoadingProgress = $( '#LoadingProgress' );
-	var m_elStatusText = $( '#PrimeStatusText' );
 	var m_jsLoadingHandle = false;
+	var m_bPrimeUpgradeAvailable = false;
 
 	var _Init = function ()
 	{
 		_SetElevatedInfoText();
-		_SetStatusPanel( _GetPlayerElevatedStatus() );
+		_SetStatusPanel( MyPersonaAPI.GetElevatedState() );
 	}
 
 	function _SetElevatedInfoText()
 	{
 		var PrimeStatusDesc = $( '#PrimeStatusDesc' );
-		PrimeStatusDesc.text = $.Localize( m_bIsPerfectWorld ? '#SFUI_Elevated_Status_Desc_pw' : '#SFUI_Elevated_Status_Desc' );
+		PrimeStatusDesc.text = $.Localize( m_bIsPerfectWorld ? '#SFUI_Elevated_Status_Desc_pw_1' : '#SFUI_Elevated_Status_Desc_1' );
 
 		var PrimeStatusFaq = $( '#PrimeStatusFaq' );
-		PrimeStatusFaq.text = $.Localize( m_bIsPerfectWorld ? '#SFUI_Elevated_Status_Faq_pw' : '#SFUI_Elevated_Status_Faq' );
+		PrimeStatusFaq.text = $.Localize( m_bIsPerfectWorld ? '#SFUI_Elevated_Status_Faq_pw_1' : '#SFUI_Elevated_Status_Faq_1' );
 	}
 
 	function _SetStatusPanel( strState )
 	{
+		m_bPrimeUpgradeAvailable = MyPersonaAPI.HasPrestige() || FriendsListAPI.GetFriendLevel( MyPersonaAPI.GetXuid() ) > 20;
 		                           
 		                                
-		m_btnActivate.visible = strState == "eligible" || strState == "eligible_with_takeover" ? true : false;
-		m_btnClose.visible = strState == "awaiting_cooldown" || strState == "account_cooldown" || strState == "not_identifying" || strState == "timeout" || strState == "elevated" ? true : false;
-		m_btnCheckStatus.visible = strState == "checkstatus" || strState == "none" || strState == "not_identifying" ? true : false;
+		m_btnActivate.visible = false;                                                                                
+		                                                                                                                                                                                            
+		m_btnCheckStatus.visible = false;                                                                                                                                  
+		m_btnPurchase.visible = strState !== "elevated" && !m_bIsPerfectWorld ? true : false;
 		
 		                                                                             
 		                                                                                       
-		if ( strState != "loading" && strState != "checkstatus" )
-		{
-			_CancelLoading();
-		}
-		else
-		{
-			m_elLoadingProgress.visible = strState == "loading" ? true : false;
-		}
+		                                                            
+		    
+		   	                 
+		    
+		       
+		    
+		   	                                                                   
+		    
 
-		var bButtonPanelVisible = m_btnActivate.visible || m_btnClose.visible || m_btnCheckStatus.visible || m_elLoadingProgress.visible;
+		m_elLoadingProgress.visible = false;
+		var bButtonPanelVisible = m_btnActivate.visible || m_btnClose.visible || m_btnCheckStatus.visible || m_elLoadingProgress.visible || m_btnPurchase.visible;
 		$( '#ButtonPanel' ).SetHasClass( "hidden", !bButtonPanelVisible );
 
 		                                                                                                
@@ -52,54 +56,55 @@ var PopupPrimeStatus = ( function ()
 		                                                 
 		switch ( strState ) 
 		{
-			case "loading" :
-				              
-				_SetLoadingStatus();
-				break;
-			case "checkstatus" :
-				                    
-				_SetCheckStatus();
-				break;
+			                   
+			   	              
+			   	                    
+			   	      
+			                       
+			   	                    
+			   	                  
+			   	      
 			case "elevated" :
 				                                                                                                                                               
 				_SetElevatedStatus();
 				break;
-			case "eligible" :
-				                                                   
-				_SetEligibleStatus();
-				break;
-			case "eligible_with_takeover" :
-				                                                                                        
-				                                                                                                 
-				                                                                                                             
-				                                                                                                                                                                     
-				                                                                                                                                                   
-				_SetStatusPanelTakeover();
-				break;
+			                    
+			   	                                                   
+			   	                     
+			   	      
+			                                  
+			   	                                                                                        
+			   	                                                                                                 
+			   	                                                                                                             
+			   	                                                                                                                                                                     
+			   	                                                                                                                                                   
+			   	                          
+			   	      
 			case "none" :
 				                                                                                                                         
 				_SetFailedStatusNone();
 				break;
-			case "not_identifying" :
-				                                                                                                         
-				_SetFailedStatusError();
-				break;
-			case "awaiting_cooldown" :
-				                                                                                                                                       
-				                                                                                                                                                          
-				                                                                           
-				_SetFailedStatusCooldown("awaiting_cooldown", "#Panorama_Elevated_Status_Cooldown");
-				break;
-			case "account_cooldown" :
-				                                 
-				_SetFailedStatusCooldown("account_cooldown", "#Panorama_Elevated_Status_AccCooldown");
-				break;
-			case "timeout" :
-				_SetFailedStatus();
-				                                                                                                         
-				break;
+			                           
+			   	                                                                                                         
+			   	                        
+			   	      
+			                             
+			   	                                                                                                                                       
+			   	                                                                                                                                                          
+			   	                                                                           
+			   	                                                                                    
+			   	      
+			                            
+			   	                                 
+			   	                                                                                      
+			   	      
+			                   
+			   	                   
+			   	                                                                                                         
+			   	      
 			default:
-				_SetCheckStatus();
+				                    
+				_SetFailedStatusNone();
 				break;
 		}
 	}
@@ -110,6 +115,9 @@ var PopupPrimeStatus = ( function ()
 
 		m_jsLoadingHandle = $.Schedule( 5.0, function ()
 		{
+			                                                                               
+			                                                            
+			m_jsLoadingHandle = false;		
 			_SetStatusPanel( "timeout" );
 		} );
 	}
@@ -119,7 +127,7 @@ var PopupPrimeStatus = ( function ()
 		if( m_elLoadingProgress.visible )
 		{
 			                  
-			if ( m_jsLoadingHandle )
+			if ( m_jsLoadingHandle !==  false )
 			{
 				$.CancelScheduled( m_jsLoadingHandle );
 				m_jsLoadingHandle = false;
@@ -132,6 +140,17 @@ var PopupPrimeStatus = ( function ()
 	function _UpdateStatus( strIconName, strText, strColorClass )
 	{
 		var elPrimeStatus = $( '#PrimeStatus' );
+
+		if ( !strText )
+		{
+			elPrimeStatus.visible = false;
+			return;
+		}
+		else
+		{
+			elPrimeStatus.visible = true;
+		}
+
 		elPrimeStatus.SetHasClass( "warning_status", strColorClass === "warning_status" );
 		elPrimeStatus.SetHasClass( "ok_status", strColorClass === "ok_status" );
 		$( '#PrimeStatusImage' ).SetImage( _GetIconPath( strIconName ) );
@@ -164,7 +183,6 @@ var PopupPrimeStatus = ( function ()
 	{
 		_UpdateCheckStatusButton( "refresh", "#SFUI_Elevated_Status_Check_Btn", function()
 		{
-			_GetPlayerElevatedStatus();
 			_SetStatusPanel( "loading" );
 		} );
 	
@@ -175,7 +193,7 @@ var PopupPrimeStatus = ( function ()
 	{
 		_UpdateActivateButton( "#SFUI_Elevated_Status_Confirm_Btn", function()
 		{
-			MyPersonaAPI.ActionElevate( '' );
+			MyPersonaAPI.ActionElevate( false );
 			_SetStatusPanel( "loading" );
 		} );
 
@@ -194,16 +212,27 @@ var PopupPrimeStatus = ( function ()
 		_UpdateStatus( "info", "#SFUI_Elevated_Status_Error", "warning_status" );
 	}
 
-	function _SetFailedStatusNone()
+	function _SetFailedStatusNone ()
 	{
-		var strCheckStatusText = m_bIsPerfectWorld ? "#SFUI_Elevated_Status_Add_Btn_pw" : "#SFUI_Elevated_Status_Add_Btn";
-		_UpdateCheckStatusButton( "external_link", strCheckStatusText, function()
+		if ( m_bPrimeUpgradeAvailable || m_bIsPerfectWorld )
 		{
-			SteamOverlayAPI.OpenURL( _GetSteamUrl( m_bIsPerfectWorld ) );
-		} );
+			var strStatusText = m_bIsPerfectWorld ? "#SFUI_Elevated_Status_NoPhone_pw" : "";
+			_UpdateStatus( "info", strStatusText, "warning_status" );
 
-		var strStatusText = m_bIsPerfectWorld ? "#SFUI_Elevated_Status_NoPhone_pw" : "#SFUI_Elevated_Status_NoPhone";
-		_UpdateStatus( "info", strStatusText, "warning_status" );
+			var strCheckStatusText = m_bIsPerfectWorld ? "#SFUI_Elevated_Status_Add_Btn_pw" : "#SFUI_Elevated_Status_Add_Btn";
+			_UpdateCheckStatusButton( "external_link", strCheckStatusText, function()
+			{
+				SteamOverlayAPI.OpenURL( _GetSteamUrl( m_bIsPerfectWorld ) );
+			} );
+		}
+		else
+		{
+			var strStatusText = "";
+			_UpdateStatus( "info", strStatusText, "warning_status" );
+		}
+
+		               
+		m_btnPurchase.SetPanelEvent( 'onactivate', function() { SteamOverlayAPI.OpenURL( 'https://store.steampowered.com/sub/54029' ); $.DispatchEvent( 'UIPopupButtonClicked', '' );} );
 	}
 
 	function _SetFailedStatusError()
@@ -226,7 +255,7 @@ var PopupPrimeStatus = ( function ()
 			return;
 		}
 
-		$( '#PrimeStatusText' ).SetDialogVariableTime( "cooldowntime", numSec );
+		$( '#PrimeStatusText' ).SetDialogVariable( "cooldowntime", FormatText.SecondsToSignificantTimeString( numSec ) );
 		_UpdateStatus( "info", strWarningText, true );
 	}
 
@@ -251,7 +280,7 @@ var PopupPrimeStatus = ( function ()
 			"#SFUI_Elevated_Status_Switch_Btn", function()
 			{
 				_SetStatusPanel( "loading" );
-				MyPersonaAPI.ActionElevate( "takeover" );
+				MyPersonaAPI.ActionElevate( true );
 				$.DispatchEvent( 'UIPopupButtonClicked', '' );
 			},
 			"#vgui_close", function()
@@ -262,17 +291,7 @@ var PopupPrimeStatus = ( function ()
 
 	function _UpdateEleveatedStatusPanel()
 	{
-		_SetStatusPanel( _GetPlayerElevatedStatus() );
-	}
-
-	function _GetPlayerElevatedStatus()
-	{
-		return MyPersonaAPI.GetElevatedState();
-	}
-
-	function GetEleveatedTime()
-	{
-		return MyPersonaAPI.GetElevatedTime();
+		_SetStatusPanel( MyPersonaAPI.GetElevatedState() );
 	}
 
 	return {

@@ -3,6 +3,7 @@
                                                                   
 @define CTColor: #6f9ce6;
 @define TColor: #eabe54;
+@define FadedColor: #888888;
 
                             
 @define DeathNoticeLifetime: 5.0;				                                       
@@ -22,6 +23,13 @@ CSGOHudDeathNotice
 CSGOHudDeathNotice Label
 {
     font-family: Stratum2, 'Arial Unicode MS';
+}
+
+                                                                                                 
+                                                                         
+.Language_vietnamese CSGOHudDeathNotice Label 
+{
+	font-family: ForceStratum2, 'Arial Unicode MS';
 }
 
 #VisibleNotices
@@ -147,6 +155,11 @@ CSGOHudDeathNotice Label
 	margin-bottom: 2px;
 	letter-spacing: 0.45px;
 	text-shadow-fast: 1px 1px #000000;
+
+	max-height: 30px;
+	max-width: 300px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .DeathNoticeCTColor
@@ -157,6 +170,11 @@ CSGOHudDeathNotice Label
 .DeathNoticeTColor
 {
 	color: TColor;
+}
+
+.DeathNoticeFadedColor
+{
+	color: FadedColor;
 }
 
 .DeathNoticeIcon
