@@ -6,6 +6,32 @@ var ItemInfo = ( function() {
 		return InventoryAPI.GetItemRarityColor( id );
 	};
 
+                                    
+	var _GetFormattedName = function ( id )
+	{
+	    var strName = _GetName( id );
+
+	    if ( InventoryAPI.HasCustomName( id ) )
+	    {
+	        return new CFormattedText( '#CSGO_ItemName_Custom', { item_name: strName } );
+	    }
+	    else
+	    {
+	                                                                                                   
+	        var splitLoc = strName.indexOf('|');
+            
+	        if ( splitLoc >= 0 )
+	        {
+	            var strWeaponName = strName.substr( 0, splitLoc ).trimRight();                                          
+	            var strPaintName  = strName.substr( splitLoc + 1 ).trimLeft();                                      
+
+	            return new CFormattedText( '#CSGO_ItemName_Painted', { item_name: strWeaponName, paintkit_name: strPaintName } );
+	        }
+
+	        return new CFormattedText( '#CSGO_ItemName_Base', { item_name: strName } );
+	    }
+	};
+
 	var _GetName = function( id )
 	{
 		return InventoryAPI.GetItemName( id );
@@ -295,9 +321,24 @@ var ItemInfo = ( function() {
 		return InventoryAPI.GetLootListItemIdByIndex( id, index );
 	};
 
+	var _GetMarketLinkForLootlistItem = function( id )
+	{
+		var appID = SteamOverlayAPI.GetAppID();
+		var communityUrl = SteamOverlayAPI.GetSteamCommunityURL();
+		var strName = _GetName( id );
+		
+		return communityUrl + "/market/search?appid=" + appID + "&lock_appid=" + appID + "&q=" + strName;
+	};
+
+	var _GetToolType = function( id )
+	{
+		return InventoryAPI.GetToolType( id );
+	};
+
 	return {
 		GetRarityColor					: _GetRarityColor,
 		GetName							: _GetName,
+        GetFormattedName                : _GetFormattedName,                                 
 		IsEquippedForCT					: _IsEquippedForCT,
 		IsEquippedForT					: _IsEquippedForT,
 		IsEquippedForNoTeam				: _IsEquippedForNoTeam,
@@ -336,8 +377,10 @@ var ItemInfo = ( function() {
 		GetModelPath					: _GetModelPath,
 		GetModelPathFromJSONOrAPI		: _GetModelPathFromJSONOrAPI,
 		GetLootListCount				: _GetLootListCount,
-		GetLootListItemByIndex			:_GetLootListItemByIndex,
-		IsStatTrak						:_IsStatTrak,
+		GetLootListItemByIndex			: _GetLootListItemByIndex,
+		IsStatTrak						: _IsStatTrak,
+		GetToolType						: _GetToolType,
+		GetMarketLinkForLootlistItem	: _GetMarketLinkForLootlistItem,
 		GetItemIdForItemEquippedInLoadoutSlot : _GetItemIdForItemEquippedInLoadoutSlot           
 	};
 })();

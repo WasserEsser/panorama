@@ -5,6 +5,11 @@ var SettingsMenuShared = ( function () {
 
 	var _ResetControlsRecursive = function( panel )
 	{
+		if ( panel == null )
+		{
+			return;
+		}
+
 		if (panel.GetChildCount == undefined)
 		{
 			                                       
@@ -59,6 +64,11 @@ var SettingsMenuShared = ( function () {
 	
 	var _RefreshControlsRecursive = function( panel )
 	{
+		if ( panel == null )
+		{
+			return;
+		}
+
 		if ( panel.OnShow != undefined )
 		{
 			panel.OnShow();
@@ -115,35 +125,50 @@ var SettingsMenuShared = ( function () {
 	var _ScrollToId = function ( locationId )
 	{
 		var elLocationPanel = $.GetContextPanel().FindChildInLayoutFile( locationId );
-		elLocationPanel.ScrollParentToMakePanelFit(2, false);
-		elLocationPanel.AddClass('Highlight');
 
-		var kfs = elLocationPanel.CreateCopyOfCSSKeyframes( 'settings-highlight' );
-		elLocationPanel.UpdateCurrentAnimationKeyframes( kfs );
+		if ( elLocationPanel != null )
+		{
+			elLocationPanel.ScrollParentToMakePanelFit(2, false);
+			elLocationPanel.AddClass('Highlight');
+
+			var kfs = elLocationPanel.CreateCopyOfCSSKeyframes( 'settings-highlight' );
+			elLocationPanel.UpdateCurrentAnimationKeyframes( kfs );
+		}
 	}
-
+	
 	                                                                    
 	                                           
 	                                      
 	                                       
 	                                         
 
-	var gVideoSettingsUserSubmittedInput = false;
 	var gBtnApplyVideoSettingsButton=null;
 	var gBtnDiscardVideoSettingChanges=null;
 	
 	var _VideoSettingsOnUserInputSubmit = function ()
 	{
-		gBtnApplyVideoSettingsButton.enabled = true;
-		gBtnDiscardVideoSettingChanges.enabled = true;
-		gVideoSettingsUserSubmittedInput = true;
+		if ( gBtnApplyVideoSettingsButton != null )
+		{
+			gBtnApplyVideoSettingsButton.enabled = true;
+		}
+
+		if ( gBtnDiscardVideoSettingChanges != null )
+		{
+			gBtnDiscardVideoSettingChanges.enabled = true;
+		}
 	}
 
 	var _VideoSettingsResetUserInput = function ()
 	{
-		gBtnApplyVideoSettingsButton.enabled = false;
-		gBtnDiscardVideoSettingChanges.enabled = false;
-		gVideoSettingsUserSubmittedInput = false;
+		if ( gBtnApplyVideoSettingsButton != null )
+		{
+			gBtnApplyVideoSettingsButton.enabled = false;
+		}
+
+		if ( gBtnDiscardVideoSettingChanges != null )
+		{
+			gBtnDiscardVideoSettingChanges.enabled = false;
+		}
 	}
 
 	var _VideoSettingsDiscardChanges = function ()
@@ -158,7 +183,7 @@ var SettingsMenuShared = ( function () {
 		_VideoSettingsResetUserInput();
 	}
 
-	var _NewTabOpened = function ( prevTab, newTab )
+	var _NewTabOpened = function ( newTab )
 	{
 		                                            
 		
@@ -173,7 +198,6 @@ var SettingsMenuShared = ( function () {
 			gBtnDiscardVideoSettingChanges = videoSettingsPanel.FindChildInLayoutFile( "BtnDiscardVideoSettingChanges" );
 			
 			                                  
-			gVideoSettingsUserSubmittedInput = false;
 			gBtnApplyVideoSettingsButton.enabled = false;
 			gBtnDiscardVideoSettingChanges.enabled = false;
 

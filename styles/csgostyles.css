@@ -35,9 +35,10 @@
 
 @define mousepanningcursorsize: 99px;
 
-@define monospaceFont: notomono-regular, Courier New,Courier;
-@define stratum2Font: Stratum2, "Arial Unicode MS", "Courier New", "Courier", "Lucida Console";
-@define stratum2monoFont: Stratum2 Bold Monodigit, "Courier New", "Courier", "Lucida Console";
+@define monospaceFont: notomono-regular;
+@define stratum2Font: Stratum2, "Arial Unicode MS";
+@define stratum2monoFont: Stratum2 Regular Monodigit, "Arial Unicode MS";
+@define stratum2monoFontBold: Stratum2 Bold Monodigit, "Arial Unicode MS";
 
 @define shadowOffset: fill #000000aa 0px 0px 8px 4px;
 
@@ -91,6 +92,12 @@
 @define color-hud-10: #ff7999;           
 @define color-hud-11: #d5e286;                                        
 
+@define color-player-yellow: rgb(248, 246, 45);
+@define color-player-purple: rgb(161, 25, 240 );
+@define color-player-green: rgb(0, 181, 98);
+@define color-player-blue: rgb( 92, 168, 255);
+@define color-player-orange: rgb(255, 155, 37);
+
              
 @define curve__ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
 @define curve__ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -105,6 +112,7 @@ Label, TextEntry
 {
 	font-family: notosans, 'Arial Unicode MS';
 	text-overflow: clip;
+
 }
 
                                                                                      
@@ -131,7 +139,10 @@ Label.MonoNumbersFont, TextEntry.MonoNumbersFont
                                                                                
                                                                                
                                                                                
-
+.fontSize-xxxl
+{
+	font-size: 64px; 
+}
 .fontSize-xxl
 {
 	font-size: 40px; 
@@ -262,7 +273,10 @@ Label.MonoNumbersFont, TextEntry.MonoNumbersFont
 .csgo-hud--cl-hud-color-10 .cl-hud-wash-color { wash-color-fast: color-hud-10; }
 .csgo-hud--cl-hud-color-11 .cl-hud-wash-color { wash-color-fast: color-hud-11; }
 
-
+.csgo-hud--cl_hud_background_alpha
+{
+	opacity: .5;
+}
 
                                                                                
                                       				                           
@@ -629,28 +643,29 @@ VerticalScrollBar:active .ScrollThumb, HTMLVerticalScrollBar:active .ScrollThumb
 
 HorizontalScrollBar, HTMLHorizontalScrollBar
 {
-	height: 12px;
+	height: 8px;
 	width: 100%;
-	background-color: #0d131a;
+	opacity:.4;
 	horizontal-align: left;
 	vertical-align: bottom;
-	box-shadow: fill #00000055 0px -3px 3px 4px;
-	transition-property: transform;
+	transition-property: transform, opacity;
+
+	-s2-mix-blend-mode: screen;
 }
 
 HorizontalScrollBar:hover, HTMLHorizontalScrollBar:hover
 {
-	brightness: 1;
-	background-color: blueColor;
+	opacity:.6;
 }
 
 HorizontalScrollBar .ScrollThumb, HTMLHorizontalScrollBar .ScrollThumb
 {
-	height: 12px;
+	height: 8px;
 	min-width: 32px;
-    border-radius: 14px;
-	brightness: .2;
-	background-color: blueColor;
+	background-color: white;
+	opacity:.4;
+	transition-property: position;
+	border-radius: 2px;
 	transition-property: background-color, transform;
 	transition-duration: 0.1s;
 	transition-timing-function: linear;
@@ -658,13 +673,12 @@ HorizontalScrollBar .ScrollThumb, HTMLHorizontalScrollBar .ScrollThumb
 
 HorizontalScrollBar:hover .ScrollThumb, HTMLHorizontalScrollBar:hover .ScrollThumb
 {
-    brightness: 1;
-	background-color: blueColor;
+	opacity:.6;
 }
 
 HorizontalScrollBar:active .ScrollThumb, HTMLHorizontalScrollBar:active .ScrollThumb
 {
-    background-color: blueColor;
+	opacity:.6;
 }
 
 VerticalScrollBar, 
@@ -1120,6 +1134,7 @@ RadioButton:disabled:selected .RadioBox
                                                                                
                                                                                
                                                                                
+                                                                               
 
               
 .SettingsMenuDropdownContainer
@@ -1155,23 +1170,18 @@ CSGOSettingsSlider
 	vertical-align: center;
 }
 
-#Title
+CSGOSettingsSlider #Title
 {
     width: fill-parent-flow(1.0);
 }
 
-#Slider
+CSGOSettingsSlider #Slider
 {
     width: 25.5%;
 	margin-right: 10px;
 }
 
-CSGOSettingsSlider:disabled Panel Label
-{
-    color: #333333;
-}
-
-#Value
+CSGOSettingsSlider #Value
 {
 	width: 36px;
 	text-align: right;
@@ -1196,7 +1206,7 @@ CSGOSettingsKeyBinder:selected .ActiveBindFX
 	transition-duration: 0.1s;
 }
 
-#LabelFXContainer
+CSGOSettingsKeyBinder #LabelFXContainer
 {
 	background-color: #00000020;
 	width: fill-parent-flow( 0.3 );
@@ -1208,38 +1218,38 @@ CSGOSettingsKeyBinder:selected .ActiveBindFX
 	border-radius: 2px;
 }
 
-.BindingRow #Value.BindingRowButton
+CSGOSettingsKeyBinder .BindingRow #Value.BindingRowButton
 {
 	color:#ffffff70; 
 	font-weight: bold;
 }
 
-.BindingRow:hover #Value.BindingRowButton
+CSGOSettingsKeyBinder .BindingRow:hover #Value.BindingRowButton
 {
 	color:#ffffff; 
 }
 
-.BindingRow:hover #LabelFXContainer
+CSGOSettingsKeyBinder .BindingRow:hover #LabelFXContainer
 {
 	background-color: #00000050;
 }
 
                                               
 
-.BindingRow:hover .BindingRowLabel
+CSGOSettingsKeyBinder .BindingRow:hover .BindingRowLabel
 {
 	                     
 	                                    
 	                    
 }
 
-.BindingRow:selected #LabelFXContainer
+CSGOSettingsKeyBinder .BindingRow:selected #LabelFXContainer
 {
 	                            
 	                                          
 }
 
-.ActiveBindFX
+CSGOSettingsKeyBinder .ActiveBindFX
 {
 	width: 100%;
 	height: 100%;
@@ -1363,8 +1373,8 @@ CSGOSettingsEnumDropDown.PopupButton Label
 	font-weight: medium;
 	font-size: 20px;
 	margin: 16px 12px 12px;
-	overflow: noclip;
 	font-family: stratum2Font;
+    text-overflow: shrink;
 }
 
 .PopupButton Image,
@@ -1404,7 +1414,8 @@ Button.PopupButton.Activated
 	background-color: positiveColor;
 }
 
-.PopupButton.Positive:hover
+.PopupButton.Positive:hover,
+.FlatButton.Positive:hover
 {
 	background-color: positiveColor;
 	brightness: 1.4;
@@ -1837,42 +1848,44 @@ TextEntry.HasInput #PlaceholderText
 .TextEntryIMECandidateRow
 {
 	flow-children: right;
-	background-color: #FFFFFF;
+	                            
+	padding: 4px 10px;
 }
 
 .TextEntryIMECandidateRowPrefix
 {
-	font-size: 20px;
+	font-size: 14px;
 	font-weight: normal;
-	color:#FFFFFF;
-	background-color: #000000;
+	color: baseText;
+	                                          
 	vertical-align: middle;
 }
 
 .TextEntryIMECandidateRowSuffix
 {
-	font-size: 25px;
+	font-size: 20px;
 	font-weight: normal;
-	color:#FFFFFF;
-	background-color: #333333;
+	color: baseText;
+	                                          
 	vertical-align: middle;
+	padding-left: 6px;
 }
 
-.TextEntryIMECandidateRow.Highlight .TextEntryIMECandidateRowSuffix
+.TextEntryIMECandidateRow.Highlight
 {
-	background-color: #4444FF;
+	background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000), color-stop( 0, #000010 ), to( #00001005 ) );
 }
 
 .TextEntryIMEReadingString
 {
-	font-size: 20px;
+	font-size: 16px;
 	font-weight: normal;
-	color: #DDDDDD;
-	background-color: #333333;
+	color: baseText;
+	background-color: contextMenuBackground;
 	margin-top: 5px;
 	margin-bottom: 5px;
 	padding: 5px;
-	border: 1px solid #FFFFFF;
+	                            
 }
 
 .TextEntryIMEReadingString.NoReadingString
@@ -1882,10 +1895,12 @@ TextEntry.HasInput #PlaceholderText
 
 .TextEntryIMECandidateList
 {
-	color: #DDDDDD;
-	background-color: #333333;
+	color: baseText;
+	background-color: contextMenuBackground;
 	flow-children: down;
-	border: 1px solid #FFFFFF;
+	border-radius: 2px;
+	box-shadow: shadowOffset;
+	                            
 }
 
 TextEntryIMEControls
@@ -2049,6 +2064,15 @@ SlottedSlider.HorizontalSlider #SliderTrackProgress
 	background-color: #cccccc80;
 	                                          
 	                   
+	border: 0px;
+}
+
+Slider.HorizontalSlider.OutOfBounds #SliderTrackProgress, 
+Slider.HorizontalSlider.OutOfBounds #SliderTrack 
+{
+	width: 100%;
+	height: 8px;
+	background-color: #20202080;
 	border: 0px;
 }
 
@@ -2963,6 +2987,11 @@ EdgeScrollBar.Vertical #MaxButton
 .right-margin
 {
 	margin-right: 8px;
+}
+
+.right-margin-medium
+{
+	margin-right: 16px;
 }
 
 .z-index-2

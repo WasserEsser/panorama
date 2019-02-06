@@ -26,7 +26,28 @@ var watchTile = ( function() {
     function _Delete( elTile )
     {
         $.DispatchEvent( 'DeletePanel', elTile );
-    }
+	}
+
+	function _CheckPlayerParticipatedInMatch( elTile )
+	{
+		var bPlayerParticipated = false;
+		var myTeam = 0;
+
+		for ( var t = 0; t < 2; t++ )
+		{
+            for ( var n = 0; n < 5; n++ )
+            {
+                var playerXuid = MatchInfoAPI.GetMatchPlayerXuidByIndexForTeam( elTile.matchId, t, n );
+                if ( playerXuid === elTile.myXuid ) 
+                {
+                    bPlayerParticipated = true;
+                    myTeam = t;
+                }
+			}
+		}
+
+		return { bPlayerParticipated: bPlayerParticipated, myTeam: myTeam };
+	}
 
     function _Init( elTile )
     {
@@ -40,8 +61,8 @@ var watchTile = ( function() {
 
         if ( elTile.id == 'live_gotv' ) matchTileDescriptor = 'gotv';
 
+        var isLive = Boolean(MatchInfoAPI.IsLive(elTile.matchId));
         var tournamentName = MatchInfoAPI.GetMatchTournamentName( elTile.matchId );
-        var matchState =  MatchInfoAPI.GetMatchState( elTile.matchId );
         if ( ( tournamentName != undefined ) && ( tournamentName != "" ) )
         {
             matchTileDescriptor = 'tournament';
@@ -51,16 +72,9 @@ var watchTile = ( function() {
             matchTileDescriptor = 'live';
         }
 
-        for ( var t = 0; t < 2; t++ )
-            for ( var n = 0; n < 5; n++ )
-            {
-                var playerXuid = MatchInfoAPI.GetMatchPlayerXuidByIndexForTeam( elTile.matchId, t, n );
-                if ( playerXuid === elTile.myXuid ) 
-                {
-                    bPlayerParticipated = true;
-                    myTeam = t;
-                }
-            }
+		var _multiresult = _CheckPlayerParticipatedInMatch( elTile );
+		bPlayerParticipated = _multiresult.bPlayerParticipated;
+		myTeam = _multiresult.myTeam;
 
         var mapName = MatchInfoAPI.GetMatchMap( elTile.matchId );
 
@@ -101,7 +115,7 @@ var watchTile = ( function() {
         var elViewersLabel = elTile.FindChildInLayoutFile('viewers');
         var elOutcomeLabel = elTile.FindChildInLayoutFile('outcome');
         var elTimestampLabel = elTile.FindChildInLayoutFile('timestamp');
-        
+
         if ( elMatchMapLabel )
         {
             var mapLabelText = "SFUI_Map_"+mapName;
@@ -147,13 +161,17 @@ var watchTile = ( function() {
 
             
             if ( elTournamentTeam0Icon ) elTournamentTeam0Icon.SetImage( icon0Filename );
-            if ( elTournamentTeam1Icon ) elTournamentTeam1Icon.SetImage( icon1Filename );
+            if (elTournamentTeam1Icon) elTournamentTeam1Icon.SetImage(icon1Filename);
+
         }
 
         if ( elScore0Label )
         {
             elScore0Label.text = MatchInfoAPI.GetMatchRoundScoreForTeam( elTile.matchId, team0 );
-            elScore0Label.AddClass( 'tint--' + TEAMS[ team0 ] );
+            if ( matchTileDescriptor != 'tournament' )
+            {
+                elScore0Label.AddClass( 'tint--' + TEAMS[ team0 ] );
+            }
         }
 
         if ( elVsLabel )
@@ -164,18 +182,35 @@ var watchTile = ( function() {
         if ( elScore1Label )
         {
             elScore1Label.text =  MatchInfoAPI.GetMatchRoundScoreForTeam( elTile.matchId, team1 );
-            elScore1Label.AddClass( 'tint--' + TEAMS[ team1 ] );
+            if ( matchTileDescriptor != 'tournament' )
+            {
+                elScore1Label.AddClass( 'tint--' + TEAMS[ team1 ] );
+            }
         }
 
         if ( elViewersLabel )
         {
-            var spectatorCount = MatchInfoAPI.GetMatchSpectators( elTile.matchId );
-            var viewersString = "WatchMenu_Viewers";
-            if ( spectatorCount === 1 )
+            var spectatorCount = parseInt( MatchInfoAPI.GetMatchSpectators( elTile.matchId ) );
+            if ( !spectatorCount )
             {
-                viewersString = "WatchMenu_Viewer";
+                spectatorCount = 0;
             }
-            elViewersLabel.text = spectatorCount + " " + $.Localize( viewersString );
+            elTile.SetDialogVariableInt( 'spectatorCount', spectatorCount );
+
+            var elSingleViewerLabel = elTile.FindChildInLayoutFile('single_viewer');
+            if ( elSingleViewerLabel )
+            {
+                if ( spectatorCount === 1 )
+                {
+                    elSingleViewerLabel.RemoveClass( 'hide' );
+                    elViewersLabel.AddClass( 'hide' );
+                }
+                else
+                {
+                    elSingleViewerLabel.AddClass( 'hide' );
+                    elViewersLabel.RemoveClass( 'hide' );
+                }
+            }
         }
 
         
@@ -222,7 +257,10 @@ var watchTile = ( function() {
 
         if ( elTimestampLabel )
         {
-            elTimestampLabel.text = MatchInfoAPI.GetMatchTimestamp( elTile.matchId );
+            if (isLive)
+                elTimestampLabel.text = $.Localize( "CSGO_Watch_Cat_LiveMatches" );
+            else
+                elTimestampLabel.text = MatchInfoAPI.GetMatchTimestamp( elTile.matchId );
         }
         
         var setDefaultMapImage = function ( mapIcon )
@@ -244,10 +282,16 @@ var watchTile = ( function() {
 		}
     }
 
+    function _Refresh( elTile )
+    {
+        _Init( elTile );
+    }
+
                       
 	return {
         Init			: _Init,
-        SetParentActive : _SetParentActive,
+		SetParentActive : _SetParentActive,
+        Refresh         : _Refresh,
         Delete          : _Delete
 	};
 

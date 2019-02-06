@@ -10,11 +10,11 @@
 			<Panel class="PlayerIcons" acceptsinput="false" force-no-composition-layer="true">
 
 				<Panel id="PI_FirstRotated">
-					<Image id="ViewFrustrum" scaling="stretch-to-fit-y-preserve-aspect" src="file://{images}/icons/ui/map_view_angle.svg"/>
+					<Image id="ViewFrustrum" src="file://{images}/icons/ui/map_view_angle.svg"/>
 					<Image id="SpeakingOnMap" src="file://{images}/icons/ui/map_speaking_onmap.svg"/>
           <Image id="SpeakingOffMap" src="file://{images}/icons/ui/map_speaking_offmap.svg"/>
-					<Image id="AbovePlayer" class="PI_Above" src="file://{images}/icons/ui/map_bomb_above.svg" texturewidth="18" textureheight="15" />
-					<Image id="BelowPlayer" class="PI_Below" src="file://{images}/icons/ui/map_bomb_below.svg" texturewidth="18" textureheight="15" />
+					<Image id="AbovePlayer" class="PI_Above" src="file://{images}/hud/radar/icon-radar-bomb-above.png" texturewidth="13" textureheight="7" />
+					<Image id="BelowPlayer" class="PI_Below" src="file://{images}/hud/radar/icon-radar-bomb-below.png" texturewidth="13" textureheight="7" />
 					<Image id="HostageTransitOnMap" src="file://{images}/icons/ui/map_hostage_transit_onmap.svg"/>
 					<Image id="CTOnMap" class="PI_OnMap PI_Color_CT" textureheight="11" texturewidth="11" src="file://{images}/hud/radar/icon-on-map.png"/>
 					<Image id="CTOffMap" class="PI_OffMap PI_Color_CT" src="file://{images}/icons/ui/map_enemy_offmap.svg"/>
@@ -38,13 +38,19 @@
 				</Panel>
 
 				<Panel id="PI_NonRotated">
-					<Label id="PlayerNumber" class="PI_Text"/>
-					<Label id="PlayerLetter" class="PI_Text"/>
+					<Label id="PlayerNumber" class="PI_Text" />
+					<Label id="PlayerLetter" class="PI_Text" />
 				</Panel>
 
 			</Panel>
 		</snippet>
 
+    <snippet name="RadarImageSnippet" >
+      <Image class="RadarTextMapImg" textureheight="10" texturewidth="10" antialias="true" scaling="stretch-to-fit-preserve-aspect">
+                                                     
+                                                                                                        
+      </Image>
+    </snippet>
 	</snippets>
 
 	<CSGOHudRadar class="hud-radar" hittest="false">
@@ -66,7 +72,7 @@
 				<Panel id="Radar__Round--Overlay"/>
 			</Panel>
 
-          <Panel id="Radar__Square">
+          <Panel id="Radar__Square" antialias="true">
 			<Panel id="Radar__Square--Inner">
 				<Panel id="Radar__Square--InnerTransform" force-no-composition-layer="true">
 					                                                                                

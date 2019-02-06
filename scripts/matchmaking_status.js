@@ -2,30 +2,82 @@
 
                                                      
                                                                     
+                                    
                                                      
 
-var MatchmakingStatus = ( function()
+
+function MatchmakingStatus( elMatchStatus )
 {
 	var _m_searchTimeUpdateHandle = false;
-	var _m_elStatusPanel = $( "#MatchStatusContainer" );
+	var _m_elStatusPanel = elMatchStatus;
+	var _handler_MatchmakingSessionUpdate,
+		_handler_GC_Hello,
+		_handler_HideMainMenu,
+		_handler_HidePauseMenu,
+		_handler_ShowPauseMenu,
+		_handler_ShowMainMenu;
+
+	var _BCanShow = function()
+	{
+		if ( _m_elStatusPanel.GetAttributeString( 'data-type', '' ) === 'hud' )
+		{
+			var mode = GameStateAPI.GetGameModeInternalName( false );
+			if ( mode === 'survival' )
+			{
+				var teamCount = Number( GameInterfaceAPI.GetSettingString( 'sv_dz_team_count' ) );
+				if ( teamCount > 1 )
+					return false;                                                                                  
+				else
+					return true;                                                                              
+			}
+			else
+			{	                                                    
+				return false;
+			}
+		}
+
+		                                         
+		return true;
+	}
 
 	var _Init = function()
 	{
-		_ActionsForInotBtn();
 		_UpdateMatchmakingStatus();
+		_handler_MatchmakingSessionUpdate = $.RegisterForUnhandledEvent( "PanoramaComponent_Lobby_MatchmakingSessionUpdate", _SessionUpdate );
+		
+		                                                                                                                             
+		_handler_GC_Hello = $.RegisterForUnhandledEvent( 'PanoramaComponent_GC_Hello', _SessionUpdate );
+	
+		                                                                                                                               
+		_handler_HideMainMenu = $.RegisterForUnhandledEvent( "CSGOHideMainMenu", _OnHideMainMenu );
+		_handler_HidePauseMenu = $.RegisterForUnhandledEvent( "CSGOHidePauseMenu", _OnHidePauseMenu );
+		_handler_ShowPauseMenu = $.RegisterForUnhandledEvent( "CSGOShowPauseMenu", _OnShowMenu );
+		_handler_ShowMainMenu = $.RegisterForUnhandledEvent( "CSGOShowMainMenu", _OnShowMenu );
+	};
+
+	var _Shutdown = function()
+	{
+		$.UnregisterForUnhandledEvent( 'PanoramaComponent_Lobby_MatchmakingSessionUpdate', _handler_MatchmakingSessionUpdate );
+		$.UnregisterForUnhandledEvent( 'PanoramaComponent_GC_Hello', _handler_GC_Hello );
+		$.UnregisterForUnhandledEvent( "CSGOHideMainMenu", _handler_HideMainMenu );
+		$.UnregisterForUnhandledEvent( "CSGOHidePauseMenu", _handler_HidePauseMenu );
+		$.UnregisterForUnhandledEvent( "CSGOShowPauseMenu", _handler_ShowPauseMenu );
+		$.UnregisterForUnhandledEvent( "CSGOShowMainMenu", _handler_ShowMainMenu );
 	};
 
 	var _SessionUpdate = function()
 	{
+		if ( !_m_elStatusPanel || !_m_elStatusPanel.IsValid() )
+			return;
+		
 		_UpdateMatchmakingStatus();
-		_TintBgForSearch();
 	};
 
 	var _UpdateMatchmakingStatus = function()
 	{
 		var lobbySettings = LobbyAPI.GetSessionSettings().game;
 
-		if ( !LobbyAPI.IsSessionActive() )
+		if ( !LobbyAPI.IsSessionActive() || !_BCanShow() )
 		{
 			_m_elStatusPanel.SetHasClass( 'hidden', true );
 			return;
@@ -54,19 +106,6 @@ var MatchmakingStatus = ( function()
 			elStatusWait.AddClass( 'hidden' );
 			return;
 		}
-
-		                                                          
-		                      
-
-		                                        
-		    
-		   	                                                                                       
-		       
-
-		                                                                                                    
-		                                                                       
-
-		                                                                                
 
 		elStatusWait.RemoveClass( 'hidden' );
 		elStatusWait.FindChildInLayoutFile( 'MatchStatusWaitLabel' ).text = $.Localize( "#party_waiting_lobby_leader" );
@@ -121,30 +160,6 @@ var MatchmakingStatus = ( function()
 			elStatusWarnings.FindChild( 'MatchStatusWarningLabel' ).text = $.Localize( serverWarning );
 	};
 
-	var _TintBgForSearch = function()
-	{	
-		var serverWarning = NewsAPI.GetCurrentActiveAlertForUser();
-		var isWarning = serverWarning !== '' && serverWarning !== undefined ? true : false;
-	
-		$.GetContextPanel().FindChildInLayoutFile( 'MatchStatusBackground' ).SetHasClass( 'party-list__bg--warning',( isWarning && _IsSeaching() ) );
-		$.GetContextPanel().FindChildInLayoutFile( 'MatchStatusBackground' ).SetHasClass( 'party-list__bg--searching', _IsSeaching() );
-	};
-
-	var _ActionsForInotBtn = function()
-	{
-		var btnSettings = $.GetContextPanel().FindChildInLayoutFile( 'MatchStatusInfo' );
-		btnSettings.SetPanelEvent( 'onmouseover', function()
-		{
-			UiToolkitAPI.ShowCustomLayoutParametersTooltip( 'MatchStatusInfo',
-				'LobbySettingsTooltip',
-				'file://{resources}/layout/tooltips/tooltip_lobby_settings.xml',
-				'xuid=' + ''
-			);
-		} );
-
-		btnSettings.SetPanelEvent( 'onmouseout', function() { UiToolkitAPI.HideCustomLayoutTooltip('LobbySettingsTooltip'); } );
-	};
-
 	                                                                                                    
 	                          
 	                                                                                                    
@@ -183,11 +198,6 @@ var MatchmakingStatus = ( function()
 		}
 	};
 
-	var _ShowMatchAcceptPopUp = function( map )
-	{
-		UiToolkitAPI.ShowGlobalCustomLayoutPopupParameters( '', 'file://{resources}/layout/popups/popup_accept_match.xml', 'map_and_isreconnect=' + map + ',false' );
-	};
-
 	var _OnHideMainMenu = function()
 	{
 		_CancelSearchTimeUpdate();
@@ -198,30 +208,20 @@ var MatchmakingStatus = ( function()
 		_CancelSearchTimeUpdate();
 	};
 
-	return {
-		Init										: _Init,
-		SessionUpdate								: _SessionUpdate,
-		ShowMatchAcceptPopUp						: _ShowMatchAcceptPopUp,
-		OnHideMainMenu								: _OnHideMainMenu,
-		OnHidePauseMenu								: _OnHidePauseMenu
+	var _OnShowMenu = function()
+	{
+		_UpdateMatchmakingStatus();
 	};
 
-})();
+	return {
+		Init: _Init,
+		Shutdown: _Shutdown
+	};
+}
 
-                                                                                                    
-                                           
-                                                                                                    
-(function()
+( function()
 {
-	MatchmakingStatus.Init();
-	$.RegisterForUnhandledEvent( "PanoramaComponent_Lobby_MatchmakingSessionUpdate", MatchmakingStatus.SessionUpdate );
-	
-	                                                                                                                             
-	$.RegisterForUnhandledEvent( 'PanoramaComponent_GC_Hello', MatchmakingStatus.SessionUpdate );
-
-	  	                                                                                                                            
-	$.RegisterForUnhandledEvent( "ServerReserved", MatchmakingStatus.ShowMatchAcceptPopUp );
-	$.RegisterForUnhandledEvent( "CSGOHideMainMenu", MatchmakingStatus.OnHideMainMenu );
-	$.RegisterForUnhandledEvent( "CSGOHidePauseMenu", MatchmakingStatus.OnHidePauseMenu );
-
+	var elMatchStatus = $.GetContextPanel();
+	elMatchStatus.matchStatus = new MatchmakingStatus( elMatchStatus );
+	elMatchStatus.matchStatus.Init();
 })();

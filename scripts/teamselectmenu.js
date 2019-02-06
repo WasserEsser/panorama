@@ -50,13 +50,18 @@ var TeamSelectMenu = ( function (){
 		elModelPanel.SetHasClass( 'highlight', false );
 
 		elModelPanel.SetFlashlightAmount( 1.0 );
+
+		if ( elModelPanel.id === 'TeamCharT' )
+		{
+			elModelPanel.LayerSequence( 't_loadout_pistol_idle' , true, false );
+		}
 	}
 
 	function _SelectTeam( team )
 	{
 		var currentTeamNumber = GameStateAPI.GetPlayerTeamNumber( MyPersonaAPI.GetXuid());
 
-		if( currentTeamNumber.toString() === team )
+		if( team !== "0" && currentTeamNumber.toString() === team )
 		{
 			                                                        
 			_HidePanel();
@@ -82,9 +87,10 @@ var TeamSelectMenu = ( function (){
 		var elCtModel = $( '#TeamCharCT' );
 		var elTModel = $( '#TeamCharT' );
 
-		_HighlightPanel( elTModel, 't_loadout_pistol_idle_alt' );
+		_HighlightPanel( elTModel, 't_loadout_pistol_idle_alt_loop01' );
 		_UnhighlightPanel( elCtModel );
 		m_highlightedTeam = '2';
+		elBtnTeamT.SetFocus();
 	}
 
 	function _HighlightCTTeam()
@@ -98,9 +104,10 @@ var TeamSelectMenu = ( function (){
 		var elCtModel = $( '#TeamCharCT' );
 		var elTModel = $( '#TeamCharT' );
 
-		_HighlightPanel( elCtModel, 'ct_loadout_pistol01_idle_alt' );
+		_HighlightPanel( elCtModel, 'ct_loadout_pistol_idle_alt_intro01' );
 		_UnhighlightPanel( elTModel );
 		m_highlightedTeam = '3';
+		elBtnTeamCT.SetFocus();
 	}
 
 	function _SetUpTeamSelectBtns()
@@ -157,19 +164,28 @@ var TeamSelectMenu = ( function (){
 		                                      
 		                                     
 
+		var anims = {
+			cameraPreset: 0 ,
+			idle : 'ct_loadout_pistol_idle_alt_loop01'
+		};
+
 		_SetCharacterAnim( elCharRight,
 			{
 				team: 'ct',
 				model: $.GetContextPanel().GetPlayerModelCT(),
-				anims: CharacterAnims.GetAnims('ct', 'secondary0', 'deagle')                                                   
+				anims: anims 
 			}
 		);
 
+		anims = {
+			cameraPreset: 2 ,
+			idle : 't_loadout_pistol_idle'
+		};
 		_SetCharacterAnim( elCharLeft,
 			{
 				team: 't',
 				model: $.GetContextPanel().GetPlayerModelTerrorist(),
-				anims: CharacterAnims.GetAnims('t', 'secondary0', '')                                                   
+				anims: anims 
 			}
 		);
 	}
@@ -177,9 +193,10 @@ var TeamSelectMenu = ( function (){
 	var _SetCharacterAnim = function ( elPanel, settings )
 	{
 		elPanel.ResetAnimation( false );
-		elPanel.SetPlayerModel( settings.model );
+		elPanel.SetScene( 'resource/ui/econ/ItemModelPanelCharMainMenu.res', settings.model, false );
 		
 		elPanel.EquipPlayerFromLoadout( settings.team, 'secondary0' );
+		elPanel.EquipPlayerFromLoadout( settings.team, 'clothing_hands' );
 
 		elPanel.LayerSequence( settings.anims.idle , true, false );
 		elPanel.SetCameraPreset( settings.anims.cameraPreset, false );
@@ -265,7 +282,7 @@ var TeamSelectMenu = ( function (){
 
 			var clanTag = GameStateAPI.GetPlayerClanTag(xuid);
 			var playerName = GameStateAPI.GetPlayerNameWithNoHTMLEscapes(xuid);
-			elName.text = clanTag + " " + playerName;
+			elName.text = clanTag + " " + playerName;               
 	
 			var elAvatar = $.CreatePanel( 'Panel', elTeammate, xuid, { hittest:'false' } );
 			elAvatar.SetAttributeString( 'xuid', xuid );
@@ -327,8 +344,8 @@ var TeamSelectMenu = ( function (){
 
 	var _ShowCancelButton = function()
 	{
-		var elTimer = $( '#AutojoinTimer' );
-		$('#TeamSelectCancel').visible = !elTimer.visible;
+		var bUnassigned = $.GetContextPanel().GetTeamNumber() == 0;
+		$('#TeamSelectCancel').visible = !bUnassigned;
 	}
 
 	var _ShowError = function( locString )
@@ -340,7 +357,10 @@ var TeamSelectMenu = ( function (){
 		elWarningPanel.RemoveClass('hidden');
 		
 		m_errorTimerHandle = $.Schedule(5.0, function () {
-			elWarningPanel.AddClass('hidden');
+			if ( elWarningPanel.IsValid() )
+			{
+				elWarningPanel.AddClass('hidden');
+			}
 			m_errorTimerHandle = false;
 		});
 	}

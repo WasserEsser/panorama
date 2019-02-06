@@ -8,7 +8,7 @@ var friendsList = (function() {
 
 	var _m_schfnUpdateAntiAddiction = null;
 
-	var _Init = function ()
+	var _Init = function()
 	{
 		                               
 
@@ -16,54 +16,62 @@ var friendsList = (function() {
 
 		_m_tabs = [
 			{
-				elContent : $( '#JsFriendsList-friends' ),
-				elList : $( '#JsFriendsList-friends' ).FindChild( 'JsFriendsList-List' ),
-				elTabRadioBtn : $( '#JsFriendsTab-friends' ),
-				getCount : _GetFriendsCount,
-				getAlertsCount : _GetFriendsCount,
+				elContent: $( '#JsFriendsList-friends' ),
+				elList: $( '#JsFriendsList-friends' ).FindChild( 'JsFriendsList-List' ),
+				elTabRadioBtn: $( '#JsFriendsTab-friends' ),
+				getCount: _GetFriendsCount,
+				getAlertsCount: _GetFriendsCount,
 				getXuidByIndex: _GetXuidByIndex,
-				tileXmlToUse : 'friendtile',
-				nodatString : '#FriendsList_nodata_friends'
+				tileXmlToUse: 'friendtile',
+				nodatString: '#FriendsList_nodata_friends'
 			},
 
 			{
-				elContent : $( '#JsFriendsList-requests' ),
-				elList : $( '#JsFriendsList-requests' ).FindChild( 'JsFriendsList-List' ),
-				elTabRadioBtn : $( '#JsFriendsTab-requests' ),
-				getCount : _GetRequestsCount,
-				getAlertsCount : _GetRequestsAlertCount,
-				getXuidByIndex : _GetRequestsXuidByIndex,
-				tileXmlToUse : 'friendtile',
-				nodatString : '#FriendsList_nodata_requests'
+				elContent: $( '#JsFriendsList-requests' ),
+				elList: $( '#JsFriendsList-requests' ).FindChild( 'JsFriendsList-List' ),
+				elTabRadioBtn: $( '#JsFriendsTab-requests' ),
+				getCount: _GetRequestsCount,
+				getAlertsCount: _GetRequestsAlertCount,
+				getXuidByIndex: _GetRequestsXuidByIndex,
+				tileXmlToUse: 'friendtile',
+				nodatString: '#FriendsList_nodata_requests'
 			},
 
 			{
-				elContent : $( '#JsFriendsList-recents' ),
-				elList : $( '#JsFriendsList-recents' ).FindChild( 'JsFriendsList-List' ),
+				elContent: $( '#JsFriendsList-recents' ),
+				elList: $( '#JsFriendsList-recents' ).FindChild( 'JsFriendsList-List' ),
 				elTabRadioBtn: $( '#JsFriendsTab-recents' ),
-				getCount : _GetRecentsCount,
-				getAlertsCount : _GetRecentsCount,
-				getXuidByIndex : _GetRecentXuidByIndex,
-				tileXmlToUse : 'friendtile',
+				getCount: _GetRecentsCount,
+				getAlertsCount: _GetRecentsCount,
+				getXuidByIndex: _GetRecentXuidByIndex,
+				tileXmlToUse: 'friendtile',
 				nodatString: '#FriendsList_nodata_recents',
 				type: 'recent'
 			},
 
 			{
-				elContent : $( '#JsFriendsList-lobbies' ),
-				elList : $( '#JsFriendsList-lobbies' ).FindChild( 'JsFriendsList-List' ),
-				elTabRadioBtn : $( '#JsFriendsTab-lobbies' ),
-				getCount : _GetLobbiesCount,
-				getAlertsCount : _GetLobbiesCount,
-				getXuidByIndex : _GetLobbyXuidByIndex,
-				tileXmlToUse : 'friendlobby',
-				nodatString : '#FriendsList_nodata_lobbies'
+				elContent: $( '#JsFriendsList-lobbies' ),
+				elList: $( '#JsFriendsList-lobbies' ).FindChild( 'JsFriendsList-List' ),
+				elTabRadioBtn: $( '#JsFriendsTab-lobbies' ),
+				getCount: _GetLobbiesCount,
+				getAlertsCount: _GetLobbiesCount,
+				getXuidByIndex: _GetLobbyXuidByIndex,
+				tileXmlToUse: 'friendlobby',
+				nodatString: '#FriendsList_nodata_lobbies'
 			}
 		];
 
 		_UpdateAllTabsAlertCounts();
 		_ShowSelectedTab( 0 );
-	}
+
+		_UpdateIncomingInvitesContainer();
+
+		var btnLobbiesTabListFilters = $( '#JsFriendsList-lobbies-toolbar-button-' + _m_sLobbiesTabListFiltersString );
+		if ( btnLobbiesTabListFilters )
+		{	                                                                         
+			btnLobbiesTabListFilters.checked = true;
+		}
+	};
 
 	var _SetLocalPlayerAvatar = function ()
 	{
@@ -237,10 +245,11 @@ var friendsList = (function() {
 		_UpdateTabAlertCounts( 3 );
 	};
 
-	var _m_sLobbiesTabListFiltersString = 'competitive';
+	var _m_sLobbiesTabListFiltersString = GameInterfaceAPI.GetSettingString( 'ui_nearbylobbies_filter' );
 	var _SetLobbiesTabListFilters = function( sFilterString )
 	{
 		_m_sLobbiesTabListFiltersString = sFilterString;
+		GameInterfaceAPI.SetSettingString( 'ui_nearbylobbies_filter', _m_sLobbiesTabListFiltersString );
 		_RefreshLobbyListings();
 	};
 
@@ -447,7 +456,7 @@ var friendsList = (function() {
 			elTile.Data().type = type;
 		}	
 
-		if( children[index + 1] )
+		if( children && children[index + 1] )
 			elList.MoveChildBefore( elTile, children[index + 1] );
 		
 		_AddTransitionEndEventHandeler( elTile );
@@ -455,7 +464,25 @@ var friendsList = (function() {
 		_InitTile( elTile, tileXmlToUse );
 		elTile.RemoveClass( 'hidden' );
 
+		return elTile;
 	};
+
+	var _UpdateIncomingInvitesContainer = function()
+	{
+		var elInviteRoot = $.GetContextPanel().FindChild( 'JsIncomingInvites' );
+		elInviteRoot.AddClass( 'hidden' );
+
+		var elInviteContainer = elInviteRoot.FindChildInLayoutFile( 'JsIncomingInviteContainer' );
+		elInviteContainer.RemoveAndDeleteChildren();
+		
+		var numInvites = PartyBrowserAPI.GetInvitesCount();
+		if ( numInvites > 0 )
+		{	                                             
+			var xuid = PartyBrowserAPI.GetInviteXuidByIndex( 0 );
+			_AddTile( elInviteContainer, null, xuid, 0, 'friendlobby', null );
+			elInviteRoot.RemoveClass( 'hidden' );
+		}
+	}
 
 	var _UpdateTilePosition = function( elList, children, elTile, xuid, index, tileXmlToUse )
 	{
@@ -648,6 +675,7 @@ var friendsList = (function() {
 		SetLobbiesTabListFilters	: _SetLobbiesTabListFilters,
 		UpdateRecentsTabList		: _UpdateRecentsTabList,
 		UpdateActiveTabList			: _UpdateActiveTabList,
+		UpdateIncomingInvitesContainer : _UpdateIncomingInvitesContainer,
 		FriendsListNameChanged		: _FriendsListNameChanged,
 		RefreshLobbyListings		: _RefreshLobbyListings,
 		OpenLobbyFaq				: _OpenLobbyFaq,
@@ -676,8 +704,8 @@ var friendsList = (function() {
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_FriendsList_NameChanged', friendsList.FriendsListNameChanged );
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_MyPersona_InventoryUpdated', friendsList.SetLocalPlayerAvatar );
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_MyPersona_MedalsChanged', friendsList.SetLocalPlayerAvatar );
-  	                                                                                                                  
-  	                                                                                                                  
+	$.RegisterForUnhandledEvent( 'PanoramaComponent_PartyBrowser_InviteConsumed', friendsList.UpdateIncomingInvitesContainer );
+	$.RegisterForUnhandledEvent( 'PanoramaComponent_PartyBrowser_InviteReceived', friendsList.UpdateIncomingInvitesContainer );
 	$.RegisterForUnhandledEvent( 'SidebarIsCollapsed', friendsList.OnSideBarHover );
 	$.RegisterForUnhandledEvent( 'SidebarContextMenuActive', friendsList.SidebarContextMenuActive );
 	$.RegisterForUnhandledEvent( 'FriendInvitedFromContextMenu', friendsList.SetInvitedTile )

@@ -1,11 +1,11 @@
 @define row-image-size: 24px;
-@define cell-background-dark: #00000090;
-@define cell-background-darker: #000000B0;
-@define cell-background-light: #00000070;
+@define cell-background-dark: #ffffff05;
+@define cell-background-darker: #ffffff05;
+@define cell-background-light: #ffffff08;
+@define cell-background-lighter: #FFFFFF10;
 
-@define left-panel-width: 87px;
+@define left-panel-width: 80px;
 
-@define timeline-round-height: 50px;
 
 
 @define timeline-round-width: 20px;
@@ -60,6 +60,68 @@ Label {
 	width: left-panel-width;                                            
 }
 
+.sb-footer-panel
+{
+    width: 100%;
+    height: 48px;
+}
+.sb-spectator-control-panel
+{
+    flow-children: right;
+    horizontal-align: left;
+    vertical-align:bottom;
+    margin-bottom: 10px;
+    margin-left: -2px;
+}
+
+.sb-spectator-control-button
+{
+    margin: 1px;
+    width: 24px;
+    height: 24px;
+    border-radius: 0px;
+
+    transition-duration: 0.1s;
+}
+
+.sb-spectator-control-button Image
+{
+    margin: 4px;
+    wash-color: #AAAAAADD;
+                                           
+    img-shadow:0px 0px 1px 2.0 #00000066;
+}
+
+.sb-spectator-control-button-notactive Image
+{
+    wash-color: #664444FF;
+                                           
+}
+
+#id-sb-footer-server-website
+{
+	margin: 10px;
+	horizontal-align: left;
+	flow-children: right;
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+#id-sb-footer-server-website Label
+{
+	font-size: 16px;
+	color: #ffffff;
+	margin: 2px -1px 2px 10px;
+	text-overflow: clip;
+}
+
+#id-sb-footer-server-website Image
+{
+	width: 20px;
+	height: 20px;
+	margin-right: 8px;
+}
+
 #id-sb-mouse-instructions{
 
 	font-size: 12px;
@@ -99,17 +161,28 @@ Label {
 	
  }
 
-.sb-team__info__name {
+.sb-team__info__name,
+.sb-team__info__number {
 
 	font-size: 12px;
 
 	                   
+
+	margin-top: 2px;
 
 	horizontal-align: center;
 	text-align: center;
 
 	text-shadow-fast:1px 1px 1px 1.0 #000000;
 
+	max-width: 90px;
+	overflow: squish noclip;
+
+}
+
+.sb-team__info__number{
+
+	opacity: 0.2;
 }
 
 .sb-team__info__score {
@@ -123,6 +196,10 @@ Label {
 
 .sb-team-logo-bg {
 	background-img-opacity:0.2;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: 0% 0%;
+
 }
 
 .sb-team__info__score Label {
@@ -142,14 +219,6 @@ Label {
 	horizontal-align: left;
 }
 
-#players-table-Spectator{
-	margin-left: left-panel-width;
-}
-
-#players-table-Spectator .sb-row {
-
-	margin-left:0px;
-}
 
 
 
@@ -201,6 +270,10 @@ Label {
 
 	font-weight: bold;
 	font-family: Stratum2, 'Arial Unicode MS';
+
+	text-overflow: shrink;
+	max-width: 550px;
+	height: 40px;
 }
 
 
@@ -209,10 +282,30 @@ Label {
 	font-size: 16px;
 
 	horizontal-align: left;
-	margin-top: 6px;
+	margin-top: 0px;
+
+	max-height: 20px;
+	max-width: 500px;
+	text-overflow: ellipsis;
 
 	vertical-align: top;
 	position: 0px 50px 0px;
+
+	color: grey;
+	-s2-mix-blend-mode: SRGBadditive;
+
+	font-family: Stratum2, 'Arial Unicode MS';
+
+}
+
+#id-viewers {
+
+	font-size: 16px;
+
+	horizontal-align: left;
+	                      
+
+	vertical-align: top;
 
 	color: grey;
 	-s2-mix-blend-mode: SRGBadditive;
@@ -259,7 +352,8 @@ Label {
 	padding: 2px;
 }
 
-.sb-meta__button-panel__btn:hover {
+.sb-meta__button-panel__btn:hover,
+Button.sb-row__cell:hover {
 	brightness: 2.0;
 }
 
@@ -275,16 +369,13 @@ Label {
 	height: 0px;
 }
 
-.sb-muted {
 
-}
-
-         
+            
                  
 
 	                   
  
-         
+            
 
                
  #id-sb-meta__musickit{
@@ -354,6 +445,10 @@ Label {
 	text-align: center;
 	letter-spacing: 0px;
 
+	max-width: 100px;
+	height: 40px;
+	text-overflow: shrink;
+
 }
 
 #id-gametime__desc{
@@ -368,6 +463,10 @@ Label {
 
 	vertical-align: bottom;
 	                                  
+
+	max-width: 150px;
+	height: 40px;
+	text-overflow: shrink;
 }
 
 
@@ -386,25 +485,35 @@ Label {
 
 	overflow:clip scroll;
 
-	max-height: 520px;
-
 	flow-children: down;
 
 	horizontal-align: center;
 
 }
 
+
 #players-table-CT,
 #players-table-TERRORIST,
 #players-table-ANY {
 
-	min-height: 135px;                       
+	min-height: 120px;                       
 }
 
+#players-table-CT,
+#players-table-TERRORIST {
+
+	max-height: 270px;                 
+}
+
+
+#players-table-ANY {
+	max-height: 540px;                 
+}
 
 #players-table-Spectator {
 
 	margin-bottom: 20px;
+	max-height: 108px;                
 }
 
 #id-sb-team--Spectator{
@@ -445,6 +554,7 @@ Label {
 
 	                       
 
+
 }
 
 .sb-row--transition {
@@ -455,10 +565,10 @@ Label {
 }
 
          
-                
- 
-	                    
- 
+.sb-row.survival
+{
+	flow-children: none;
+}
          
 
 .sb-row__set
@@ -490,7 +600,7 @@ Label {
 }
 
 .sb-row--localplayer.sb-row.sb-team--Spectator {
-	background-color: rgba(255, 255, 255, 0.07);
+	                                                  
 	-s2-mix-blend-mode: SRGBadditive;
 }
 
@@ -541,6 +651,14 @@ background-color: rgba(255, 238, 0, 0.07);
 
 }
 
+
+.sb-row__cell.sortstat {
+
+	background-color: cell-background-lighter;
+	                                       
+
+}
+
                        
                                                                                                                         
                    
@@ -588,14 +706,14 @@ background-color: rgba(255, 238, 0, 0.07);
 .sb-row__cell--deaths,
 .sb-row__cell--kdr,
 .sb-row__cell--utilitydamage,
-.sb-row__cell--score
+.sb-row__cell--score,
 {
 	background-color: cell-background-dark;
 }
 
 .sb-row__cell--score
 {
-	background-color: cell-background-darker;
+	background-color: cell-background-dark;
 }
 
 
@@ -660,15 +778,19 @@ Label.sb-row__cell--ping__label--bot {
 .sb-row__cell--flair Image{
 
 	padding: 1px;
+
 }
 
 .sb-row__cell--avatar {
 	width: height-percentage(100%);
 	padding: 2px;
+
 }
 
 .sb-row__cell--avatar CSGOAvatarImage{
 	background-size:cover;
+
+	-s2-mix-blend-mode: opaque;
 }
 
 .sb-row__cell--avatar--CT{
@@ -694,14 +816,12 @@ Label.sb-row__cell--ping__label--bot {
 	background-color: #80808080;
 
 	img-shadow:1px 1px 1px 1.0 #000000ff;
+
 }
 
 .sb-row__cell--name {
 	width: 400px;
-}
-
-.sb-row__cell--name Label{
-	font-family: Stratum2, 'Arial Unicode MS';
+	flow-children: left;
 }
 
 .sb-clantag {
@@ -713,17 +833,22 @@ Label.sb-row__cell--ping__label--bot {
 
                                           
 .sb-row__cell--name Label {
+	font-family: Stratum2, 'Arial Unicode MS';
+
 	width: 100%;
 	text-align: left;
+	text-overflow: ellipsis;
+	max-height: 24px;
+
+	width: fill-parent-flow( 1.0 );
 
 	                                                                     
 	margin-top: 2px;
-	overflow: noclip;
 }
 
                              
 #id-sb-name__nameicons {
-	width: 100%;
+	width: fit-children;
 	height: 100%;
 
 	horizontal-align: right;
@@ -736,13 +861,14 @@ Label.sb-row__cell--ping__label--bot {
 #id-sb-name__nameicons Image {
 	width: 22px;
 	height: 22px;
-	padding: 1px;
 	margin-left: 3px;
 	margin-right: 3px;
+	margin-bottom: 1px;
 
 	vertical-align: center;
 
 	                                           
+
 }
 
 #id-sb-name__nameicons #id-sb-skillgroup-image {
@@ -850,6 +976,8 @@ Label.sb-row__cell--mvps__count {
 	font-size: 14px;
 	margin-top:5px;
 
+	text-overflow: shrink;
+
 	                              
 
 }
@@ -879,16 +1007,25 @@ Label.sb-row__cell--mvps__count {
 	wash-color: #ffffff00;
 }
 
-.sb-player-status-dead {
-	                   
-	                            
+:not(.eom-scoreboard) .sb-player-status-dead,  {
+	opacity: 0.5;
 	wash-color: #999;
-
-	                                
-	                         
-	                                       
-	                                
 }
+
+:not(.eom-scoreboard) .sb-player-status-dead .sb-row__cell,
+:not(.eom-scoreboard) .sb-row__cell--label {
+	background-color: #00000000;
+}
+
+.sb-team--Spectator  {
+	opacity: 0.8;
+	margin-left:0px;
+}
+
+.sb-team--Spectator .sb-row__cell {
+	background-color: #00000000;
+}
+
 
 @keyframes 'anim-pulse' {
 	0% 	{ brightness: 1; }
@@ -955,11 +1092,18 @@ Label.sb-row__cell--mvps__count {
 	margin-top: 2px;
 	margin-bottom: 2px;
 
+	min-height: 20px;
+
 }
 
 .sb-timeline__bumper {
 
-	width:50px;
+	width: left-panel-width;
+}
+
+.sb-team-spacer {
+
+	height:20px;
 }
 
 
@@ -981,16 +1125,46 @@ Label.sb-row__cell--mvps__count {
 	width: fit-children;
 	min-width: 1px; 
 	height: fit-children;
+	min-height: 100px;
 	flow-children: right;
 
 	horizontal-align: center;
+
+	padding-left: 10px;
 }
 
-.sb-timeline__segment {
+.sb-timeline__segment,
+.sb-timeline__round-container {
 
 	width: fit-children; 
-	height: 100px;
 	flow-children: right;
+	vertical-align: center;
+}
+
+.sb-timeline__divider {
+
+	width: 2px;
+	height: 50%;
+	background-color: gray;
+	opacity: 0.1;
+	vertical-align:center;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+.sb-timeline__half-time-scores {
+
+	horizontal-align: center;
+	vertical-align: center;
+	flow-children:right;
+	width: left-panel-width; 
+
+}
+
+
+.sb-timeline__segment_ot_spacer {
+
+	width: 100px;
 }
 
                                                                                  
@@ -1051,28 +1225,41 @@ Label.sb-row__cell--mvps__count {
 
 }
 
-.sb-timeline__segment__score{
+.sb-timeline__score{
 	flow-children: down;
 	horizontal-align: center;
-	width: fit-children; 
+	width: fill-parent-flow( 1.0 );
 	height: fit-children;
 	vertical-align: center;
 
-	margin-left: 10px;
-	margin-right: 10px;
-
 	                              
+
+	transition-property: opacity, position;
+	transition-duration: 0.2s;
+	transition-timing-function: ease-in-out;
 }
 
-.sb-timeline__segment__phase-label{
+.sb-timeline__phase-label{
 	font-size: 12px;
 	horizontal-align: center;
 	vertical-align: middle;
 	margin-top: 4px;
 	margin-bottom: 4px;
+
 }
 
-.sb-timeline__segment__score__label{
+.sb-timeline__round-label {
+
+	horizontal-align: center;
+	text-align: center;
+	font-size: 70px;
+	letter-spacing: 2px;
+	opacity: 0.03;
+	font-family: Stratum2 Bold Monodigit, 'Arial Unicode MS';
+	color: gray;
+}
+
+.sb-timeline__score__label{
 	font-size: 24px;
 	height: 24px;
 	width: 24px;
@@ -1084,13 +1271,12 @@ Label.sb-row__cell--mvps__count {
 
 	text-shadow-fast:1px 1px 1px 1.0 #000000;
 
-
 }
 
                                 
 .sb-timeline__segment__round__team {
-	height: timeline-round-height;
 	horizontal-align: center;
+	min-height: 49px;
 }
 
 
@@ -1192,6 +1378,39 @@ Label.sb-row__cell--mvps__count {
 	opacity:0.6;
 }
 
+.sb-timeline__segment__round--clinch{
+
+	background-color: gray;
+	opacity:0.2;
+}
+
+.clinch-label {
+
+	font-size: 12px;
+	text-align: center;
+	horizontal-align: center;
+	width: 100%;
+	color: gray;
+}
+
+.past-clinch {
+
+	opacity: 0.1;
+}
+
+.clinch-round {
+
+	                   
+}
+
+.sb-timeline__segment__round__team--top .clinch-label {
+	vertical-align: bottom;
+}
+
+.sb-timeline__segment__round__team--bot .clinch-label {
+	vertical-align: top;
+}
+
 
 .sb-timeline__segment__round__team--top .sb-timeline__segment__round--active{
 	background-color: gradient( linear, 0% 100%, 0% 0%, from( #ffffff22 ), to( #ffffff00 ) );
@@ -1222,10 +1441,15 @@ Label.sb-row__cell--mvps__count {
 	visibility: visible;
 }
 
-.hidden,
-.spectator-hidden {
+.hidden {
 	visibility: collapse;
 }
+
+.sb-team--Spectator .spectator-hidden Image,
+.sb-team--Spectator .spectator-hidden Label {                                                                                                                 
+	opacity: 0;
+}
+
 
 .fade {
 	opacity: 0;
@@ -1234,6 +1458,7 @@ Label.sb-row__cell--mvps__count {
 	transition-duration: 0.1s;
 	transition-timing-function: ease-in-out;
 }
+
 
 .transparent {
 	opacity: 0;
@@ -1249,6 +1474,12 @@ Label.sb-row__cell--mvps__count {
 	opacity: 1.0;
 }
 
+                                                            
+.sb-tournament-match .sb-row__cell--rank,
+.sb-tournament-match #id-sb-skillgroup-image
+{
+	visibility: collapse;
+}
 
 
 
@@ -1266,7 +1497,7 @@ Label.sb-row__cell--mvps__count {
 
 
 
- .eom-scoreboard.sb-main{
+ .eom-scoreboard .sb-main{
 
 	vertical-align: top;
 	horizontal-align: center;
@@ -1284,9 +1515,23 @@ Label.sb-row__cell--mvps__count {
 .eom-scoreboard .sb-row__cell--status,
 .eom-scoreboard #id-sb-mouse-instructions,
 .eom-scoreboard #id-sb-meta__musickit,
+.eom-scoreboard .sb-row__cell--money Label,
+.eom-scoreboard .sb-team__info__number,
  {
 	visibility: collapse;
  }
+
+ .eom-scoreboard .sb-timeline__segment__round--clinch,
+ .eom-scoreboard .clinch-label
+{
+	opacity: 0;
+ }
+
+
+ .eom-scoreboard .sb-row__cell--money:not(.sb-row__cell--label)
+{
+	background-color: cell-background-dark;
+}
 
  .eom-scoreboard .sb-meta,
  {
@@ -1301,7 +1546,6 @@ Label.sb-row__cell--mvps__count {
 .eom-scoreboard #id-sb-label-container {
 
 	horizontal-align: center;
-	                    
  }
 
 .eom-scoreboard .sb-timeline {

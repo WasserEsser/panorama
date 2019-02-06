@@ -6,6 +6,7 @@
 
 	</styles>
 	<scripts>
+		<include src="file://{resources}/scripts/common/sessionutil.js" />
 		<include src="file://{resources}/scripts/tooltips/tooltip_lobby_settings.js" />
 		<include src="file://{resources}/scripts/common/formattext.js" />
 	</scripts>
@@ -14,7 +15,7 @@
 		<snippet name="SettingsEntry">
 			<Panel class="tooltip-player-setting" >
 				<Image id="SettingImage" class="tooltip-player-setting__image" src="" textureheight="16" texturewidth="16"/>
-				<Label id="SettingText" class="tooltip-player-xp__subtitle" text="test" />
+				<Label id="SettingText" class="tooltip-player-xp__subtitle" text="XXXX" />
 			</Panel>
 		</snippet>
 	</snippets>
@@ -46,7 +47,7 @@
 				<Label class="tooltip-player-xp__title--small" text="#party_tooltip_gamemode" />
 				<Panel id="LobbyTooltipGameMode" class="tooltip-player-setting" >
 					<Image id="SettingImage" class="tooltip-player-setting__image tint" src="" textureheight="16" texturewidth="16"/>
-					<Label id="SettingText" class="tooltip-player-xp__subtitle" text="Competitive" />
+					<Label id="SettingText" class="tooltip-player-xp__subtitle" text="XXXXXXXXXXX" />
 				</Panel>
 			</Panel>
 

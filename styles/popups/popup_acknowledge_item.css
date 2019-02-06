@@ -1,3 +1,12 @@
+DelayLoadPanel
+{
+	width: 100%;
+}
+
+DelayLoadPanel.Offscreen
+{
+	opacity: 0.0;
+}
 
 .PopupPanel.popup-acknowledge
 {
@@ -85,7 +94,7 @@
 .popup-acknowledge__info__itemname
 {
 	font-size: 28px;
-	width: 520px;
+	width: 900px;
 	font-weight: bold;
 	height: fit-children;
 	vertical-align: bottom;
@@ -148,7 +157,7 @@
 	margin-top: 8px;
 }
 
-.popup-acknowledge__item.Focused
+.Focused .popup-acknowledge__item
 {
 	opacity: 1;
 	transform: translatex( 0px );
@@ -157,21 +166,20 @@
 	transition-timing-function: ease-in-out;
 }
 
-.PreviouslyLeft.popup-acknowledge__item:not(.Focused)
+.PreviouslyLeft:not(.Focused) .popup-acknowledge__item
 {
 	transform: translatex( -100% );
-	opacity: 0;
+	opacity: 0.01;	                                                                                                       
 	
 	transition-property: transform, opacity;
 	transition-duration: .25s;
 	transition-timing-function: ease-in-out;
 }
 
-
-.PreviouslyRight.popup-acknowledge__item:not(.Focused)
+.PreviouslyRight:not(.Focused) .popup-acknowledge__item
 {
 	transform: translatex( 100% );
-	opacity: 0;
+	opacity: 0.01;	                                                                                                       
 	
 	transition-property: transform, opacity;
 	transition-duration: .25s;

@@ -37,8 +37,8 @@ var ItemTile = ( function()
 	                                                                                                    
 	var _SetItemName = function( id )
 	{
-		var name = ItemInfo.GetName( id );
-		$( '#JsItemName' ).text = FormatText.GetInventoryDisplayStringFromName( name );
+	    var fmtName = ItemInfo.GetFormattedName( id );
+	    fmtName.SetOnLabel( $( '#JsItemName' ) );
 	};
 
 	                             
@@ -53,7 +53,12 @@ var ItemTile = ( function()
 
 	var _SetItemRarity = function( id )
 	{
-		$.GetContextPanel().FindChildInLayoutFile( 'JsRarity' ).style.backgroundColor = ItemInfo.GetRarityColor( id );
+		var color = ItemInfo.GetRarityColor( id );
+
+		if ( !color )
+			return;
+		
+		$.GetContextPanel().FindChildInLayoutFile( 'JsRarity' ).style.backgroundColor = color;
 	};
 
 	var _SetEquippedState = function( id )
@@ -150,25 +155,8 @@ var ItemTile = ( function()
 
 	var _TintSprayImage = function( id )
 	{
-		if ( ItemInfo.ItemMatchDefName( id, 'spraypaint' ) || ItemInfo.ItemMatchDefName( id, 'spray' ) )
-		{
-			InventoryAPI.GetSprayTintColorCode( id );
-
-			var colorTint = InventoryAPI.GetSprayTintColorCode( id );
-			
-			if ( colorTint )
-			{
-				$.GetContextPanel().FindChildInLayoutFile( 'ItemImage' ).style.washColor = colorTint;
-			}
-			else
-			{
-				$.GetContextPanel().FindChildInLayoutFile( 'ItemImage' ).style.washColor = 'none';
-			}
-		}
-		else
-		{
-			$.GetContextPanel().FindChildInLayoutFile( 'ItemImage' ).style.washColor = 'none';
-		}
+		var elImage = $.GetContextPanel().FindChildInLayoutFile( 'ItemImage' );
+		TintSprayIcon.CheckIsSprayAndTint( id, elImage );
 	};
 
 	var _DisableTile = function( id )
@@ -234,7 +222,7 @@ var ItemTile = ( function()
 
 	var _GetPopUpCapability = function()
 	{
-		if ( InventoryPanel )
+		if ( typeof InventoryPanel === "object" )                                                                 
 		{
 			var capInfo = InventoryPanel.GetCapabilityInfo();
 			if ( capInfo.popupVisible )	

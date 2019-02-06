@@ -10,7 +10,6 @@ var InventorySearch = ( function (){
 	{
 		var elTextEntry = m_elSearchPanel.FindChildInLayoutFile( 'InvSearchTextEntry' );
 		elTextEntry.SetPanelEvent( 'ontextentrychange', InventorySearch.OnEntryChanged );
-		elTextEntry.SetFocus();
  
 		_PopulateSuggested( m_elSearchPanel.FindChildInLayoutFile( 'InvSearchSuggestionsList' ) );
 		_TextEntrySettings.SetTextEntryPanel( elTextEntry );
@@ -151,8 +150,7 @@ var InventorySearch = ( function (){
 			_TextEntrySettings.UpdateText( itemName );
 		} );
 		
-		var elLabel = elEntry.FindChildInLayoutFile( 'SuggestedLabel' );
-		elLabel.text = itemName;
+		elEntry.SetDialogVariable( 'suggestion_text', itemName );
 
 		var elImage = elEntry.FindChildInLayoutFile( 'SuggestedImage' );
 		elImage.itemid = id;
@@ -202,4 +200,6 @@ var InventorySearch = ( function (){
 (function()
 {
 	 InventorySearch.Init();
+
+	 $.RegisterForUnhandledEvent( 'PanoramaComponent_MyPersona_InventoryUpdated', InventorySearch.UpdateItemList );
 })();

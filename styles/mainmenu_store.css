@@ -68,7 +68,8 @@
 	sound-trans: "UIPanorama.store_item_rolloff";
 }
 
-.store-panel__carousel__item__image:hover
+.store-panel__carousel__item__image:hover,
+.store-panel__carousel__item__image--prime:hover
 {
 	brightness: 1.2;
 	transform: scale3d( 1.05, 1.05, 1.05 );
@@ -78,6 +79,25 @@
 	transition-timing-function: ease-in-out;
 
 	sound-trans: "UIPanorama.store_item_rollover";
+}
+
+.store-panel__carousel__item__image--prime
+{
+	margin: 23px 0px;
+	padding: 15px 15px;
+	horizontal-align: center;
+	vertical-align: center;
+
+	border-radius: 50%;
+	box-shadow: fill #000000aa 0px 0px 4px 2px;
+	border: 2px solid warningColor;
+	background-color: gradient( radial, 50% 50%, 0% 0%, 50% 50%, from( warningColor ), color-stop(.5, warningColor ), to( #000000) );
+
+	transition-property: brightness, transform;
+	transition-duration: .20s;
+	transition-timing-function: ease-in-out;
+
+	sound-trans: "UIPanorama.store_item_rolloff";
 }
 
 .store-panel__carousel__item__stattrak
@@ -133,6 +153,28 @@
 	opacity: 1;
 }
 
+.store-panel__tournament-saletag
+{
+	background-color: green;
+	horizontal-align: left;
+	margin-left: 16px;
+	margin-bottom: 52px;
+	border-radius: 2px;
+	vertical-align: bottom;
+
+	font-size: 18px;
+	padding: 8px;
+	text-align: center;
+	font-weight: medium;
+	font-family: Stratum2, 'Arial Unicode MS';
+	box-shadow: fill #0000005b 0px 0px 4px 4px;
+}
+
+.store-panel__tournament-saletag.hidden 
+{
+	visibility: collapse;
+}
+
 .PreviouslyLeft.store-panel__carousel-page:not(.Focused)
 {
 	transform: translatex( -100% );
@@ -150,6 +192,134 @@
 	transition-property: transform, opacity;
 	transition-duration: .25s;
 	transition-timing-function: ease-in-out;
+}
+
+.store-panel__tournament-banner
+{
+	width: 690px;
+	height: 250px;
+	padding: 0px;
+
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+	background-size: 100%;
+	                                                 
+
+	                           
+}
+
+.store-panel__tournament-banner.store-panel__tournament-banner__pickemgame
+{
+	background-image: url( "file://{images}/store/play_pickem2.png" );
+	background-repeat: no-repeat;
+	background-position: 0% 70%;
+	background-size: auto 180%;
+}
+
+#id-store-tournament-items-container
+{
+	transform-origin: 50% 50%;
+	margin-bottom: 32px;
+
+	transition-property: transform, brightness;
+	transition-duration: .20s;
+	transition-timing-function: ease-in-out;
+}
+
+.store-panel__tournament-banner:Hover #id-store-tournament-items-container
+{
+	transform: scale3d( 1.05, 1.05, 1.05 );
+	brightness: 2;
+
+	transition-property: transform, brightness;
+	transition-duration: .20s;
+	transition-timing-function: ease-in-out;
+}
+
+.store-panel__tournament-image
+{
+	height: 240px;
+	img-shadow: 2px 2px 13px 2.0 black;
+	
+	transition-property: position;
+	transition-delay: 1s;
+	transition-duration: 3s;
+	transition-timing-function: ease-in-out;
+}
+
+.store-panel-tournament-trophy-container
+{
+	transform: translatex( -140px ) translatey( -15px );
+	height: 100%;
+	horizontal-align: left;
+
+	transition-property: transform, brightness;
+	transition-duration: .20s;
+	transition-timing-function: ease-in-out;
+}
+
+.store-panel__tournament-banner:Hover .store-panel-tournament-trophy-container
+{
+	transform: translatex( -140px ) translatey( -15px ) scale3d( 1.05, 1.05, 1.05 );
+	brightness: 2;
+
+	transition-property: transform, brightness;
+	transition-duration: .20s;
+	transition-timing-function: ease-in-out;
+}
+
+.store-panel-tournament-trophy
+{
+	width: 550px;
+	height: 100%;
+}
+
+.store-panel-tournament-trophy.bronze
+{
+	transform: translatex( 110px ) scale3d( 0.7, 0.7, 0.7 ) translatey( 25px );
+	blur: gaussian( 2, 2, 3 );
+}
+
+.store-panel-tournament-trophy.silver
+{
+	transform: translatex( 50px ) scale3d( 0.85, 0.85, 0.85 ) translatey( 10px );
+	blur: gaussian( 2, 2, 1 );
+}
+
+.store-panel__tournament-label
+{
+	font-size: 28px;
+	padding: 16px;
+	vertical-align: bottom;
+	font-weight: light;
+	font-family: Stratum2, 'Arial Unicode MS';
+	color:  gradient( linear, 0% 0%, 0% 100%, from( #ffffff ), to( #a5a5a5 ) );
+}
+
+.store-panel__tournament-label.game 
+{
+	font-size: 32px;
+	vertical-align: center;
+	horizontal-align: left;
+	margin-left: 280px;
+	padding-bottom: 80px;
+	max-width: 390px;
+}
+
+.store-panel__tournament-label.countdown 
+{
+	font-size: 16px;
+	vertical-align: bottom;
+	horizontal-align: left;
+	margin-bottom: 20px;
+	margin-left: 280px;
+	max-width: 390px;
+}
+
+.store-panel__tournament-banner__button.hidden,
+.store-panel__tournament-label.hidden
+{
+	visibility: collapse;
 }
 
 .store-panel-connectingtogc
@@ -177,3 +347,57 @@
 	padding-bottom: 5px;
 	margin-top: 30%;
 }
+
+.store-panel-license-banner
+{
+	width: 100%;
+	height: 100%;
+	margin: 24px;
+
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+	background-size: 100%;
+	flow-children: right;
+	background-image: url( "file://{images}/store/pw_linking_bg.png" );
+	box-shadow: fill #000000aa 0px 0px 8px 4px;
+}
+
+.store-panel-license-banner.hidden
+{
+	visibility: collapse;
+}
+
+.store-panel-license-banner__text
+{
+	color: white;
+	font-weight: lighter;
+	font-size: 18px;
+	width: 470px;
+	padding-left: 24px;
+	height: fit-children;
+
+	horizontal-align: left;
+
+	vertical-align: center;
+}
+
+.store-panel-license-banner__button
+{
+	margin-top: 10px;
+	horizontal-align: right;
+	vertical-align: bottom;
+	margin-right: 20px;
+	margin-bottom: 20px;
+}
+
+#StoreNaveBarWalletBalance
+{
+	horizontal-align: right;
+	margin: 0px;
+}
+
+#StoreNaveBarWalletBalance.hidden
+{
+	visibility: collapse;
+}
+

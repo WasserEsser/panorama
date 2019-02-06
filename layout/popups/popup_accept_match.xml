@@ -6,6 +6,7 @@
 	
 	<scripts>
 		<include src="file://{resources}/scripts/common/formattext.js" />
+		<include src="file://{resources}/scripts/common/sessionutil.js" />
 		<include src="file://{resources}/scripts/popups/popup_accept_match.js" />
 	</scripts>
 
@@ -16,15 +17,14 @@
 	</snippets>
 
 	<PopupCustomLayout class="accept-match Hidden" 
-					popupbackground="blur" 
-					onload="PopupAcceptMatch.Init();">
+					popupbackground="dim" 
+					onload="PopupAcceptMatch.Init();"
+					oncancel="">                                                                                                        
 					
-		<Panel class="accept-match">
+		<Panel id="id-accept-match" class="accept-match accept-match-container">
 
 			<Panel class="accept-match__bg">
-				<Panel class="accept-match__map">
-					<Image id="AcceptMatchMapImage" class="accept-match__map__image" src="" scaling="stretch-to-fit-preserve-aspect"/>
-				</Panel>
+				<Panel id="AcceptMatchMapImage" class="accept-match__map"/>
 
 				<Panel id="AcceptMatchDataContainer" class="accept-match__data">
 					<Label class="accept-match__data__title" text="#match_ready_title"/>

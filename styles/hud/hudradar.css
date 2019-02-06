@@ -260,7 +260,7 @@ CSGOHudRadar Label
 	height: Radar_Overlay_Round;
 	horizontal-align: center;
 	vertical-align: center;
-	background-color: gradient(radial, 50% 50%, 0px 0px, 150px 150px, from( #00000000 ), to( #000000CC ) );
+	background-color: gradient(radial, 50% 50%, 0px 0px, 150px 150px, from( #22222211 ), color-stop( 0.9, #000000CC)) )to( #000000DD ) );
 	border-radius: 50% / 50%;
 
 	opacity: 1.0;
@@ -339,6 +339,11 @@ CSGOHudRadar Label
 	flow-children: none;
 }
 
+.RadarTextMapImg
+{
+                        
+}
+
 #PI_FirstRotated
 {
 	width: 100px;
@@ -358,34 +363,34 @@ CSGOHudRadar Label
 
 .PI_Above
 {
-	              
-	               
+	width: 13px;
+	height: 7px;
 
 	y: 8px;                                            
-	x: 0px;
+	x: -1px;
 
     horizontal-align: center;
 	vertical-align: center;	
 
     wash-color:#CCCCCCCC;
 
-	opacity: 0.85;
+	opacity: 0.65;
 }
 
 .PI_Below
 {
-	              
-	               
+	width: 13px;
+	height: 7px;
 
 	y: -8px;                                            
-	x: 0px;
+	x: -1px;
 
     horizontal-align: center;
 	vertical-align: center;	
 
     wash-color:#CCCCCCCC;
 
-	opacity: 0.85;
+	opacity: 0.65;
 }
 
 .PI_EnemyOnMap
@@ -561,12 +566,15 @@ CSGOHudRadar Label
 
 #ViewFrustrum
 {
-	height: 56px;
+	height: 64px;
+    width: 128px;
 
 	horizontal-align: center;
-	y: -4px;                              
+	y: -12px;                              
 
-	opacity: 0.15;
+	opacity: 0.08;
+
+    -s2-mix-blend-mode: normal;
 }
 
                                                                                
@@ -627,6 +635,8 @@ CSGOHudRadar Label
 	width: 70px;
 	height: 70px;
 
+    opacity: 0.2;
+
 	transform: scale3d( 1, 1, 1 );
 	
 	horizontal-align: center;
@@ -636,7 +646,7 @@ CSGOHudRadar Label
 
 	border-width: 2px;
 	border-style: solid;
-	border-color: red;
+	border-color: #D10000;
 
 	animation-name: DroppedBomb--Animate;
 	animation-duration: 0.75s;
@@ -651,6 +661,8 @@ CSGOHudRadar Label
 	width: 110px;
 	height: 110px;
 
+    opacity: 0.2;
+
 	transform: scale3d( 1, 1, 1 );
 	
 	horizontal-align: center;
@@ -660,7 +672,7 @@ CSGOHudRadar Label
 
 	border-width: 2px;
 	border-style: solid;
-	border-color: red;
+	border-color: #880000;
 
 	animation-name: DroppedBomb--Animate;
 	animation-duration: 0.75s;
@@ -675,27 +687,27 @@ CSGOHudRadar Label
 	0%
 	{
         opacity: 1.0;
-        transform: scale3d( 0.1, 0.1, 1 );
+        transform: scale3d( 0.01, 0.01, 1 );
     }
-    25%
+    20%
     {
         opacity: 1.0;
-        transform: scale3d( 0.25, 0.25, 1 );
+        transform: scale3d( 0.1, 0.1, 1 );
     }
     50%
     {
         opacity: 1.0;
-        transform: scale3d( 0.5, 0.5, 1 );
+        transform: scale3d( 0.25, 0.25, 1 );
     }
     75%
     {
-        opacity: 1.0;
-        transform: scale3d( 0.75, 0.75, 1 );
+        opacity: 0.5;
+        transform: scale3d( 0.4, 0.4, 1 );
     }
 	100%
 	{
         opacity: 0.0;
-        transform: scale3d( 1, 1, 1 );
+        transform: scale3d( 0.6, 0.6, 1 );
 	}
 }
 

@@ -5,6 +5,7 @@
                                                                                                     
 
 var MainMenu = ( function() {
+	var _m_bPerfectWorld = ( MyPersonaAPI.GetLauncherType() === "perfectworld" );
 	var _m_activeTab;
 	var _m_sideBarElementContextMenuActive = false;
 	var _m_elContentPanel = $( '#JsMainMenuContent' );
@@ -21,6 +22,7 @@ var MainMenu = ( function() {
 	];
 
 	var _m_storePopupElement = null;
+	var m_TournamentPickBanPopup = null;
 
 	var _OnInitFadeUp = function()
 	{
@@ -31,21 +33,43 @@ var MainMenu = ( function() {
 		}
 	};
 
+	var _SetBackgroundMovie = function()
+	{
+		var videoPlayer = $( '#MainMenuMovie' );
+		var defaultMovie = 'nuke';
+
+		                                                                 
+		var overrideMovie = 'blacksite';
+		var backgroundMovie = overrideMovie;
+
+		                                                            
+		                                                                                   
+
+		                                                                                     
+		videoPlayer.SetAttributeString( 'data-type', backgroundMovie );
+
+		                          
+		videoPlayer.SetMovie( "file://{resources}/videos/" + backgroundMovie + ".webm" );
+		videoPlayer.SetSound( 'UIPanorama.BG_' + backgroundMovie );
+		videoPlayer.Play();
+	};
+
 	var _OnShowMainMenu = function()
 	{
 		$.DispatchEvent('PlayMainMenuMusic', true, true );
 
 		                                         
-		GameInterfaceAPI.SetConVarIntValue('panorama_play_movie_ambient_sound', 1);
+		GameInterfaceAPI.SetSettingString( 'panorama_play_movie_ambient_sound', '1' );
 
 		                                                                  
 		                                          
-		GameInterfaceAPI.SetConVarIntValue('dsp_room', 29);
-		GameInterfaceAPI.SetConVarStringValue('snd_soundmixer', 'MainMenu_Mix');
+		GameInterfaceAPI.SetSettingString( 'dsp_room', '29' );
+		GameInterfaceAPI.SetSettingString( 'snd_soundmixer', 'MainMenu_Mix' );
 
 		_m_bVanityAnimationAlreadyStarted = false;                                               
 		_InitVanity();
 		_OnInitFadeUp();
+		_SetBackgroundMovie();
 
 		                                                   
 		$( '#MainMenuNavBarPlay' ).SetHasClass( 'mainmenu-navbar__btn-small--hidden', false );
@@ -54,10 +78,22 @@ var MainMenu = ( function() {
 		_UpdateOverwatch();
 
 		_UpdateNotifications();
+		_ShowWeaponUpdatePopup();
 
 		                              
 		_GcLogonNotificationReceived();
+
+		                                                                          
+		_DeleteSurvivalEndOfMatch();
 	};
+
+	var _TournamentDraftUpdate = function ()
+	{
+		if ( !m_TournamentPickBanPopup || !m_TournamentPickBanPopup.IsValid() )
+		{
+			m_TournamentPickBanPopup = UiToolkitAPI.ShowCustomLayoutPopup( 'tournament_pickban_popup', 'file://{resources}/layout/popups/popup_tournament_pickban.xml' );
+		}
+	}
 
 	var _m_bGcLogonNotificationReceivedOnce = false;
 	var _GcLogonNotificationReceived = function()
@@ -87,11 +123,17 @@ var MainMenu = ( function() {
 			}
 			else if ( strFatalError === "ShowGameLicenseNoOnlineLicensePW" )
 			{
-				_OnGcLogonNotificationReceived_ShowLicenseYesNoBox( "#SFUI_LoginLicenseAssist_NoOnlineLicense_PW", "https://community.csgo.com.cn/join/pwlink_csgo" );
+				                                                                                 
+				                                                                                     
+				                                 
+				                                                                                                                                                           
 			}
 			else if ( strFatalError === "ShowGameLicenseNoOnlineLicense" )
 			{
-				_OnGcLogonNotificationReceived_ShowLicenseYesNoBox( "#SFUI_LoginLicenseAssist_NoOnlineLicense", "https://store.steampowered.com/app/730/" );
+				                                                                                 
+				                                                                                     
+				                                 
+				                                                                                                                                                 
 			}
 			else
 			{
@@ -174,6 +216,7 @@ var MainMenu = ( function() {
 		var bQueuedMatchmaking = GameStateAPI.IsQueuedMatchmaking();
 		var bTraining = elContextPanel.IsTraining();
 		var bGotvSpectating = elContextPanel.IsGotvSpectating();
+		var bIsCommunityServer = !_m_bPerfectWorld && MatchStatsAPI.IsConnectedToCommunityServer();
 
 		                                                                        
 		                                                                                                         
@@ -185,6 +228,15 @@ var MainMenu = ( function() {
 		                                                                                                                   
 		                                                                                                                                                 
 		$( '#MainMenuNavBarVote' ).SetHasClass( 'mainmenu-navbar__btn-small--hidden', ( bTraining ||                      bGotvSpectating ) );
+
+		                                                                                        
+		$( '#MainMenuNavBarReportServer' ).SetHasClass( 'mainmenu-navbar__btn-small--hidden', !bIsCommunityServer );
+
+		                                                                                           
+		$( '#MainMenuNavBarShowCommunityServerBrowser' ).SetHasClass( 'mainmenu-navbar__btn-small--hidden', !bIsCommunityServer );
+
+		                                                            
+		_UpdateSurvivalEndOfMatchInstance();
 
 		                
 		_OnHomeButtonPressed();
@@ -199,6 +251,16 @@ var MainMenu = ( function() {
 
 	var _BCheckTabCanBeOpenedRightNow = function( tab )
 	{
+		if ( tab === 'JsInventory' )
+		{
+			var restrictions = LicenseUtil.GetCurrentLicenseRestrictions();
+			if ( restrictions !== false )
+			{
+				LicenseUtil.ShowLicenseRestrictions( restrictions );
+				return false;
+			}
+		}
+
 		if ( tab === 'JsInventory' )
 		{
 			if ( !MyPersonaAPI.IsInventoryValid() || !MyPersonaAPI.IsConnectedToGC() )
@@ -233,13 +295,15 @@ var MainMenu = ( function() {
 		$.DispatchEvent('PlayMainMenuMusic', true, false );
 
 		                                    
-		GameInterfaceAPI.SetConVarIntValue('panorama_play_movie_ambient_sound', 0);
+		GameInterfaceAPI.SetSettingString( 'panorama_play_movie_ambient_sound', '0' );
 
 		                                      
 		                            
 		if( !$.GetContextPanel().FindChildInLayoutFile( tab ) )
 		{
 			var newPanel = $.CreatePanel('Panel', _m_elContentPanel, tab );
+			
+			newPanel.Data().elMainMenuRoot = $.GetContextPanel();
 			                                                 
 
 			newPanel.BLoadLayout('file://{resources}/layout/' + XmlName + '.xml', false, false );
@@ -258,6 +322,10 @@ var MainMenu = ( function() {
 						newPanel.visible = false;
 						newPanel.SetReadyForDisplay( false );
 						return true;
+					}
+					else if ( newPanel.visible === true )
+					{
+						$.DispatchEvent( 'MainMenuTabShown', tab );
 					}
 				}
 
@@ -294,6 +362,10 @@ var MainMenu = ( function() {
 			activePanel.visible = true;
 			activePanel.SetReadyForDisplay( true );
 			                                      
+
+
+			                                           	
+			_PauseMainMenuCharacter();
 		}
 
 		_ShowContentPanel();
@@ -306,6 +378,7 @@ var MainMenu = ( function() {
 			_m_elContentPanel.RemoveClass( 'mainmenu-content--offscreen' );
 		}
 
+		$.DispatchEvent( 'ShowContentPanel' );
 		_DimMainMenuBackground( false );
 		_HideNewsAndStore();
 	};
@@ -441,18 +514,25 @@ var MainMenu = ( function() {
 	function _OnHomeButtonPressed()
 	{
 		$.DispatchEvent( 'HideContentPanel' );
+
+		                                            	
+		var vanityPanel = $( '#JsMainmenu_Vanity' );
+		if ( vanityPanel )
+		{
+			vanityPanel.Pause( false );
+		}
 	}
 
 	function _OnQuitButtonPressed()
 	{	
-		UiToolkitAPI.ShowGenericPopupTwoOptionsBgStyle('Confirm Exit',
-			'Are you sure you want to quit?',
+		UiToolkitAPI.ShowGenericPopupTwoOptionsBgStyle( '#UI_ConfirmExitTitle',
+			'#UI_ConfirmExitMessage',
 			'',
-			'Quit',
+			'#UI_Quit',
 			function() {
 				QuitGame( 'Option1' );
 			},
-			'Return',
+			'#UI_Return',
 			function() {
 			},
 			'dim'
@@ -476,6 +556,8 @@ var MainMenu = ( function() {
 
 	var _InitNewsAndStore = function ()
 	{	
+		_AddStream();
+		
 		var elNews = $.CreatePanel( 'Panel', $.FindChildInContext( '#JsNewsContainer' ), 'JsNewsPanel' );
 		elNews.BLoadLayout( 'file://{resources}/layout/mainmenu_news.xml', false, false );
 		
@@ -500,6 +582,25 @@ var MainMenu = ( function() {
 		};
 
 		_ShowNewsAndStore();
+		                      
+	};
+
+	var _AddStream = function()
+	{
+		var elStream = $.CreatePanel( 'Panel', $.FindChildInContext( '#JsNewsContainer' ), 'JsStreamPanel' );
+		elStream.BLoadLayout( 'file://{resources}/layout/mainmenu_stream.xml', false, false );
+	};
+
+	var _AddFeaturedPanel = function()
+	{
+		                  
+		var featuredXML = 'file://{resources}/layout/mainmenu_featured.xml';
+
+		var elPanel = $.CreatePanel( 'Panel', $.FindChildInContext( '#JsNewsContainer' ), 'JsFeaturedPanel' );
+		elPanel.BLoadLayout( featuredXML, false, false );
+
+		$.FindChildInContext( '#JsNewsContainer' ).MoveChildBefore( elPanel, $.FindChildInContext( '#JsNewsPanel' ) );
+		$.FindChildInContext( '#JsNewsPanel' ).AddClass( 'news-panel-style-feature-panel-visible' );
 	};
 
 	var _ShowNewsAndStore = function ()
@@ -513,8 +614,6 @@ var MainMenu = ( function() {
 		var elNews = $.FindChildInContext( '#JsNewsContainer' );
 		elNews.SetHasClass( 'hidden', true );
 	};
-
-
 
 	                                                                                                    
 	                     
@@ -539,12 +638,12 @@ var MainMenu = ( function() {
 		}
 
 		var loadout = {
-			itemId: InventoryAPI.GetUIPreferenceString( 'ui_vanitysetting_itemid' ),
-			modelPath: '',
+			itemId: GameInterfaceAPI.GetSettingString( 'ui_vanitysetting_itemid' ),
+			model: '',
 			team: '',
 			loadoutSlot: ''
 		};
-		
+
 		var i = 0;
 		for ( i = 0; i < 2; ++ i )
 		{	                                                                 
@@ -553,18 +652,30 @@ var MainMenu = ( function() {
 				loadout = _DefaultModelLoadouts();
 				loadout.itemId = LoadoutAPI.GetItemID( loadout.team, loadout.loadoutSlot );
 				                                          
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_itemid', loadout.itemId );
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_model', loadout.modelPath );
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_team', loadout.team );
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_loadoutslot', loadout.loadoutSlot );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_itemid', loadout.itemId );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_model', loadout.model );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_team', loadout.team );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_loadoutslot', loadout.loadoutSlot );
 				                                                                                                                      
 			}
 			else
 			{	                             
-				loadout.modelPath = InventoryAPI.GetUIPreferenceString( 'ui_vanitysetting_model' );
-				loadout.team = InventoryAPI.GetUIPreferenceString( 'ui_vanitysetting_team' );
-				loadout.loadoutSlot = InventoryAPI.GetUIPreferenceString( 'ui_vanitysetting_loadoutslot' );
+				loadout.model = GameInterfaceAPI.GetSettingString( 'ui_vanitysetting_model' );
+				loadout.team = GameInterfaceAPI.GetSettingString( 'ui_vanitysetting_team' );
+				loadout.loadoutSlot = GameInterfaceAPI.GetSettingString( 'ui_vanitysetting_loadoutslot' );
 
+				                                            
+				                                         
+				var arrModels = CharacterAnims.GetValidCharacterModels();
+				if ( arrModels.filter( function( entry )
+					{
+						return entry.model === loadout.model && ( entry.team === loadout.team || entry.team === 'any' );
+					} ).length <= 0 )
+				{
+					                                                                                                                 
+					loadout.itemId = null;
+					continue;
+				}
 				if ( !InventoryAPI.IsValidItemID( loadout.itemId ) || !InventoryAPI.IsItemInfoValid( loadout.itemId ) )
 				{
 					loadout.itemId = LoadoutAPI.GetItemID( loadout.team, loadout.loadoutSlot );
@@ -572,6 +683,24 @@ var MainMenu = ( function() {
 				}
 				else
 				{
+					                                                        
+					if ( !loadout.loadoutSlot || ( ItemInfo.GetSlotSubPosition( loadout.itemId ) !== loadout.loadoutSlot ) )
+					{
+						                                                                                                                   
+						loadout.itemId = null;
+						continue;
+					}
+					
+					                                            
+					if ( !( ItemInfo.IsItemAnyTeam( loadout.itemId ) ||
+						(ItemInfo.IsItemCt( loadout.itemId ) && loadout.team === 'ct') ||
+						(ItemInfo.IsItemT( loadout.itemId ) && loadout.team === 't') ) )
+					{
+						                                                                                                            
+						loadout.itemId = null;
+						continue;
+					}
+
 					                                                                                                                        
 				}
 			}
@@ -603,6 +732,8 @@ var MainMenu = ( function() {
 		loadout.playIntroAnim = true;
 		CharacterAnims.PlayAnimsOnPanel( loadout );
 
+		_SetVanityLightingBasedOnBackgroundMovie( vanityPanel );
+
 		if ( loadout.panel.BHasClass( 'hidden' ) ) {
 			loadout.panel.RemoveClass( 'hidden' );
 		}
@@ -610,30 +741,74 @@ var MainMenu = ( function() {
 
 	var _DefaultModelLoadouts = function()
 	{
-		var loadoutsList = [
-			{
-				team: 'ct',
-				modelPath: 'models/player/custom_player/legacy/ctm_sas.mdl',
-				loadoutSlot: 'rifle1'
-			},
-			{
-				team: 'ct',
-				modelPath: 'models/player/custom_player/legacy/ctm_sas.mdl',
-				loadoutSlot: 'smg2'
-			},
-			{
-				team: 't',
-				modelPath: 'models/player/custom_player/legacy/tm_leet_variantb.mdl',
-				loadoutSlot: 'rifle1'
-			},
-			{
-				team: 't',
-				modelPath: 'models/player/custom_player/legacy/tm_leet_variantd.mdl',
-				loadoutSlot: 'secondary1'
-			}
-		];
+		var loadoutsList = CharacterAnims.GetValidCharacterModels();
+		var randomEntry = Math.floor( Math.random() * loadoutsList.length );
+		
+		                                                                 
+		var result = Object.assign( {}, loadoutsList[ randomEntry ] );
 
-		return loadoutsList[ Math.floor( Math.random() * loadoutsList.length )];
+		                                                                                                 
+		if ( result.team === 'any' )
+			result.team = 't';
+
+		  
+		                                                       
+		  
+		var survivalRandomEntry = loadoutsList.length - 3 + Math.floor( Math.random()*3 );
+		result.model = loadoutsList[ survivalRandomEntry ].model;
+
+		return result;
+	};
+
+	var _SetVanityLightingBasedOnBackgroundMovie = function( vanityPanel )
+	{
+		var backgroundMap = $.GetContextPanel().FindChildInLayoutFile( 'MainMenuMovie' ).GetAttributeString( 'data-type', 'nuke' );
+
+		if ( backgroundMap === 'cbble' )
+		{
+			vanityPanel.SetFlashlightAmount( 1.0 );
+			vanityPanel.SetFlashlightRotation( 0, 0, 0 );
+			vanityPanel.SetFlashlightPosition( 38.67, 40.11, 107.51 );
+			                                                           
+			vanityPanel.SetFlashlightColor( 0.81, 0.92, 1.00 );
+			vanityPanel.SetAmbientLightColor( 0.12, 0.21, 0.46 );
+
+			vanityPanel.SetDirectionalLightModify( 0 );
+			vanityPanel.SetDirectionalLightColor( 0.13, 0.14, 0.13 );
+			vanityPanel.SetDirectionalLightDirection( -0.81, 0.41, 0.43 );
+			
+			vanityPanel.SetDirectionalLightModify( 1 );
+			vanityPanel.SetDirectionalLightColor( 0.82, 0.19, 0.08 );
+			vanityPanel.SetDirectionalLightDirection( 0.62, 0.74, -0.25 );
+			vanityPanel.SetDirectionalLightPulseFlicker( 0.25, 0.25, 0.25, 0.25 );
+
+			vanityPanel.SetDirectionalLightModify( 2 );
+			vanityPanel.SetDirectionalLightColor( 0.72, 1.40, 1.68 );
+			vanityPanel.SetDirectionalLightDirection( 0.50, -0.69, -0.52 );
+
+			                                                   
+		}
+		else if ( 'blacksite' )
+		{
+			vanityPanel.SetFlashlightAmount( 1 );
+			vanityPanel.SetFlashlightRotation( 0, 0, 0 );
+			vanityPanel.SetFlashlightPosition( 47.37, 172.91, 0.00 );
+			                                                            
+			vanityPanel.SetFlashlightColor( 4, 4, 4);
+			vanityPanel.SetAmbientLightColor( 0.16, 0.26, 0.30 );
+			
+			vanityPanel.SetDirectionalLightModify( 0 );
+			vanityPanel.SetDirectionalLightColor( 0.26, 0.35, 0.47 );
+			vanityPanel.SetDirectionalLightDirection( -0.50, 0.80, 0.00 );
+			
+			vanityPanel.SetDirectionalLightModify( 1 );
+			vanityPanel.SetDirectionalLightColor( 0.74, 1.01, 1.36 );
+			vanityPanel.SetDirectionalLightDirection( 0.47, -0.77, -0.42 );
+
+			vanityPanel.SetDirectionalLightModify( 2 );
+			vanityPanel.SetDirectionalLightColor( 0.75, 1.20, 1.94 );
+			vanityPanel.SetDirectionalLightDirection( 0.76, 0.48, -0.44 );
+		}
 	};
 
 	                                                                           
@@ -643,8 +818,30 @@ var MainMenu = ( function() {
 
 	var _OpenPlayMenu = function ()
 	{
+		                                                      
+		if ( MatchStatsAPI.GetUiExperienceType() )
+			return;
+
 		_InsureSessionCreated();
 		_NavigateToTab( 'JsPlay', 'mainmenu_play' );
+
+		                                           	
+		_PauseMainMenuCharacter();		
+	};
+
+	var _OpenWatchMenu = function()
+	{
+		_PauseMainMenuCharacter();
+		_NavigateToTab( 'JsWatch', 'mainmenu_watch' );
+	}
+
+	var _OpenInventory = function ()
+	{
+		                                           	
+		_PauseMainMenuCharacter();
+
+		_NavigateToTab( 'JsInventory', 'mainmenu_inventory' );
+
 	};
 
 	var _InsureSessionCreated = function()
@@ -716,6 +913,7 @@ var MainMenu = ( function() {
 		var keyId = ParamsList[ 0 ];
 		var caseId = ParamsList[ 1 ];
 		var storeId = ParamsList[ 2 ];
+		var showMarketLinkDefault = _m_bPerfectWorld ? 'false' : 'true';
 
 		JsInspectCallback = UiToolkitAPI.RegisterJSCallback( _OpenDecodeAfterInspect.bind( undefined, keyId, caseId, storeId ) );
 
@@ -727,6 +925,7 @@ var MainMenu = ( function() {
 			'&' + 'allowsave=false' +
 			'&' + 'showequip=false' +
 			'&' + 'showitemcert=false' +
+			'&' + 'showmarketlink='+ showMarketLinkDefault +
 			'&' + 'callback=' + JsInspectCallback,
 			'none'
 		);
@@ -864,25 +1063,28 @@ var MainMenu = ( function() {
 	{
 		var notification = { color_class: "", title: "", tooltip: "" };
 
-		  
-		                                        
-		  
-		var bIsConnectedToGC = MyPersonaAPI.IsConnectedToGC();
-		$( '#MainMenuInput' ).SetHasClass( 'GameClientConnectingToGC', !bIsConnectedToGC );
-		if ( bIsConnectedToGC )
-		{	                                                                 
-			_m_tLastSeenDisconnectedFromGC = 0;
-		}
-		else if ( !_m_tLastSeenDisconnectedFromGC )
-		{	                                                                          
-			_m_tLastSeenDisconnectedFromGC = + new Date();                                                          
-		}
-		else if ( Math.abs( ( + new Date() ) - _m_tLastSeenDisconnectedFromGC ) > 7000 )
-		{	                                           
-			notification.color_class = "NotificationLoggingOn";
-			notification.title = $.Localize( "#Store_Connecting_ToGc" );
-			notification.tooltip = $.Localize( "#Store_Connecting_ToGc_Tooltip" );
-			return notification;
+		if ( LicenseUtil.GetCurrentLicenseRestrictions() === false )
+		{
+			  
+			                                                                                              
+			  
+			var bIsConnectedToGC = MyPersonaAPI.IsConnectedToGC();
+			$( '#MainMenuInput' ).SetHasClass( 'GameClientConnectingToGC', !bIsConnectedToGC );
+			if ( bIsConnectedToGC )
+			{	                                                                 
+				_m_tLastSeenDisconnectedFromGC = 0;
+			}
+			else if ( !_m_tLastSeenDisconnectedFromGC )
+			{	                                                                          
+				_m_tLastSeenDisconnectedFromGC = + new Date();                                                          
+			}
+			else if ( Math.abs( ( + new Date() ) - _m_tLastSeenDisconnectedFromGC ) > 7000 )
+			{	                                           
+				notification.color_class = "NotificationLoggingOn";
+				notification.title = $.Localize( "#Store_Connecting_ToGc" );
+				notification.tooltip = $.Localize( "#Store_Connecting_ToGc_Tooltip" );
+				return notification;
+			}
 		}
 
 		  
@@ -910,8 +1112,7 @@ var MainMenu = ( function() {
 		  
 		                                  
 		  
-		var strStatusString = LobbyAPI.GetMatchmakingStatusString();
-		if ( strStatusString.indexOf( 'outofdate' ) !== -1 )
+		if ( NewsAPI.IsNewClientAvailable() )
 		{
 			notification.color_class = "NotificationYellow";
 			notification.title = $.Localize( "#SFUI_MainMenu_Outofdate_Title" );
@@ -945,16 +1146,17 @@ var MainMenu = ( function() {
 				notification.color_class = "NotificationYellow";
 			}
 			
-			                    
-			notification.title = notification.title + ' ' + FormatText.SecondsToSignificantTimeString( nBanRemaining );
+			                                                                                                                
+			if ( nBanRemaining <= 49*24*3600 )
+			{
+				notification.title = notification.title + ' ' + FormatText.SecondsToSignificantTimeString( nBanRemaining );
+			}
 
 			return notification;
 		}	
 
 		return null;
 	}
-
-	
 
 	function _UpdateNotificationBar()
 	{
@@ -1031,7 +1233,7 @@ var MainMenu = ( function() {
 	var _ShowVote = function ()
 	{
 		var contextMenuPanel = UiToolkitAPI.ShowCustomLayoutContextMenuParametersDismissEvent(
-			'',
+			'MainMenuNavBarVote',
 			'',
 			'file://{resources}/layout/context_menus/context_menu_vote.xml',
 			'',
@@ -1068,12 +1270,100 @@ var MainMenu = ( function() {
 	    _m_storePopupElement = UiToolkitAPI.ShowCustomLayoutPopupParameters(
             'store_popup',
             'file://{resources}/layout/popups/popup_store_status.xml',
-            'text=' + $.UrlEncode( strText )
-             + '&allowclose=' + paramclose
-             + '&cancel=' + paramcancel
-             + '&okcmd=' + $.UrlEncode( strOkCmd ) );
+			'text=' + $.UrlEncode( strText ) +
+			'&' + 'allowclose=' + paramclose +
+			'&' + 'cancel=' + paramcancel +
+			'&'+'okcmd=' + $.UrlEncode( strOkCmd ) );
 	};
+
+	var _ShowWeaponUpdatePopup = function()
+	{
+		return;                                                         
+		var setVersionTo = '1';
+		var currentVersion = GameInterfaceAPI.GetSettingString( 'ui_popup_weaponupdate_version' );
+
+		if ( currentVersion !== setVersionTo )
+		{
+			                      
+			$.Schedule( 1.75, showMp5Popup );
+
+			function showMp5Popup ()
+			{
+				var defIndex = 23;
+				UiToolkitAPI.ShowCustomLayoutPopupParameters(
+					'',
+					'file://{resources}/layout/popups/popup_weapon_update.xml',
+					'defindex=' + defIndex +
+					'&' + 'uisettingversion=' + setVersionTo,
+					'none'
+				);
+			}
+		}
+	};
+
+	var _PauseMainMenuCharacter = function()
+	{
+		var vanityPanel = $( '#JsMainmenu_Vanity' );
+
+		if ( vanityPanel && UiToolkitAPI.IsPanoramaInECOMode() )
+		{
+			vanityPanel.Pause( true );
+		}
+	}
+
+	var _ShowTournamentStore = function() 
+	{
+		UiToolkitAPI.ShowCustomLayoutPopupParameters(
+			'',
+			'file://{resources}/layout/popups/popup_tournament_store.xml',
+			'',
+			'none'
+		);
+	}; 
 	
+	                                                                                                    
+	                                                
+	                                                                                                    
+	var _ResetSurvivalEndOfMatch = function()
+	{
+		_DeleteSurvivalEndOfMatch();
+
+		function CreateEndOfMatchPanel ()
+		{
+			var elPanel = $.CreatePanel(
+				'CSGOSurvivalEndOfMatch',
+				$( '#MainMenuBackground' ),
+				'PauseMenuSurvivalEndOfMatch',
+				{
+					class: 'PauseMenuModeOnly'
+				}
+			);
+
+			
+			elPanel.SetAttributeString( 'pausemenu', 'true' );
+			_UpdateSurvivalEndOfMatchInstance();
+		}
+
+		$.Schedule( 0.1, CreateEndOfMatchPanel );
+	};
+
+	var _DeleteSurvivalEndOfMatch = function()
+	{
+		if ( $( '#PauseMenuSurvivalEndOfMatch' ) )
+		{
+			$( '#PauseMenuSurvivalEndOfMatch' ).DeleteAsync( 0.0 );
+		}
+	};
+
+	function _UpdateSurvivalEndOfMatchInstance()
+	{
+		var elSurvivalPanel = $( '#PauseMenuSurvivalEndOfMatch' );
+
+		if ( elSurvivalPanel && elSurvivalPanel.IsValid() )
+		{
+			$( '#PauseMenuSurvivalEndOfMatch' ).matchStatus.UpdateFromPauseMenu();
+		}
+	}
 
 	return {
 		OnInitFadeUp						: _OnInitFadeUp,
@@ -1095,6 +1385,8 @@ var MainMenu = ( function() {
 		ForceRestartVanity	 				: _ForceRestartVanity,
 		OnEquipSlotChanged	 				: _OnEquipSlotChanged,
 		OpenPlayMenu						: _OpenPlayMenu,
+		OpenWatchMenu						: _OpenWatchMenu,
+		OpenInventory						: _OpenInventory,
 		OnHomeButtonPressed					: _OnHomeButtonPressed,
 		OnQuitButtonPressed					: _OnQuitButtonPressed,
 		OnEscapeKeyPressed					: _OnEscapeKeyPressed,
@@ -1109,8 +1401,12 @@ var MainMenu = ( function() {
 		ResetAcknowlegeHandler				: _ResetAcknowlegeHandler,
 		ShowNotificationBarTooltip			: _ShowNotificationBarTooltip,
 		ShowVote 							: _ShowVote,
-		ShowStoreStatusPanel                : _ShowStoreStatusPanel,
-		HideStoreStatusPanel                : _HideStoreStatusPanel
+		ShowStoreStatusPanel				: _ShowStoreStatusPanel,
+		HideStoreStatusPanel				: _HideStoreStatusPanel,
+		PauseMainMenuCharacter				: _PauseMainMenuCharacter,
+		ShowTournamentStore					: _ShowTournamentStore,
+		TournamentDraftUpdate				: _TournamentDraftUpdate,
+		ResetSurvivalEndOfMatch				: _ResetSurvivalEndOfMatch
 	};
 })();
 
@@ -1124,6 +1420,8 @@ var MainMenu = ( function() {
 	$.RegisterForUnhandledEvent( 'SidebarContextMenuActive', MainMenu.OnSideBarElementContextMenuActive );
 	$.RegisterForUnhandledEvent( 'UpdateVanityModelData', MainMenu.ForceRestartVanity );
 	$.RegisterForUnhandledEvent( 'OpenPlayMenu', MainMenu.OpenPlayMenu );
+	$.RegisterForUnhandledEvent( 'OpenInventory', MainMenu.OpenInventory );
+	$.RegisterForUnhandledEvent( 'OpenWatchMenu', MainMenu.OpenWatchMenu );
 	$.RegisterForUnhandledEvent( 'CSGOShowMainMenu', MainMenu.OnShowMainMenu);
 	$.RegisterForUnhandledEvent( 'CSGOHideMainMenu', MainMenu.OnHideMainMenu);
 	$.RegisterForUnhandledEvent( 'CSGOShowPauseMenu', MainMenu.OnShowPauseMenu);
@@ -1135,10 +1433,16 @@ var MainMenu = ( function() {
 	$.RegisterForUnhandledEvent( 'LootlistItemPreview', MainMenu.OnLootlistItemPreview );
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_Inventory_WeaponPreviewRequest', MainMenu.WeaponPreviewRequest );
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_Overwatch_CaseUpdated', MainMenu.UpdateOverwatch );
+	$.RegisterForUnhandledEvent( "PanoramaComponent_TournamentMatch_DraftUpdate", MainMenu.TournamentDraftUpdate );
 
 	$.RegisterForUnhandledEvent( 'ShowAcknowledgePopup', MainMenu.ShowAcknowledgePopup );
     $.RegisterForUnhandledEvent( 'ShowStoreStatusPanel', MainMenu.ShowStoreStatusPanel );
 	$.RegisterForUnhandledEvent( 'HideStoreStatusPanel', MainMenu.HideStoreStatusPanel );
+
+	$.RegisterForUnhandledEvent( 'ShowVoteContextMenu', MainMenu.ShowVote );
+	$.RegisterForUnhandledEvent( 'ShowTournamentStore', MainMenu.ShowTournamentStore );
+
+	$.RegisterForUnhandledEvent( 'OnMapConfigLoaded', MainMenu.ResetSurvivalEndOfMatch );
 	
 	MainMenu.MinimizeSidebar();
 	MainMenu.InitVanity();

@@ -1,12 +1,5 @@
 'use strict';
 
-var dictRoundResultImage = {
-	"win_elimination"	: "file://{images}/icons/ui/elimination.svg",	
-	"win_rescue"		: "file://{images}/icons/ui/rescue.svg", 			
-	"win_defuse"		: "file://{images}/icons/equipment/defuser.svg",
-	"win_time"			: "file://{images}/icons/ui/timer.svg",		
-	"win_bomb"			: "file://{images}/icons/ui/bomb.svg",
-}
 
                                               
 var arrValidStats = [
@@ -232,7 +225,7 @@ var EOM_Podium = ( function () {
 		var settings = {
 			panel: elPlayerModel,
 			team: shortTeam,
-			modelPath: 'models/' + GameStateAPI.GetPlayerModel( _xuid ),
+			model: 'models/' + GameStateAPI.GetPlayerModel( _xuid ),
 			itemId: id,
 			loadoutSlot: ItemInfo.GetSlotSubPosition( id ),
 			playIntroAnim: false,
@@ -510,6 +503,7 @@ var EOM_Podium = ( function () {
 
 	                      
 	return {
+        name: 'eom-podium',
 
 		Start									: _Start,
 		GetFreeForAllTopThreePlayers_Response	: _GetFreeForAllTopThreePlayers_Response,

@@ -426,9 +426,6 @@ var playerCard = ( function (){
 		if ( !_m_isSelf )
 			return;
 
-		if ( !MyPersonaAPI.IsInventoryValid() )
-			return;
-
 		var teamName = MyPersonaAPI.GetMyOfficialTeamName(),
 			tournamentName = MyPersonaAPI.GetMyOfficialTournamentName();
 		
@@ -440,13 +437,15 @@ var playerCard = ( function (){
 			$.GetContextPanel().FindChildInLayoutFile( 'JsPlayerTeam' ).AddClass( 'hidden' );
 			return;
 		}
-		
+
+		                                                        
+		$.GetContextPanel().FindChildInLayoutFile( 'JsPlayerXp' ).AddClass( 'hidden' );
+		$.GetContextPanel().FindChildInLayoutFile( 'JsPlayerCardSkillGroupContainer' ).AddClass( 'hidden' );
 		$.GetContextPanel().FindChildInLayoutFile( 'JsPlayerTeam' ).RemoveClass( 'hidden' );
-		$.GetContextPanel().FindChildInLayoutFile( 'JsPlayerSkill' ).ToggleClass( 'hidden' );
 		
 		var teamTag = MyPersonaAPI.GetMyOfficialTeamTag();
 
-		$.GetContextPanel().FindChildInLayoutFile( 'JsTeamIcon' ).SetImage( 'file://{images}/icons/teams/' + teamTag + '.png' );
+		$.GetContextPanel().FindChildInLayoutFile( 'JsTeamIcon' ).SetImage( 'file://{images}/tournaments/teams/' + teamTag + '.svg' );
 		$.GetContextPanel().FindChildInLayoutFile( 'JsTeamLabel' ).text = teamName;
 		$.GetContextPanel().FindChildInLayoutFile( 'JsTournamentLabel' ).text = tournamentName;
 	};
@@ -636,16 +635,14 @@ var playerCard = ( function (){
 		elWingman.SetHasClass( 'collapsed', !elToggleBtn.checked );
 	};
 
-	var _UpdateAvatarForLocalPlayerCard = function ( xuid )
+	var _FriendsListUpdateName = function( xuid )
 	{
-		                                                              
-		                                                                       
-
-		if(  $.GetContextPanel().visible && _m_isSelf )
+		if ( xuid === _m_xuid )
 		{
-			_UpdateAvatar();
+			_SetName();
 		}
-	}
+	};
+	
 
 	return {
 		Init					: _Init,
@@ -658,7 +655,8 @@ var playerCard = ( function (){
 		ShowXpTooltip			: _ShowXpTooltip,
 		HideXpTooltip: _HideXpTooltip,
 		SetAllSkillGroups: _SetAllSkillGroups,
-		ShowHideAdditionalRanks: _ShowHideAdditionalRanks
+		ShowHideAdditionalRanks: _ShowHideAdditionalRanks,
+		FriendsListUpdateName: _FriendsListUpdateName
 		
 	};
 
@@ -683,5 +681,6 @@ var playerCard = ( function (){
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_FriendsList_ProfileUpdated', playerCard.ProfileUpdated );
 	$.RegisterForUnhandledEvent( 'PanoramaComponent_MyPersona_PipRankUpdate', playerCard.SetAllSkillGroups );
 	$.RegisterForUnhandledEvent( "PanoramaComponent_Lobby_PlayerUpdated", playerCard.UpdateAvatar );
+	$.RegisterForUnhandledEvent( 'PanoramaComponent_FriendsList_NameChanged', playerCard.FriendsListUpdateName );
 	                                                                                          
 })();

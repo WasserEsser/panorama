@@ -7,7 +7,7 @@ var CharacterAnims = ( function ()
 	               
 		      
 		      
-		           
+		       
 		        
 		             
 		               
@@ -26,8 +26,9 @@ var CharacterAnims = ( function ()
 		
 		playerPanel.ResetAnimation( false );
 		playerPanel.SetSceneAngles( 0, 0, 0 );
-		playerPanel.SetPlayerModel( settings.modelPath );
+		playerPanel.SetPlayerModel( settings.model );
 		playerPanel.EquipPlayerWithItem( settings.itemId );
+		playerPanel.EquipPlayerFromLoadout( settings.team, 'clothing_hands' );
 
 		var anims = _GetAnims(
 						settings.team,
@@ -128,10 +129,10 @@ var CharacterAnims = ( function ()
 		{
 			if( settingsToSave )
 			{
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_team', settingsToSave.team );
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_model', settingsToSave. modelPath );
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_loadoutslot', settingsToSave.loadoutSlot );
-				InventoryAPI.SetUIPreferenceString( 'ui_vanitysetting_itemid', settingsToSave.itemId );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_team', settingsToSave.team );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_model', settingsToSave.model );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_loadoutslot', settingsToSave.loadoutSlot );
+				GameInterfaceAPI.SetSettingString( 'ui_vanitysetting_itemid', settingsToSave.itemId );
 			}
 			settingsToSave = null;
 		};
@@ -151,6 +152,33 @@ var CharacterAnims = ( function ()
 
 		                                                 
 		return hasAnims;
+	};
+
+	var _GetValidCharacterModels = function()
+	{
+		                                                                            
+		
+		var dropdownEntries = [
+			{ label: '#faction_sas', model: "models/player/custom_player/legacy/ctm_sas.mdl", team: "ct", loadoutSlot: 'rifle1' },
+			{ label: '#faction_fbi_a', model: "models/player/custom_player/legacy/ctm_fbi_varianta.mdl", team: "ct", loadoutSlot: 'rifle1' },
+			{ label: '#faction_fbi_c', model: "models/player/custom_player/legacy/ctm_fbi_variantc.mdl", team: "ct", loadoutSlot: 'secondary1' },
+			{ label: '#faction_fbi_d', model: "models/player/custom_player/legacy/ctm_fbi_variantd.mdl", team: "ct", loadoutSlot: 'secondary1' },
+			{ label: '#faction_fbi_e', model: "models/player/custom_player/legacy/ctm_fbi.mdl", team: "ct", loadoutSlot: 'rifle1'},
+			                                                                                                         
+			                                                                                                       
+			{ label: '#faction_elite_a', model: "models/player/custom_player/legacy/tm_leet_varianta.mdl", team: "t", loadoutSlot: 'rifle1' },
+			{ label: '#faction_elite_b', model:"models/player/custom_player/legacy/tm_leet_variantb.mdl", team:"t", loadoutSlot: 'secondary1' },
+			{ label: '#faction_elite_c', model:"models/player/custom_player/legacy/tm_leet_variantc.mdl", team:"t", loadoutSlot: 'secondary1' },
+			{ label: '#faction_elite_d', model:"models/player/custom_player/legacy/tm_leet_variantd.mdl", team:"t", loadoutSlot: 'rifle1' },
+			                                                                                                                 
+			                                                                                                           
+			                                                                                                                   
+			{ label: '#faction_phoenix', model: "models/player/custom_player/legacy/tm_phoenix.mdl", team: "t", loadoutSlot: 'secondary1' },
+			{ label: '#faction_survival_a', model: "models/player/custom_player/legacy/tm_jumpsuit_varianta.mdl", team: "any", loadoutSlot: 'secondary1' },
+			{ label: '#faction_survival_b', model: "models/player/custom_player/legacy/tm_jumpsuit_variantb.mdl", team: "any", loadoutSlot: 'secondary1' },
+			{ label: '#faction_survival_c', model:"models/player/custom_player/legacy/tm_jumpsuit_variantc.mdl", team:"any", loadoutSlot: 'secondary1' }
+		];
+		return dropdownEntries;
 	};
 
 	                                                                                                    
@@ -354,20 +382,20 @@ var CharacterAnims = ( function ()
 					};
 				}
 				        
-				                                        
-				   
-				  	        
-				  		                
-				  		                                 
-				  		                            
-				  		            
-				  			                               
-				  			                              
-				  			                             
-				  			                             
-				  		 
-				  	  
-				   
+				if( weapon.indexOf( 'mp5sd' ) !== -1 )
+				{
+					return {
+						cameraPreset: 2,
+						intro: 'ct_loadout_mp5sd_walkup',
+						idle: 'ct_loadout_p90_idle',
+						animsList: [
+							'ct_loadout_p90_weightshift01',
+							'ct_loadout_p90_lookbehind01',
+							'ct_loadout_p90_lookatwatch',
+							'ct_loadout_p90_lookbehind02'
+						]
+					};
+				}
 				          
 				return {
 					cameraPreset: 0,
@@ -779,6 +807,23 @@ var CharacterAnims = ( function ()
 						]
 					};
 				}
+				if( weapon.indexOf( 'mp5sd' ) !== -1 )
+				{
+					return {
+						cameraPreset: 1,
+						intro: 't_loadout_shotgun_xm_walkup',
+						idle: 't_loadout_shotgun_xm_idle',
+						animsList: [
+							't_loadout_shotgun_xm_weightshift',
+							't_loadout_shotgun_xm_lookat01',
+							't_loadout_shotgun_xm_shrug',
+							't_loadout_shotgun_xm_headcock',
+							't_loadout_shotgun_xm_headgrab',
+							't_loadout_shotgun_xm_bellyscratch',
+							't_loadout_shotgun_xm_lookback'
+						]
+					};
+				}
 				if( weapon.indexOf( 'mp7' ) !== -1 )
 				{
 					return {
@@ -963,6 +1008,7 @@ var CharacterAnims = ( function ()
 		PlayAnimsOnPanel			: _PlayAnimsOnPanel,
 		CancelScheduledAnim			: _CancelScheduledAnim,
 		ItemHasCharacterAnims		: _ItemHasCharacterAnims,
-		GetAnims					: _GetAnims
+		GetAnims					: _GetAnims,
+		GetValidCharacterModels		: _GetValidCharacterModels
 	};
 })();

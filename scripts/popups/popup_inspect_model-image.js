@@ -14,12 +14,12 @@ var InspectModelImage = ( function (){
 			return;
 		}
 
-		var modelPath = ItemInfo.GetModelPathFromJSONOrAPI( itemId );
+		var model = ItemInfo.GetModelPathFromJSONOrAPI( itemId );
 		m_elPanel = elPanel;
 
-		if ( modelPath )
+		if ( model )
 		{
-			_SetModelScene( elPanel, modelPath );
+			_SetModelScene( elPanel, model );
 		}
 		else
 		{
@@ -27,13 +27,13 @@ var InspectModelImage = ( function (){
 		}
 	};
 
-	var _SetModelScene = function ( elParent, modelPath )
+	var _SetModelScene = function ( elParent, model )
 	{
-		                                                  
+		                                              
 
 		var elPanel = elParent.FindChildInLayoutFile( 'InspectItemModel' );
 		elPanel.SetScene( "resource/ui/econ/ItemModelPanelCharWeaponInspect.res",
-			modelPath,
+			model,
 			false
 		);
 
@@ -51,25 +51,7 @@ var InspectModelImage = ( function (){
 
 	var _TintSprayImage = function( id, elImage )
 	{
-		if ( ItemInfo.ItemMatchDefName( id, 'spraypaint' ) || ItemInfo.ItemMatchDefName( id, 'spray' ) )
-		{
-			InventoryAPI.GetSprayTintColorCode( id );
-
-			var colorTint = InventoryAPI.GetSprayTintColorCode( id );
-			
-			if ( colorTint )
-			{
-				elImage.style.washColor = colorTint;
-			}
-			else
-			{
-				elImage.style.washColor = 'none';
-			}
-		}
-		else
-		{
-			elImage.style.washColor = 'none';
-		}
+		TintSprayIcon.CheckIsSprayAndTint( id, elImage );
 	};
 
 	var _SetCharScene = function ( elParent, id, selectedModel, selectedTeam )
@@ -79,7 +61,7 @@ var InspectModelImage = ( function (){
 		var settings = {
 			panel: elPanel,
 			team: selectedTeam,
-			modelPath: selectedModel,
+			model: selectedModel,
 			itemId: id,
 			loadoutSlot: ItemInfo.GetSlotSubPosition( id ),
 			playIntroAnim: false,
@@ -97,6 +79,9 @@ var InspectModelImage = ( function (){
 
 	var _ShowHideItemPanel = function( elParent, bshow )
 	{
+		if ( !elParent.IsValid() )
+			return;
+		
 		elParent.FindChildTraverse( 'InspectModelContainer' ).SetHasClass( 'hidden', !bshow );
 		
 		if ( bshow )
@@ -105,6 +90,9 @@ var InspectModelImage = ( function (){
 
 	var _ShowHideCharPanel = function( elParent, bshow )
 	{
+		if ( !elParent.IsValid() )
+			return;
+		
 		elParent.FindChildTraverse( 'InspectModelCharContainer' ).SetHasClass( 'hidden', !bshow );
 
 		if ( bshow )

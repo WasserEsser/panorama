@@ -42,11 +42,17 @@
 				                
 					<Panel class="SettingsMenuDropdownContainer">
 						<Label text="#GameUI_DisplayMode" class="half-width"/>
-						<CSGOSettingsEnumDropDown onuserinputsubmit="SettingsMenuShared.VideoSettingsOnUserInputSubmit()" class="PopupButton White" id="ColorMode" convar="mat_monitorgamma_tv_enabled">
+						<CSGOSettingsEnumDropDown onuserinputsubmit="SettingsMenuShared.VideoSettingsOnUserInputSubmit()" class="PopupButton White" id="ColorMode">
 							<Label text="#GameUI_DisplayMonitor" value="0" id="tvmode0" />
 							<Label text="#GameUI_DisplayTV" value="1" id="tvmode1"/>
 						</CSGOSettingsEnumDropDown>
 					</Panel>
+					<Panel class="horizontal-separator"/>
+
+					                   
+					<TooltipPanel class="SettingsMenuDropdownContainer" tooltip="#SFUI_Settings_Brightness">
+						<CSGOSettingsSlider id="brightness" text="#GameUI_Brightness" max="2.6" min="1.6" invert="true" percentage="true" value100percent="2.0" convar="mat_monitorgamma"/>
+					</TooltipPanel>
 					<Panel class="horizontal-separator"/>
 
 					                     
@@ -64,7 +70,7 @@
 					<Panel class="SettingsMenuDropdownContainer">
 						<Label text="#SFUI_Settings_Resolution" class="half-width"/>
 						<CSGOSettingsEnumDropDown onuserinputsubmit="SettingsMenuShared.VideoSettingsOnUserInputSubmit()" class="PopupButton White" id="ResolutionEnum" oninputsubmit="CSGOResolutionSelectionChanged()" >
-							<Label text="NOT USED. DYNAMIC" value="0" id="resolution0" />
+							<Label value="0" id="resolution0" />
 						</CSGOSettingsEnumDropDown>
 					</Panel>
 					<Panel class="horizontal-separator"/>
@@ -83,7 +89,7 @@
 					                     
 					<TooltipPanel class="SettingsMenuDropdownContainer" tooltip="#SFUI_Settings_PowerSavings_Info">
 						<Label text="#SFUI_Settings_Laptop_Power" class="half-width"/>
-						<CSGOSettingsEnumDropDown onuserinputsubmit="SettingsMenuShared.VideoSettingsOnUserInputSubmit()" class="PopupButton White" convar="mat_powersavingsmode">
+						<CSGOSettingsEnumDropDown onuserinputsubmit="SettingsMenuShared.VideoSettingsOnUserInputSubmit()" class="PopupButton White" id="PowerSavingsMode">
 							<Label text="#SFUI_Settings_Disabled" value="0" id="laptoppower0" />
 							<Label text="#SFUI_Settings_Enabled" value="1" id="laptoppower1"/>
 						</CSGOSettingsEnumDropDown>
@@ -161,8 +167,8 @@
 					<TooltipPanel class="SettingsMenuDropdownContainer" tooltip="#SFUI_Settings_Antialiasing_Info">
 						<Label text="#SFUI_Settings_Antialiasing_Mode" class="half-width"/>
 						<CSGOSettingsEnumDropDown onuserinputsubmit="SettingsMenuShared.VideoSettingsOnUserInputSubmit()" class="PopupButton White" id="AAMode">
-							<Label text="NOT USED. DYNAMIC" value="0" id="antialisaing0" />
-							<Label text="NOT USED. DYNAMIC" value="1" id="antialiasing1"/>
+							<Label value="0" id="antialisaing0" />
+							<Label value="1" id="antialiasing1"/>
 						</CSGOSettingsEnumDropDown>
 					</TooltipPanel>
 					<Panel class="horizontal-separator"/>

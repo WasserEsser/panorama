@@ -1,46 +1,17 @@
 'use strict';
 
 
-var dictPlayerStatusImage = {
-	0: "",
-	1: "file://{images}/icons/ui/elimination.svg",
-	2: "file://{images}/icons/ui/bomb_c4.svg",
-	3: "file://{images}/icons/ui/dominated.svg",
-	4: "file://{images}/icons/ui/dominated_dead.svg",
-	5: "file://{images}/icons/ui/nemesis.svg",
-	6: "file://{images}/icons/ui/nemesis_dead.svg",
-	7: "file://{images}/icons/equipment/defuser.svg",
-	8: "file://{images}/icons/ui/VoteTeamSwitch.svg",
-	9: "file://{images}/icons/ui/switch_teams_dead.svg"
-}
 
-var dictRoundResultImage = {
-	"win_elimination": "file://{images}/icons/ui/elimination.svg",
-	"win_rescue": "file://{images}/icons/ui/rescue.svg",
-	"win_defuse": "file://{images}/icons/equipment/defuser.svg",
-	"win_time": "file://{images}/icons/ui/timer.svg",
-	"win_bomb": "file://{images}/icons/ui/bomb.svg",
-}
-
-
-var dictGamePhases = {
-	"GAMEPHASE_WARMUP_ROUND": 0,
-	"GAMEPHASE_PLAYING_STANDARD": 1,
-	"GAMEPHASE_PLAYING_FIRST_HALF": 2,
-	"GAMEPHASE_PLAYING_SECOND_HALF": 3,
-	"GAMEPHASE_HALFTIME": 4,
-	"GAMEPHASE_MATCH_ENDED": 5
-}
 
 var arrSpectatorVisibleStats = [
+	"ping",
 	"avatar",
 	"name"
 ];
 
 var arrStatsNotToTeamColorize = [
 	"ping"
-]
-
+];
 
 var Scoreboard = ( function()
 {
@@ -48,13 +19,12 @@ var Scoreboard = ( function()
 	var UPDATE_INTERVAL_MIN = 0.1;
 
 	var _m_bInit;
-	                         			                                         
+	var _m_LocalPlayerID = "";			                                         
 	var GetLocalPlayerId = function()
 	{
-		var _m_LocalPlayerID = 0;
 		return function()
 		{
-			if ( !_m_LocalPlayerID )
+			if ( _m_LocalPlayerID == "" )
 				_m_LocalPlayerID = GameStateAPI.GetLocalPlayerXuid();
 			return _m_LocalPlayerID;
 		}
@@ -64,7 +34,6 @@ var Scoreboard = ( function()
 	var _m_updatePlayerIndex;		                                   
 	var _m_oTeams = {};					                                  
 	var _m_arrSortingPausedRefGetCounter;                                     
-	var _m_stateGetCounter;				                                      
 	var _m_hDenyInputToGame;		                                                                         
 
 	var _m_dataSetCurrent;
@@ -74,7 +43,14 @@ var Scoreboard = ( function()
 	var _m_maxRounds;
 	var _m_oPlayers;				                               
 
+	var _m_RoundUpdated;			                                                                                               
+
 	var _m_TopCommends;
+	var _m_overtime;
+
+	var _m_sortOrder;                                 
+
+	var _m_updatePlayerHandler = null;
 
 	var _m_cP = $.GetContextPanel();
 
@@ -99,42 +75,45 @@ var Scoreboard = ( function()
 			}
 		}
 
+		                                                                                                     
 		function _CalculateAllCommends ()
 		{
 
 			var localTeamName = GameStateAPI.GetPlayerTeamName( GetLocalPlayerId() );
 
-			                                                                      
-			if ( !localTeamName || GameStateAPI.IsDemoOrHltv() || IsTeamASpecTeam( localTeamName ) )
+			[ 'leader', 'teacher', 'friendly' ].forEach( function( stat )
 			{
-				_ChangeCommendDisplay( _m_TopCommends[ 'leader' ], 'leader', false );
-				_ChangeCommendDisplay( _m_TopCommends[ 'teacher' ], 'teacher', false );
-				_ChangeCommendDisplay( _m_TopCommends[ 'friendly' ], 'friendly', false );
-			}
-			else
-			{
-				_SortCommendLeaderboard( 'leader' );
-				_SortCommendLeaderboard( 'teacher' );
-				_SortCommendLeaderboard( 'friendly' );				
-			}
+				                                                                                 
+				                                                        
+
+				_SortCommendLeaderboard( stat );
+
+				_ChangeCommendDisplay( _m_TopCommends[ stat ], stat, false );
+
+				_m_TopCommends[ stat ] = _GetCommendBestXuid( stat );
+				_ChangeCommendDisplay( _m_TopCommends[ stat ], stat, true );          
+				
+				
+			} );
 		}
 
-		function _UpdateCommendForPlayer ( xuid, commendStatName, value )
+		function _UpdateCommendForPlayer ( xuid, stat, value )
 		{
-			var playerCommend = _m_CommendLeaderboards[ commendStatName ].find( p => p.m_xuid === xuid );
+			if ( value == 0 )
+				return;
+			
+			var playerCommend = _m_CommendLeaderboards[ stat ].find( p => p.m_xuid === xuid );
 
 			if ( !playerCommend )
 			{
-				_m_CommendLeaderboards[ commendStatName ].push( player_commend_t( xuid, value ) );
+				_m_CommendLeaderboards[ stat ].push( player_commend_t( xuid, value ) );
 			}
 			else
 			{
 				playerCommend.m_value = value;
 			}
 
-			                                  
-			var localTeamName = GameStateAPI.GetPlayerTeamName( GetLocalPlayerId() );
-			_m_oTeams[ localTeamName ].CalculateAllCommends();
+
 
 		}
 
@@ -145,30 +124,27 @@ var Scoreboard = ( function()
 			{
 				var index = _m_CommendLeaderboards[ stat ].findIndex( p => p.m_xuid === xuid );
 
-				if ( index )
+				if ( index != -1 )
 				{
 					_m_CommendLeaderboards[ stat ].splice( index, 1 );
 				}
 			} )
 			
-			                                         
-			var localTeamName = GameStateAPI.GetPlayerTeamName( GetLocalPlayerId() );
-			if ( _m_oTeams[ localTeamName ] )
-				_m_oTeams[ localTeamName ].CalculateAllCommends();
+
 		}		
 
-		function _ChangeCommendDisplay ( xuid, commendStatName, turnon )
+		function _ChangeCommendDisplay ( xuid, stat, turnon )
 		{
 			var oPlayer = _m_oPlayers.GetPlayerByXuid( xuid );
 			if ( !oPlayer )
 				return;
 			
 			var elPlayer = oPlayer.m_elPlayer;
-			if ( !elPlayer )
+			if ( !elPlayer || !elPlayer.IsValid() )
 				return;
 			
-			var elCommendationImage = elPlayer.FindChildTraverse( "id-sb-name__commendations__" + commendStatName );
-			if ( !elCommendationImage )
+			var elCommendationImage = elPlayer.FindChildTraverse( "id-sb-name__commendations__" + stat );
+			if ( !elCommendationImage || !elCommendationImage.IsValid() )
 				return;
 			
 			if ( turnon )
@@ -179,27 +155,15 @@ var Scoreboard = ( function()
 
 
 
-		function _SortCommendLeaderboard ( commendStatName )
+		function _SortCommendLeaderboard ( stat )
 		{
 			       
-			_m_CommendLeaderboards[ commendStatName ].sort( function( a, b ) { return b.m_value - a.m_value } );
-
-			var newBest = _GetCommendBestXuid( commendStatName );
-
-			                                               
-			if ( _m_TopCommends[ commendStatName ] != newBest )
-			{
-				_ChangeCommendDisplay( _m_TopCommends[ commendStatName ], commendStatName, false );           
-
-				_m_TopCommends[ commendStatName ] = newBest;
-
-				_ChangeCommendDisplay( _m_TopCommends[ commendStatName ], commendStatName, true );          
-			}
+			_m_CommendLeaderboards[ stat ].sort( function( a, b ) { return b.m_value - a.m_value } );
 		}
 
-		function _GetCommendBestXuid ( commendStatName )
+		function _GetCommendBestXuid ( stat )
 		{
-			switch ( commendStatName )
+			switch ( stat )
 			{
 				case 'leader': return _GetCommendTopLeaderXuid(  );
 				case 'teacher': return _GetCommendTopTeacherXuid(  );
@@ -244,16 +208,17 @@ var Scoreboard = ( function()
 		}
 
 
+
 		return {
-			m_teamName : teamName,
-			m_teamClanName: "",
-			m_teamLogoImagePath: "",
-			UpdateCommendForPlayer: _UpdateCommendForPlayer,
-			DeletePlayerFromCommendsLeaderboards:_DeletePlayerFromCommendsLeaderboards,
-			CalculateAllCommends: _CalculateAllCommends,
+			m_teamName : 								teamName,
+			m_teamClanName: 							"",
+			m_teamLogoImagePath: 						"",
+			UpdateCommendForPlayer: 					_UpdateCommendForPlayer,
+			DeletePlayerFromCommendsLeaderboards:		_DeletePlayerFromCommendsLeaderboards,
+			CalculateAllCommends: 						_CalculateAllCommends,
 		}
 
-	}
+	};
 
 	function player_t ( xuid )
 	{
@@ -264,6 +229,7 @@ var Scoreboard = ( function()
 			m_oStats: {},				                                        
 			m_oElStats: {},			                                         
 			m_isMuted: false,			               
+			m_oMatchStats: undefined,
 		}
 	}
 
@@ -282,7 +248,7 @@ var Scoreboard = ( function()
 				teamName = "Spectator";
 			
 			var elTeam = _m_cP.FindChildInLayoutFile( "players-table-" + teamName );
-			if ( !elTeam )
+			if ( !elTeam || !elTeam.IsValid() )
 			{
 				elTeam = _m_cP.FindChildInLayoutFile( "players-table-ANY" );
 			}
@@ -309,6 +275,14 @@ var Scoreboard = ( function()
 
 		}
 
+
+		function _GetPlayerIndexByEntIndex ( entindex )
+		{
+			var xuid = GameStateAPI.GetPlayerXuidStringFromEntIndex( entindex );
+
+			return _GetPlayerIndexByXuid( xuid );
+		}
+
 		function _GetPlayerIndexByXuid ( xuid )
 		{
 			return _m_arrPlayers.findIndex( p => p.m_xuid === xuid );
@@ -325,11 +299,12 @@ var Scoreboard = ( function()
 
 			if ( oPlayer &&
 				oPlayer.m_oStats &&
-				( oPlayer.m_oStats[ 'teamname' ] ) &&
-				( _m_oTeams[ oPlayer.m_oStats[ 'teamname' ] ] ) )
+				( 'teamname' in oPlayer.m_oStats ) &&
+				( oPlayer.m_oStats[ 'teamname' ] in _m_oTeams ) )
+			{
 				_m_oTeams[ oPlayer.m_oStats[ 'teamname' ] ].DeletePlayerFromCommendsLeaderboards( xuid );
-			
-			
+			}
+				
 			var i = _GetPlayerIndexByXuid( xuid );
 
 			if ( _m_arrPlayers[ i ].m_elPlayer && _m_arrPlayers[ i ].m_elPlayer.IsValid() )
@@ -357,6 +332,7 @@ var Scoreboard = ( function()
 			GetPlayerByIndex: _GetPlayerByIndex,
 			GetPlayerByXuid: _GetPlayerByXuid,
 			GetPlayerIndexByXuid: _GetPlayerIndexByXuid,
+			GetPlayerIndexByEntIndex: _GetPlayerIndexByEntIndex,
 			GetCount: _GetCount,
 			DeletePlayerByXuid: _DeletePlayerByXuid,
 			DeleteDisconnectedPlayers: _DeleteAllDisconnectedPlayers,
@@ -375,12 +351,15 @@ var Scoreboard = ( function()
 		_m_updatePlayerIndex = 0;
 		_m_oTeams = {};
 		_m_arrSortingPausedRefGetCounter = 0;
-		_m_stateGetCounter = 0;
 		_m_hDenyInputToGame = null;
 		_m_dataSetCurrent = 0;
 		_m_dataSetGetCount = 0;
 		_m_areTeamsSwapped = false;
 		_m_maxRounds = 0;
+		_m_sortOrder = undefined;
+		_m_overtime = 0;
+
+		_m_RoundUpdated = {};
 
 		_m_TopCommends = {
 			'leader': 0,
@@ -400,7 +379,7 @@ var Scoreboard = ( function()
 			element.BLoadLayoutSnippet( snippet )
 			element.m_bSnippetLoaded = true;
 		}
-	};
+	}
 
 
 	  
@@ -434,6 +413,9 @@ var Scoreboard = ( function()
 			{
 				var xuid = oPlayerList[ teamName ][ j ];
 
+				if ( xuid == 0 )
+					continue;
+
 				var oPlayer = _m_oPlayers.GetPlayerByXuid( xuid );
 
 				                                                    
@@ -460,7 +442,7 @@ var Scoreboard = ( function()
 		}
 
 		return true;
-	};
+	}
 
 	function _ChangeTeams ( oPlayer, newTeam )
 	{
@@ -476,15 +458,17 @@ var Scoreboard = ( function()
 		oPlayer.m_oStats[ 'teamname' ] = newTeam;
 		
 		                                
-		if ( _m_oTeams[ oldTeam ] )
+		if ( oldTeam in _m_oTeams )
+		{
 			_m_oTeams[ oldTeam ].DeletePlayerFromCommendsLeaderboards( xuid );	
+		}
 		
 		                                                                                        
 		oPlayer.m_oStats[ 'leader' ] = -1;
 		oPlayer.m_oStats[ 'teacher' ] = -1;
 		oPlayer.m_oStats[ 'friendly' ] = -1;
 		
-		if ( !elPlayer )
+		if ( !elPlayer || !elPlayer.IsValid() )
 			return;
 		
 		                                               
@@ -493,6 +477,7 @@ var Scoreboard = ( function()
 		
 		elPlayer.AddClass( "sb-team--" + newTeam );
 		
+		                                        
 		if ( IsTeamASpecTeam( newTeam ) && MatchStatsAPI.IsTournamentMatch() )
 		{
 			elPlayer.AddClass( 'hidden' );
@@ -508,7 +493,7 @@ var Scoreboard = ( function()
 			elTeam = _m_cP.FindChildInLayoutFile( "players-table-ANY" );
 		}
 
-		if ( elTeam )
+		if ( elTeam && elTeam.IsValid() )
 		{
 			oPlayer.m_elTeam = elTeam;
 			elPlayer.SetParent( elTeam );
@@ -536,6 +521,14 @@ var Scoreboard = ( function()
 		_UpdateAllStatsForPlayer( idx, true );
 
 		_SortPlayer( idx );
+
+		                                       
+		for ( var s in _m_sortOrder )
+		{
+			_HighlightSortStatLabel( s );
+			break;
+		}
+
 	}
 
 
@@ -559,6 +552,12 @@ var Scoreboard = ( function()
 	}
 
 
+	function _UpdateAllPlayers_delayed ( bSilent = false )
+	{
+		$.Schedule( 0.01, _ => _UpdateAllPlayers( bSilent ) );
+	}
+
+
 	                                                
 	function _UpdateAllPlayers ( bSilent = false )
 	{
@@ -576,20 +575,22 @@ var Scoreboard = ( function()
 			for ( var i = 0; i < _m_oPlayers.GetCount(); i++ )
 			{
 				var elPlayer = _m_oPlayers.GetPlayerByIndex( i ).m_elPlayer;
-				if ( elPlayer )
+				if ( elPlayer && elPlayer.IsValid() )
 					elPlayer.RemoveClass( "sb-row--transition" );
 			}
 
 			for ( var i = 0; i < _m_oPlayers.GetCount(); i++ )
 			{
 				_UpdatePlayer( i, bSilent );
+
+			  	                                                    
 			};
 	
 			  	                            
 			for ( var i = 0; i < _m_oPlayers.GetCount(); i++ )
 			{
 			 	var elPlayer = _m_oPlayers.GetPlayerByIndex( i ).m_elPlayer;
-			 	if ( elPlayer )
+			 	if ( elPlayer && elPlayer.IsValid() )
 			 		elPlayer.AddClass( "sb-row--transition" );
 			 }
 		
@@ -601,6 +602,23 @@ var Scoreboard = ( function()
 		el.RemoveClass( "sb-pulse-highlight" );
 		el.AddClass( "sb-pulse-highlight" );
 	};
+
+	function _UpdatePlayerByEntIndex ( entindex )
+	{
+		var index = _m_oPlayers.GetPlayerIndexByEntIndex( entindex );
+
+		_UpdatePlayer( index, true );
+	}
+
+	function _UpdatePlayerByEntIndex_delayed ( entindex )
+	{
+		                                                                                                            
+		                                               
+
+		$.Schedule( 0.01, _ => _UpdatePlayerByEntIndex( entindex ) );
+
+	}
+
 
 	                                                
 	  
@@ -617,6 +635,8 @@ var Scoreboard = ( function()
 		bSilent = bSilent && _m_cP.visible;
 		
 		var xuid = oPlayer.m_xuid;
+
+		oPlayer.m_oMatchStats = MatchStatsAPI.GetPlayerStatsJSO( xuid );
 
 		                    
 		    
@@ -636,6 +656,25 @@ var Scoreboard = ( function()
 	};
 	                                                
 
+	function _UpdateSpectatorButtons()
+	{
+	    var elButtonPanel = $( "#spec-button-group" );
+	    if ( !elButtonPanel || !elButtonPanel.IsValid()  ) 
+	        return;
+
+	    var nCameraMan = parseInt( GameInterfaceAPI.GetSettingString( "spec_autodirector_cameraman" ) );
+	    var bQ = ( GameStateAPI.IsLocalPlayerHLTV() && nCameraMan > -1 )
+
+	    if ( bQ )
+	    {
+	        elButtonPanel.visible = true;
+	        UpdateCasterButtons();
+	    }
+	    else
+	    {
+	        elButtonPanel.visible = false;
+	    }  
+	}
 
 	var sortOrder_default = {
 
@@ -648,55 +687,84 @@ var Scoreboard = ( function()
 		'teacher': 0,
 		'friendly': 0,
 		'rank': 0,
-		'idx': -1
+		'idx': -1,
+		                                                              
+		                                                                	
+		'money': 0,
+		'hsp': 0,
+		'kdr': 0,
+		'adr':0,
+		'utilitydamage': 0,
+		'enemiesflashed' :0,
 	};
 
+	var sortOrder_reverse = {
 
-	                            
+		'score': -1,
+		'mvps': -1,
+		'kills': -1,
+		'assists': -1,
+		'deaths': 0,           
+		'leader': -1,
+		'teacher': -1,
+		'friendly': -1,
+		'rank': -1,
+		'idx': 0,
+		                                                              
+		                                                                	
+		'money': 0,
+		'hsp': 0,
+		'kdr': 0,
+		'adr':0,
+		'utilitydamage': 0,
+		'enemiesflashed' :0,
+	};
 
-	   	            
-	   	           
-	   	            
-	   	              
-	   	                       
-	   	             
-	   	               
-	   	              
-	   	           
-	   	        
-
-	     
-
-	       
-	                          
-
-		              
-		           
-		           
-		             
-		                        
-		         
-	  
-	       
 
 	var sortOrder_dm = {
 
 		'score': 0,
-		              
-		                
-		                           
-		             
-		'idx': -1
+		'idx': -1,
+		                                                              
+		                                                                	
+		'hsp': 0,
+		'kdr': 0,
+		'kills': 0,
+		'assists': 0,
+		'deaths': -1,           
+		'rank': 0,
 	}
 
 	var sortOrder_gg = {
 
 		'gglevel': 0,
 		'ggleader': 0,
-		'idx': -1
+		'idx': -1,
+		                                                              
+		                                                                
+		'hsp': 0,
+		'kdr': 0,
+		'score' : 0,
+		'kills': 0,
+		'assists': 0,
+		'deaths': -1,           
 	}
 
+	function _lessthan( x , y )
+	{
+	    x = Number(x);
+	    y = Number(y);
 
+	    if( x === NaN )
+	        return (y !== NaN);
+	    if( y === NaN )
+	        return false;
+
+	    return (x < y);
+	}
+
+	                                                          
+	  
 	function _SortPlayer ( idx )
 	{
 		if ( _m_arrSortingPausedRefGetCounter != 0 )
@@ -705,36 +773,14 @@ var Scoreboard = ( function()
 		var oPlayer = _m_oPlayers.GetPlayerByIndex( idx );
 
 		var elTeam = oPlayer.m_elTeam;
-		if ( !elTeam )
+		if ( !elTeam || !elTeam.IsValid() )
 			return;
 
 		var elPlayer = oPlayer.m_elPlayer;
 
-		if ( !elPlayer )
+		if ( !elPlayer || !elPlayer.IsValid() )
 			return;	
-
-		var sortOrder = sortOrder_default;
-
-
-
-		switch ( MatchStatsAPI.GetGameMode() )
-		{
-			       
-			                
-				                               
-				      
-			       
-
-			case "gungameprogressive":            
-				sortOrder = sortOrder_gg;
-				break;
-
-			case "deathmatch":
-				sortOrder = sortOrder_dm;
-				break;
-		}
-
-
+		
 
 		                                     
 		var children = elTeam.Children();
@@ -748,37 +794,35 @@ var Scoreboard = ( function()
 			if ( !oCompareTargetPlayer )
 				continue;
 
-			for ( var stat in sortOrder )
+			for ( var stat in _m_sortOrder )
 			{
+			    var p1stat = oPlayer.m_oStats[ stat ];
+			    var p2stat = oCompareTargetPlayer.m_oStats[ stat ];
 
-				var p1stat;
-				var p2stat;
-
-				if ( sortOrder[ stat ] === -1 )            
+				if ( _m_sortOrder[ stat ] === -1 )            
 				{
-					p2stat = oPlayer.m_oStats[ stat ];
-					p1stat = oCompareTargetPlayer.m_oStats[ stat ];
-				}
-				else
-				{
-					p1stat = oPlayer.m_oStats[ stat ];
-					p2stat = oCompareTargetPlayer.m_oStats[ stat ];
+                           
+				    var tmp = p1stat;
+				    p1stat = p2stat;
+				    p2stat = tmp;
 				}
 
-				if ( p1stat > p2stat )
+				if ( _lessthan(p2stat, p1stat) )
 				{
 
 					if ( children[ i - 1 ] != elPlayer )
 					{
+					  	                                                                                                          
+
 						elTeam.MoveChildBefore( elPlayer, children[ i ] );
 
-					   	                                                                 
+					   	                                                             
 					   		     
 					   		      
 					   		     
 					   		        
 					   		       
-					   		                                                        
+					   		                                                    
 					   		     
 					   		      
 					   		     
@@ -788,16 +832,16 @@ var Scoreboard = ( function()
 
 					return;
 				}
-				else if ( p1stat < p2stat )
+				else if ( _lessthan(p1stat, p2stat) )
 				{
 
-					                                                             
+					                                                         
 					   	     
 					   	      
 					   	     
 					   	        
 					   	       
-					   	                                                        
+					   	                                                    
 					   	     
 					   	      
 					   	     
@@ -812,7 +856,13 @@ var Scoreboard = ( function()
 
 	function IsTeamASpecTeam ( teamname )
 	{
-		return ( teamname === "Spectator" || teamname == "Unassigned" || teamname == "Unknown" );
+		return (
+			teamname === "Spectator" ||
+			teamname == "Unassigned" ||
+			teamname == "Unknown" ||
+			teamname == "UNKNOWN TEAM" ||
+			teamname === ""
+		);
 	}
 
 	                                                
@@ -824,34 +874,12 @@ var Scoreboard = ( function()
 		{
 
 			if ( typeof ( _m_oUpdateStatFns[ stat ] ) === 'function' )
-				_m_oUpdateStatFns[ stat ]( oPlayer, bSilent );
-			else
-				                                       
-
-			if ( oPlayer.m_oElStats[ stat ] )
 			{
-				                                                         
-				var teamname = GameStateAPI.GetPlayerTeamName( oPlayer.m_xuid );
-
-				if ( IsTeamASpecTeam( teamname ) && !arrSpectatorVisibleStats.includes( stat ) )
-				{
-					oPlayer.m_oElStats[ stat ].AddClass( 'spectator-hidden' );
-				}
-				else
-				{
-					oPlayer.m_oElStats[ stat ].RemoveClass( 'spectator-hidden' );
-				}
+				_m_oUpdateStatFns[ stat ]( oPlayer, bSilent );
 			}
 		}
 	};
 
-	function _TeamColorizeStat ( stat, el )
-	{
-		if ( !arrStatsNotToTeamColorize.includes( stat ) )
-		{
-			el.AddClass( "sb-team-tint" );
-		}
-	}
 
 	                                                                          
 	function _GenericUpdateStat ( oPlayer, stat, fnGetStat, bSilent = false, pulseDuration = 1.0 )
@@ -859,15 +887,13 @@ var Scoreboard = ( function()
 		                                                  
 		var elPanel = oPlayer.m_oElStats[ stat ];
 
-		if ( !elPanel )
+		if ( !elPanel || !elPanel.IsValid() )
 			return;
 		
-		var elLabel = elPanel.Children()[ 0 ];
-		if ( !elLabel )
-		{
-			elLabel = $.CreatePanel( "Label", elPanel, "id-sb-row__cell--" + stat + "__label" );
-			_TeamColorizeStat( stat, elLabel );
-		}
+		var elLabel = elPanel.FindChildTraverse( 'label' );
+
+		if ( !elLabel || !elLabel.IsValid() )
+			return;
 
 		var newStatValue = fnGetStat( oPlayer.m_xuid );
 		if ( newStatValue !== oPlayer.m_oStats[ stat ] )
@@ -887,15 +913,15 @@ var Scoreboard = ( function()
 	{
 		var _fn = function( xuid )
 		{
-			var allstats = MatchStatsAPI.GetPlayerStatsJSO( xuid );
+			var oPlayer = _m_oPlayers.GetPlayerByXuid( xuid );
+			var allstats = oPlayer.m_oMatchStats;
 
 			if ( allstats )
-				return allstats[ stat ];
+				return ( allstats[ stat ] == -1 ) ? "-" : allstats[ stat ];
 		}
 
 		return _fn;
 	}
-
 
 
 	                                                            
@@ -918,14 +944,15 @@ var Scoreboard = ( function()
 						return;
 					
 					var ownerXuid = oPlayer.m_xuid;
+					var isLocalPlayer = oPlayer.m_xuid == GetLocalPlayerId();
 					var isBorrowed = false;
 					var borrowedXuid = 0;
 
-					var borrowedPlayerIndex = parseInt( GameInterfaceAPI.LookupConVarStringValue( "cl_borrow_music_from_player_index" ) );
+					var borrowedPlayerIndex = parseInt( GameInterfaceAPI.GetSettingString( "cl_borrow_music_from_player_index" ) );
 
-					if ( borrowedPlayerIndex != 0 )
+					if ( borrowedPlayerIndex != 0 && isLocalPlayer )
 					{
-						borrowedXuid = GameStateAPI.GetPlayerXuid( borrowedPlayerIndex );
+						borrowedXuid = GameStateAPI.GetPlayerXuidStringFromEntIndex( borrowedPlayerIndex );
 
 						if ( GameStateAPI.IsPlayerConnected( borrowedXuid ) )
 						{
@@ -941,57 +968,37 @@ var Scoreboard = ( function()
 						oPlayer.m_oStats[ stat ] = newStatValue;
 
 						                                 
-						if ( oPlayer.m_xuid == GetLocalPlayerId() )
+						if ( isLocalPlayer )
 						{
-
 							var elMusicKit = $( '#id-sb-meta__musickit' );
 
-							if ( !elMusicKit )
+							if ( !elMusicKit || !elMusicKit.IsValid() )
 								return;
 
-							if ( newStatValue <= 0 )
+							var isValidMusicKit = newStatValue > 0;
+							elMusicKit.SetHasClass( 'hidden', !isValidMusicKit );
+							if ( isValidMusicKit )
 							{
-								elMusicKit.AddClass( "hidden" );
-							}
-							else
-							{
-
 								                          
-								if ( isBorrowed )
-								{
-									_m_cP.FindChildTraverse( "id-sb-meta__musickit-unborrow" ).RemoveClass( "hidden" );
-								}
-								else
-								{
-									_m_cP.FindChildTraverse( "id-sb-meta__musickit-unborrow" ).AddClass( "hidden" );
-								}	
+								_m_cP.FindChildTraverse( "id-sb-meta__musickit-unborrow" ).SetHasClass( 'hidden', !isBorrowed );
 
-								elMusicKit.RemoveClass( "hidden" );
 								var imagepath = "file://{images_econ}/" + InventoryAPI.GetItemInventoryImageFromMusicID( newStatValue ) + ".png";
 								$( '#id-sb-meta__musickit-image' ).SetImage( imagepath );
 								$( '#id-sb-meta__musickit-name' ).text = $.Localize( InventoryAPI.GetMusicNameFromMusicID( newStatValue ) );
 							}
 						}
-
-						var elPlayer = oPlayer.m_elPlayer;
-
-						if ( elPlayer )
+					}
+					
+					var elPlayer = oPlayer.m_elPlayer;
+					if ( elPlayer && elPlayer.IsValid())
+					{
+						                                
+						                     
+						                                
+						var elMusicKitIcon = elPlayer.FindChildTraverse( "id-sb-name__musickit" );
+						if ( elMusicKitIcon && elMusicKitIcon.IsValid() )
 						{
-							                                
-							                     
-							                                
-							var elMusicKitIcon = elPlayer.FindChildTraverse( "id-sb-name__musickit" );
-							if ( elMusicKitIcon )
-							{
-								if ( newStatValue <= 1 )
-								{
-									elMusicKitIcon.AddClass( "hidden" );
-								}
-								else
-								{
-									elMusicKitIcon.RemoveClass( "hidden" );
-								}
-							}
+							elMusicKitIcon.SetHasClass( 'hidden', newStatValue <= 1 );
 						}
 					}
 				}
@@ -1001,11 +1008,9 @@ var Scoreboard = ( function()
 			case 'teamname':
 				fn = function( oPlayer, bSilent = false )
 				{
-
 					var newStatValue = GameStateAPI.GetPlayerTeamName( oPlayer.m_xuid );
 
 					_ChangeTeams( oPlayer, newStatValue );
-
 				}
 				break;
 
@@ -1014,15 +1019,30 @@ var Scoreboard = ( function()
 				{
 					var elPlayer = oPlayer.m_elPlayer;
 
-					if ( elPlayer )
+					if ( !elPlayer || !elPlayer.IsValid() )
+						return;
+					
+					var elPanel = oPlayer.m_oElStats[ stat ];
+					if ( !elPanel || !elPanel.IsValid() )
+						return;
+					
+					var elLabel = elPanel.FindChildTraverse( 'label' );
+					if ( !elLabel )
+						return;
+		
+					var szCustomLabel = _GetCustomStatTextValue( 'ping', oPlayer.m_xuid );
+					elLabel.SetHasClass( "sb-row__cell--ping__label--bot", !!szCustomLabel );                                                          
+					if ( szCustomLabel )
 					{
-						var elStat = elPlayer.FindChildTraverse( "id-sb-row__cell--ping__label" );
-
-						if ( !GameStateAPI.IsFakePlayer( oPlayer.m_xuid ) )
-						{
-							_GenericUpdateStat( oPlayer, stat, GameStateAPI.GetPlayerPing.bind( GameStateAPI ), true );
-						}
+						elLabel.text = $.Localize( szCustomLabel );
+						oPlayer.m_oStats[ stat ] = szCustomLabel;                                                                                     
 					}
+					else
+					{
+						_GenericUpdateStat( oPlayer, stat, GameStateAPI.GetPlayerPing.bind( GameStateAPI ), true );
+					}
+					
+					
 				};
 				break;
 
@@ -1063,14 +1083,37 @@ var Scoreboard = ( function()
 			case 'kdr':
 				fn = function( oPlayer, bSilent = false )
 				{
-					var kdrFn = _GetMatchStatFn( 'kdr' );
-					var kdr = kdrFn( oPlayer.m_xuid );
 
-					if ( kdr > 0 )
-						kdr = kdr / 100.0;
+					var kdr;
 
-					kdr = kdr.toFixed( 2 );
+					if ( _m_overtime == 0 )
+					{
+						                                                                        
+						                                                                    
+						var kdrFn = _GetMatchStatFn( 'kdr' );
+						kdr = kdrFn( oPlayer.m_xuid );
 
+						if ( typeof kdr == "number" && kdr > 0 )
+						{
+							kdr = kdr / 100.0;
+						}
+					}
+					else
+					{
+					  
+					                                                                      
+					                                                                 
+					                                                                                                          
+					  	
+						var denom = oPlayer.m_oStats[ 'deaths' ] > 0 ? oPlayer.m_oStats[ 'deaths' ] : 1;
+						kdr = oPlayer.m_oStats[ 'kills' ] / denom;
+					}
+
+					if ( typeof kdr == "number" )
+					{
+						kdr = kdr.toFixed( 2 );
+					}
+					
 					_GenericUpdateStat( oPlayer, stat, () => { return kdr; }, bSilent );
 				};
 				break;
@@ -1085,57 +1128,31 @@ var Scoreboard = ( function()
 					{
 
 						var elMVPPanel = oPlayer.m_oElStats[ stat ];
-						if ( !elMVPPanel )
+						if ( !elMVPPanel || !elMVPPanel.IsValid() )
 							return;
 
-						        
-						                                                                          
-						  
-						  
-
-						var MVP_STAR_PANEL_ID = "id-sb-mvps__star";
-						var MVP_STAR_COUNT_ID = "id-sb-mvps__count";
 
 						                        
-						var elMVPStarImage = elMVPPanel.FindChildTraverse( MVP_STAR_PANEL_ID );
-						if ( !elMVPStarImage )
-						{
-							elMVPStarImage = $.CreatePanel( "Image", elMVPPanel, MVP_STAR_PANEL_ID );
-							elMVPStarImage.AddClass( "sb-row__cell--mvps__star" );
-							elMVPStarImage.AddClass( "hidden" );
-							_TeamColorizeStat( stat, elMVPStarImage );
-
-						}
-
+						var elMVPStarImage = elMVPPanel.FindChildTraverse( 'star-image' );
+						if ( !elMVPStarImage || !elMVPStarImage.IsValid() )
+							return;
+					
 						                             
-						var elMVPStarNumberLabel = elMVPPanel.FindChildTraverse( MVP_STAR_COUNT_ID );
-						if ( !elMVPStarNumberLabel )
-						{
-							elMVPStarNumberLabel = $.CreatePanel( "Label", elMVPPanel, MVP_STAR_COUNT_ID );
-							elMVPStarNumberLabel.AddClass( "sb-row__cell--mvps__count" );
-							elMVPStarNumberLabel.AddClass( "hidden" );
-							_TeamColorizeStat( stat, elMVPStarNumberLabel );
-						}
-
+						var elMVPStarNumberLabel = elMVPPanel.FindChildTraverse( 'star-count' );
+						if ( !elMVPStarNumberLabel || !elMVPStarNumberLabel.IsValid() )
+							return;
+					
 						              
 
 						oPlayer.m_oStats[ stat ] = newStatValue;
 
-						var elMVPStarImage = elMVPPanel.FindChildTraverse( MVP_STAR_PANEL_ID );
-						var elMVPStarNumberLabel = elMVPPanel.FindChildTraverse( MVP_STAR_COUNT_ID );
+						var elMVPStarImage = elMVPPanel.FindChildTraverse( "star-image" );
+						var elMVPStarNumberLabel = elMVPPanel.FindChildTraverse( "star-count" );
 
-						if ( newStatValue >= 1 )
-						{
-							elMVPStarImage.SetImage( "file://{images}/icons/ui/star.svg" );
-							elMVPStarNumberLabel.text = newStatValue;
-							elMVPStarNumberLabel.RemoveClass( "hidden" );
-							elMVPStarImage.RemoveClass( "hidden" );
-						}
-						else if ( newStatValue === 0 )
-						{
-							elMVPStarNumberLabel.AddClass( "hidden" );
-							elMVPStarImage.AddClass( "hidden" );
-						}
+						elMVPStarImage.SetHasClass( 'hidden', newStatValue == 0 );
+						elMVPStarNumberLabel.SetHasClass( 'hidden', newStatValue == 0 );
+
+						elMVPStarNumberLabel.text = newStatValue;
 
 						if ( !bSilent )
 						{
@@ -1156,42 +1173,21 @@ var Scoreboard = ( function()
 
 						var elPlayer = oPlayer.m_elPlayer;
 
-						if ( elPlayer )
-						{
-							                                                                           
-							if ( newStatValue === 1 )
-							{
-								elPlayer.AddClass( "sb-player-status-dead" );
-							}
-							else
-							{
-								elPlayer.RemoveClass( "sb-player-status-dead" );
-							}
-						}	
-
-
+						if ( !elPlayer || !elPlayer.IsValid() )
+							return;
+					
+						elPlayer.SetHasClass( "sb-player-status-dead", newStatValue === 1 );
+					
 						var elPanel = oPlayer.m_oElStats[ stat ];
-						if ( !elPanel )
+						if ( !elPanel || !elPanel.IsValid() )
 							return;
 
-						var elStatusImage = elPanel.FindChildTraverse( "id-sb-status-image" );
-						if ( !elStatusImage )
-						{
-							elStatusImage = $.CreatePanel( "Image", elPanel, "id-sb-status-image", { scaling: 'stretch-to-fit-y-preserve-aspect' } );
-							_TeamColorizeStat( stat, elStatusImage );
-						}
-
+						var elStatusImage = elPanel.FindChildTraverse( "image" );
+						if ( !elStatusImage || !elStatusImage.IsValid() )
+							return;
+					
 						                
-						if ( newStatValue === 0 )          
-						{
-							elStatusImage.SetImage( "" );
-						}
-						else
-						{
-							elStatusImage.SetImage( dictPlayerStatusImage[ newStatValue ] );
-						}
-
-
+						elStatusImage.SetImage( dictPlayerStatusImage[ newStatValue ] );
 					}
 				};
 				break;
@@ -1199,66 +1195,8 @@ var Scoreboard = ( function()
 			case 'score':
 				fn = function( oPlayer, bSilent = false )
 				{
-
 					_GenericUpdateStat( oPlayer, stat, GameStateAPI.GetPlayerScore.bind( GameStateAPI ) );
 				};
-				break;
-
-			                                             
-			case 'lifetime':
-				fn = function( oPlayer, bSilent = false )
-				{
-
-					                                                                                         
-					if ( !oPlayer.m_oStats[ stat ] )
-					{
-						oPlayer.m_oStats[ stat ] = 100;
-					}
-
-					var elPlayer = oPlayer.m_elPlayer;
-
-					if ( elPlayer )
-					{
-						var elLifetime = elPlayer.FindChildTraverse( "id-sb-row__lifetime" );
-						if ( !elLifetime )
-						{
-							var container = elPlayer.FindChildTraverse( "sb-row-stats-container" );
-							elLifetime = $.CreatePanel( "Panel", elPlayer, "id-sb-row__lifetime" );
-							elPlayer.MoveChildBefore( elLifetime, container );
-						}
-					}
-
-					var isAlive = GameStateAPI.IsPlayerAlive( oPlayer.m_xuid );
-
-					if ( !isAlive )
-					{
-
-						var elDeathImage = elLifetime.FindChildTraverse( "id-sb-row__lifetime__death" );
-						if ( !elDeathImage )
-						{
-							elDeathImage = $.CreatePanel( "Image", elLifetime, "id-sb-row__lifetime__death" );
-							elDeathImage.SetImage( "file://{images}/icons/ui/elimination.svg" );
-
-						}
-
-						var jsoTime = GameStateAPI.GetTimeDataJSO();
-						var totaltime = jsoTime[ "roundtime_elapsed" ];
-
-						var lifetime = GameStateAPI.GetPlayerLifetime( oPlayer.m_xuid );
-
-						var newStatValue = 100 * ( totaltime ? ( lifetime / totaltime ) : 0 );
-
-						if ( newStatValue !== oPlayer.m_oStats[ stat ] )
-						{
-							oPlayer.m_oStats[ stat ] = newStatValue;
-							elLifetime.style.width = newStatValue + "%";
-						}
-					}
-
-					        
-					                                                                    
-				}
-
 				break;
 
 			case 'money':
@@ -1267,40 +1205,24 @@ var Scoreboard = ( function()
 
 					                                                  
 					var elPanel = oPlayer.m_oElStats[ stat ];
-					if ( !elPanel )
+					if ( !elPanel || !elPanel.IsValid() )
 						return;
 
-					var elLabel = elPanel.Children()[ 0 ];
-					if ( !elLabel )
-					{
-						elLabel = $.CreatePanel( "Label", elPanel, "id-sb-row__cell--" + stat + "__label" );
-						_TeamColorizeStat( stat, elLabel );
-					}
-
-					var bShowMeTheMoney = false;
-
-					if ( GameStateAPI.IsDemoOrHltv() )
-					{
-						bShowMeTheMoney = true;
-					}
-					else if ( GetLocalPlayerId() )
-					{
-						var localPlayerTeamNumber = ( GetLocalPlayerId() != 0 ) ? GameStateAPI.GetPlayerTeamNumber( GetLocalPlayerId() ) : 0;
-						var localPlayerIsSpectator = GameStateAPI.IsDemoOrHltv() || IsTeamASpecTeam( GameStateAPI.GetPlayerTeamName( GetLocalPlayerId() ) )
+						                                                                             
+						                                                                                           
+						             
 						
-						if ( GameStateAPI.GetAssociatedTeamNumber( oPlayer.m_xuid ) === localPlayerTeamNumber || localPlayerIsSpectator )
-							bShowMeTheMoney = true;
-					}
+					var elLabel = elPanel.FindChildTraverse('label');
+					if ( !elLabel || !elLabel.IsValid() )
+						return;
 
-					if ( bShowMeTheMoney )
+					var newStatValue = GameStateAPI.GetPlayerMoney( oPlayer.m_xuid );
+
+					oPlayer.m_oStats[ stat ] = newStatValue;
+
+					if ( oPlayer.m_oStats[ stat ] >= 0 )
 					{
-						var newStatValue = GameStateAPI.GetPlayerMoney( oPlayer.m_xuid );
-
-			  			                                                                                    
-						{
-							oPlayer.m_oStats[ stat ] = newStatValue;
-							elLabel.text = "$" + newStatValue;
-						}
+						elLabel.text = "$" + newStatValue;
 					}
 					else
 					{
@@ -1313,74 +1235,86 @@ var Scoreboard = ( function()
 			case 'name':
 				fn = function( oPlayer, bSilent = false )
 				{
+					if ( !oPlayer.m_elPlayer || !oPlayer.m_elPlayer.IsValid() )
+						return;
+					
+					oPlayer.m_elPlayer.SetHasClass( "sb-row--localplayer", oPlayer.m_xuid === GetLocalPlayerId()  );
 
 					                                                  
 					var elPanel = oPlayer.m_oElStats[ stat ];
-					if ( !elPanel )
+					if ( !elPanel || !elPanel.IsValid() )
 						return;
 
 					                                
 					       
 					                                
-					var elNameLabel = elPanel.FindChildTraverse( "id-sb-name__name" );
-					if ( !elNameLabel )
+					var elNameLabel = elPanel.FindChildTraverse( "name" );
+					if ( !elNameLabel || !elNameLabel.IsValid() )
+						return;
+
+					elNameLabel.SetDialogVariable( 'player_name', GameStateAPI.GetPlayerName( oPlayer.m_xuid ) );
+
+					if ( GameStateAPI.GetPlayerClanTag( oPlayer.m_xuid ) != "" )
 					{
-						elNameLabel = $.CreatePanel( "Label", elPanel, "id-sb-name__name" );
-						elNameLabel.html = true;
-						_TeamColorizeStat( stat, elNameLabel );
+						elNameLabel.SetDialogVariable( 'player_clan', GameStateAPI.GetPlayerClanTag( oPlayer.m_xuid ) );
+						elNameLabel.text = "#Scoreboard_Player_Name_Clan";
 					}
-
-					var clantext = "<span class=\"sb-clantag\">" +
-						$.HTMLEscape( GameStateAPI.GetPlayerClanTag( oPlayer.m_xuid ) ) +
-						"</span>";
-
-					var nametext = "<span class=\"sb-player-name--\">" +
-						GameStateAPI.GetPlayerNameSafe( oPlayer.m_xuid ) +
-						"</span>";
-
-					elNameLabel.text = clantext + " " + nametext;                                      
-
-					                                
-					                
-					                                
-
-					function _UpdateCommendationStat ( oPlayer, commendStatName, newStatValue )
+					else
 					{
-
-						if (  GameStateAPI.IsDemoOrHltv() || IsTeamASpecTeam( GameStateAPI.GetPlayerTeamName( GetLocalPlayerId() ) ) )
-							return;
-						
-						if ( !GameStateAPI.IsXuidValid( oPlayer.m_xuid ) )
-						{
-							if ( 0 )                                                              
-								newStatValue = oPlayer.m_xuid;
-							else
-								return;
-						}
-									
-		
-						                        
-						if ( oPlayer.m_oStats[ commendStatName ] != newStatValue )
-						{
-							oPlayer.m_oStats[ commendStatName ] = newStatValue;
-
-							var  oTeam = _m_oTeams[ oPlayer.m_oStats[ 'teamname' ] ];
-
-							if ( oTeam )
-								oTeam.UpdateCommendForPlayer( oPlayer.m_xuid, commendStatName, newStatValue );							
-						}
+						elNameLabel.text = "#Scoreboard_Player_Name";
 					}
-				
-					_UpdateCommendationStat( oPlayer, 'leader', GameStateAPI.GetPlayerCommendsLeader( oPlayer.m_xuid ) );
-					_UpdateCommendationStat( oPlayer, 'teacher', GameStateAPI.GetPlayerCommendsTeacher( oPlayer.m_xuid ) );
-					_UpdateCommendationStat( oPlayer, 'friendly', GameStateAPI.GetPlayerCommendsFriendly( oPlayer.m_xuid ) );
 				}
 				break;
+			
+			case 'leader':
+			case 'teacher':
+			case 'friendly':
+				fn = function( oPlayer, bSilent = false )
+				{
+					var newStatValue;
 
+					if (  GameStateAPI.IsDemoOrHltv() || IsTeamASpecTeam( GameStateAPI.GetPlayerTeamName( GetLocalPlayerId() ) ) )
+					return;
+				
+					if ( !GameStateAPI.IsXuidValid( oPlayer.m_xuid ) )
+					{
+						if ( 0 )                                                              
+							newStatValue = oPlayer.m_xuid;
+						else
+							return;
+					}
+					else
+					{
+						switch (stat)
+						{
+							case 'leader': newStatValue = GameStateAPI.GetPlayerCommendsLeader( oPlayer.m_xuid ); break;
+							case 'teacher': newStatValue = GameStateAPI.GetPlayerCommendsTeacher( oPlayer.m_xuid ); break;
+							case 'friendly': newStatValue = GameStateAPI.GetPlayerCommendsFriendly( oPlayer.m_xuid ); break;
+						}						
+					}
+
+
+							
+					                        
+					if ( oPlayer.m_oStats[ stat ] != newStatValue )
+					{
+						oPlayer.m_oStats[ stat ] = newStatValue;
+			
+						var  oTeam = _m_oTeams[ oPlayer.m_oStats[ 'teamname' ] ];
+			
+						if ( oTeam )
+							oTeam.UpdateCommendForPlayer( oPlayer.m_xuid, stat, newStatValue );							
+					}
+				}
+				break;
 
 			case 'flair':
 				fn = function( oPlayer, bSilent = false )
 				{
+				                                                          
+				                                                                      
+				    if ( GameStateAPI.IsLatched() )
+				        return;
 
 					var newStatValue = InventoryAPI.GetFlairItemId( oPlayer.m_xuid );
 
@@ -1389,14 +1323,12 @@ var Scoreboard = ( function()
 						oPlayer.m_oStats[ stat ] = newStatValue;
 
 						var elPanel = oPlayer.m_oElStats[ stat ];
-						if ( !elPanel )
+						if ( !elPanel || !elPanel.IsValid() )
 							return;
 
-						var elFlairImage = elPanel.FindChildTraverse( "id-sb-flair-image" );
-						if ( !elFlairImage )
-						{
-							elFlairImage = $.CreatePanel( "Image", elPanel, "id-sb-flair-image", { scaling: 'stretch-to-fit-y-preserve-aspect' } );
-						}
+						var elFlairImage = elPanel.FindChildTraverse( "image" );
+						if ( !elFlairImage || !elFlairImage.IsValid() )
+							return;
 
 						var imagepath = InventoryAPI.GetFlairItemImage( oPlayer.m_xuid );
 
@@ -1410,18 +1342,16 @@ var Scoreboard = ( function()
 				{
 
 					var elPanel = oPlayer.m_oElStats[ stat ];
-					if ( !elPanel )
+					if ( !elPanel || !elPanel.IsValid() )
 						return;
 
 
 					               
 					  
 					         
-					var elAvatarImage = elPanel.FindChildTraverse( "id-sb-avatar-image" );
-					if ( !elAvatarImage )
-					{
-						elAvatarImage = $.CreatePanel( "CSGOAvatarImage", elPanel, "id-sb-avatar-image", { scaling: 'stretch-to-fit-y-preserve-aspect' } );
-					}
+					var elAvatarImage = elPanel.FindChildTraverse( "image" );
+					if ( !elAvatarImage || !elAvatarImage.IsValid() )
+						return;
 
 					         
 					if ( GameStateAPI.IsXuidValid( oPlayer.m_xuid ) )
@@ -1434,7 +1364,7 @@ var Scoreboard = ( function()
 						var team = GameStateAPI.GetPlayerTeamName( oPlayer.m_xuid );
 
 						                               
-						if ( elAvatarImage.m_team !== team )
+						if ( elAvatarImage.m_team != team )
 						{
 							elAvatarImage.RemoveClass( "sb-row__cell--avatar--" + elAvatarImage.m_team );
 							elAvatarImage.AddClass( "sb-row__cell--avatar--" + team );
@@ -1447,89 +1377,60 @@ var Scoreboard = ( function()
 
 					             
 					  
-					         
-					var elPlayerColor = elAvatarImage.FindChildTraverse( "id-sb-row__cell--avatar__playercolor" );
-					if ( !elPlayerColor )
+					var elPlayerColor = elAvatarImage.FindChildTraverse( 'player-color' );
+					if ( elPlayerColor && elPlayerColor.IsValid() )
 					{
-
-						elPlayerColor = $.CreatePanel( "Image", elAvatarImage, "id-sb-row__cell--avatar__playercolor" );
-						elPlayerColor.AddClass( "sb-row__cell--avatar__playercolor" );
-					}
-
-					         
-					var teamColor = GameStateAPI.GetPlayerColor( oPlayer.m_xuid );
-					if ( teamColor !== "" )
-					{
-						elPlayerColor.style.borderColor = teamColor;
-						elPlayerColor.RemoveClass( "hidden" );
-					}
-					else
-					{
-						if ( elPlayerColor )
-							elPlayerColor.AddClass( "hidden" );
+						var teamColor = GameStateAPI.GetPlayerColor( oPlayer.m_xuid );
+						if ( teamColor !== "" )
+						{
+							elPlayerColor.style.borderColor = teamColor;
+							elPlayerColor.RemoveClass( "hidden" );
+						}
+						else
+						{
+							if ( elPlayerColor && elPlayerColor.IsValid() )
+								elPlayerColor.AddClass( "hidden" );
+						}
 					}
 					                          
 
 					             
 					  
-					         
-					var elAvatarMuteImage = elPanel.FindChildTraverse( "id-sb-avatar-mute-image" );
-					if ( !elAvatarMuteImage )
+					var elAvatarMuteImage = elPanel.FindChildTraverse( "mute-image" );
+					if ( elAvatarMuteImage && elAvatarMuteImage.IsValid() )
 					{
-						elAvatarMuteImage = $.CreatePanel( "Image", elPanel, "id-sb-avatar-mute-image", { scaling: 'stretch-to-fit-y-preserve-aspect' } );
-						elAvatarMuteImage.AddClass( "hidden" );
-						elAvatarMuteImage.AddClass( "sb-row__cell--avatar__muted" );
-
-					}
-
-					              
-					var isMuted = GameStateAPI.IsSelectedPlayerMuted( oPlayer.m_xuid );
-
-					if ( oPlayer.m_isMuted !== isMuted )
-					{
-						if ( isMuted )
-						{
-							elAvatarMuteImage.AddClass( "sb-muted" );
-							elAvatarMuteImage.RemoveClass( "hidden" );
-							elAvatarMuteImage.SetImage( 'file://{images}/icons/ui/muted.svg' );
-						}
-						else
-						{
-							elAvatarMuteImage.RemoveClass( "sb-muted" );
-							elAvatarMuteImage.AddClass( "hidden" );
-						}
-
+						              
+						var isMuted = GameStateAPI.IsSelectedPlayerMuted( oPlayer.m_xuid );
 						oPlayer.m_isMuted = isMuted;
+						
+						var isEnemyTeamMuted = GameInterfaceAPI.GetSettingString( "cl_mute_enemy_team" ) == "1";
+						var isEnemy = GameStateAPI.ArePlayersEnemies( oPlayer.m_xuid, GetLocalPlayerId() );
+
+						elAvatarMuteImage.SetHasClass( 'hidden', !isMuted && !( isEnemy && isEnemyTeamMuted ) );
+
+						          
+						             
+						                                                                            
+
+						                                                              
+						 
+							                                      
+
+							                   
+							 
+								                                               
+								                                          
+								                                                                   
+							 
+							    
+							 
+								                                                  
+								                                       
+							 
+						 
+						          
 
 					}
-					
-
-					       
-					             
-					                                                                            
-
-					                                                              
-					 
-						                                      
-
-						                   
-						 
-							                                               
-							                                          
-							                                                                   
-						 
-						    
-						 
-							                                                  
-							                                       
-						 
-					 
-					       
-
-					         
-
-
-
 				}
 				break;
 
@@ -1537,26 +1438,35 @@ var Scoreboard = ( function()
 			case 'skillgroup':
 				fn = function( oPlayer, bSilent = false )
 				{
+				
 					var newStatValue = GameStateAPI.GetPlayerCompetitiveRanking( oPlayer.m_xuid );
 
 					if ( ( newStatValue != -1 ) && ( oPlayer.m_oStats[ stat ] !== newStatValue ) )
 					{
+
 						oPlayer.m_oStats[ stat ] = newStatValue;
 
 						var elPlayer = oPlayer.m_elPlayer;
-						if ( elPlayer )
+						if ( elPlayer && elPlayer.IsValid() )
 						{
 							                                
 							                     
 							                                
 							var elSkillGroupImage = elPlayer.FindChildTraverse( "id-sb-skillgroup-image" );
-							if ( elSkillGroupImage )
+							if ( elSkillGroupImage && elSkillGroupImage.IsValid() )
 							{
 								var imagepath = "";
 
 								if ( newStatValue > 0 )
 								{
-									imagepath = "file://{images}/icons/skillgroups/skillgroup" + newStatValue + ".svg";
+									var mode = GameStateAPI.GetGameModeInternalName( false );
+									
+									var imagePath = "skillgroup";
+
+									if ( mode == "scrimcomp2v2" )
+										imagePath = "wingman";
+									
+									imagepath = "file://{images}/icons/skillgroups/" + imagePath + newStatValue + ".svg";
 									elSkillGroupImage.RemoveClass( "hidden" );
 								}
 								else
@@ -1582,14 +1492,12 @@ var Scoreboard = ( function()
 						oPlayer.m_oStats[ stat ] = newStatValue;
 
 						var elPanel = oPlayer.m_oElStats[ stat ];
-						if ( !elPanel )
+						if ( !elPanel || !elPanel.IsValid() )
 							return;
 
-						var elRankImage = elPanel.FindChildTraverse( 'id-sb-rank-image' );
-						if ( !elRankImage )
-						{
-							elRankImage = $.CreatePanel( "Image", elPanel, "id-sb-rank-image", { scaling: 'stretch-to-fit-y-preserve-aspect' } );
-						}
+						var elRankImage = elPanel.FindChildTraverse( 'image' );
+						if ( !elRankImage || !elRankImage.IsValid() )
+							return;
 
 						var imagepath = "";
 
@@ -1633,21 +1541,14 @@ var Scoreboard = ( function()
 
 	function _GetPlayerRowForGameMode ()
 	{
-		var mode = MatchStatsAPI.GetGameMode();
-		if ( mode == "casual" )
-		{
-			                                          
-			var skirmishId = GameTypesAPI.GetCurrentSkirmishId();
-			if ( skirmishId != 0 )	
-			{
-				mode = GameTypesAPI.GetSkirmishInternalName( skirmishId );
-			}
-		}
-			
+		var mode = GameStateAPI.GetGameModeInternalName( false );
+		var skirmish = GameStateAPI.GetGameModeInternalName( true );
 
 		switch ( mode )
 		{
 			case "scrimcomp2v2":
+				return "snippet_scoreboard-classic__row--wingman";
+			
 			case "competitive":
 				return "snippet_scoreboard-classic__row--comp";
 
@@ -1660,16 +1561,15 @@ var Scoreboard = ( function()
 			case "deathmatch":
 				return "snippet_scoreboard__row--deathmatch";
 
-			case "flyingscoutsman":
 			case "gungametrbomb":
 				return "snippet_scoreboard__row--demolition";
 
-			       
-			                
-				                                           
-			       
-
 			case "casual":
+				if ( skirmish == "flyingscoutsman" )
+					return "snippet_scoreboard__row--demolition";
+				else
+					return "snippet_scoreboard-classic__row--casual";
+				
 			default:
 				return "snippet_scoreboard-classic__row--casual";
 
@@ -1677,13 +1577,31 @@ var Scoreboard = ( function()
 
 	}
 
+	function _HighlightSortStatLabel ( stat )
+	{
+		                        
+		_m_cP.FindChildrenWithClassTraverse( 'sb-row__cell' ).forEach( function( el )
+		{
+			if ( el && el.IsValid() )
+			{
+				if ( el.BHasClass( 'sb-row__cell--' + stat ) )
+				{
+					el.AddClass( 'sortstat' );
+				}
+				else
+				{
+					el.RemoveClass( 'sortstat' );
+				}
+			}
+			
+		} );
+	}
 
-
-	function _CreateLabelForStat ( stat, set )
+	function _CreateLabelForStat ( stat, set, isHidden )
 	{
 		var elLabelRow = $( "#id-sb-players-table__labels-row" );
 
-		if ( !elLabelRow )
+		if ( !elLabelRow || !elLabelRow.IsValid() )
 			return;
 
 		var elLabelRowOrSet = elLabelRow;
@@ -1715,7 +1633,7 @@ var Scoreboard = ( function()
 			var labelSetContainerId = "id-sb-row__set-container";
 
 			var elLabelSetContainer = $( '#' + labelSetContainerId );
-			if ( !elLabelSetContainer )
+			if ( !elLabelSetContainer || !elLabelSetContainer.IsValid() )
 			{
 				elLabelSetContainer = $.CreatePanel( "Panel", elLabelRow, labelSetContainerId );
 				elLabelSetContainer.BLoadLayoutSnippet( "snippet_sb-label-set-container" );
@@ -1732,7 +1650,7 @@ var Scoreboard = ( function()
 			                    
 			var LabelSetId = "id-sb-labels-set-" + set;
 			var elLabelSet = elSetLabels.FindChildTraverse( LabelSetId );
-			if ( !elLabelSet )
+			if ( !elLabelSet || !elLabelSet.IsValid() )
 			{
 				_m_dataSetGetCount++;                                          
 
@@ -1761,25 +1679,35 @@ var Scoreboard = ( function()
 
 		                                                
 		var elStatPanel = elLabelRowOrSet.FindChildInLayoutFile( "id-sb-" + stat );
-		if ( !elStatPanel )
+		if ( !elStatPanel || !elStatPanel.IsValid() )
 		{
-			elStatPanel = $.CreatePanel( "Panel", elLabelRowOrSet, "id-sb-" + stat );
+			elStatPanel = $.CreatePanel( "Button", elLabelRowOrSet, "id-sb-" + stat );
 			elStatPanel.AddClass( "sb-row__cell" );
 			elStatPanel.AddClass( "sb-row__cell--" + stat );
 			elStatPanel.AddClass( "sb-row__cell--label" );
 
 			var elStatLabel;
 
+
+
 			                                                           
 			if ( stat === "ping" )
 			{
-				elStatLabel = $.CreatePanel( "Image", elStatPanel, "id-sb-" + stat );
+				elStatLabel = $.CreatePanel( "Image", elStatPanel, "label-" + elStatPanel.id );
 				elStatLabel.SetImage( "file://{images}/icons/ui/ping_4.svg" );
 			}
 			else
 			{
-				elStatLabel = $.CreatePanel( "Label", elStatPanel, "id-sb-" + stat );
-				elStatLabel.text = $.Localize( "#Scoreboard_" + stat );
+				elStatLabel = $.CreatePanel( "Label", elStatPanel, "label-" + elStatPanel.id );
+
+				if ( isHidden == '1' )
+				{
+					elStatLabel.text = "";
+				}
+				else
+				{
+					elStatLabel.text = $.Localize( "#Scoreboard_" + stat );
+				}
 			}
 
 			                     
@@ -1795,7 +1723,75 @@ var Scoreboard = ( function()
 				elStatLabel.SetPanelEvent( 'onmouseover', OnMouseOver.bind( undefined, elStatLabel.id, toolTipString ) );
 				elStatLabel.SetPanelEvent( 'onmouseout', function() { UiToolkitAPI.HideTextTooltip() } );
 			}
+
+			function _SetNewSortStat ( stat )
+			{
+				var newSortOrder = {};
+
+				                                              
+				var modeDefaultSortOrder = _GetSortOrderForMode( GameStateAPI.GetGameModeInternalName( false ) );
+
+				                                             
+				                                 
+				if ( stat in modeDefaultSortOrder )
+					newSortOrder[ stat ] = modeDefaultSortOrder[ stat ];
+				else
+					return;
+				
+				_HighlightSortStatLabel( stat );
+
+				                                 
+				for ( var s in modeDefaultSortOrder )
+				{
+					if ( s == stat )
+						continue;
+					
+					newSortOrder[ s ] = modeDefaultSortOrder[ s ];
+				}
+
+				                                        
+				_m_sortOrder = newSortOrder;
+
+				                                
+				for ( var i = 0; i < _m_oPlayers.GetCount(); i++ )
+				{
+					_SortPlayer( i, true );
+				};
+
+			}
+
+			elStatPanel.SetPanelEvent( 'onactivate', _SetNewSortStat.bind( undefined, stat ) );
+
 		}
+	}
+
+          
+	                                     
+	 
+		                                                                                        
+		                                  
+			                                 
+		    
+			                           			
+	 
+          
+
+	                              
+	function _GetCustomStatTextValue( stat, xuid )
+	{
+		var szCustomLabel = null;
+		if ( stat === 'ping' )
+		{
+			if ( GameStateAPI.IsFakePlayer( xuid ) )
+			{
+				szCustomLabel = "#SFUI_scoreboard_lbl_bot";
+			}
+			else if ( IsTeamASpecTeam( GameStateAPI.GetPlayerTeamName( xuid ) ) )
+			{
+				szCustomLabel = "#SFUI_scoreboard_lbl_spec";
+			}
+		}
+		return szCustomLabel;
 	}
 
 	                      
@@ -1812,8 +1808,12 @@ var Scoreboard = ( function()
 
 		function _InitStatCell ( elStatCell, oPlayer )
 		{
+			if ( !elStatCell || !elStatCell.IsValid() )
+				return;
+			
 			var stat = elStatCell.GetAttributeString( "data-stat", "" );
 			var set = elStatCell.GetAttributeString( "data-set", "" );
+			var isHidden = elStatCell.GetAttributeString( "data-hidden", "" );
 
 			                                                         
 			var children = elStatCell.Children();
@@ -1825,15 +1825,6 @@ var Scoreboard = ( function()
 			if ( stat === "" )
 			{
 				return;
-			}
-
-			                        
-			if ( stat === 'ping' && GameStateAPI.IsFakePlayer( oPlayer.m_xuid ) )
-			{
-				                        
-				var elLabel = $.CreatePanel( "Label", elStatCell, "id-sb-row__cell--ping__label" );
-				elLabel.AddClass( "sb-row__cell--ping__label--bot" );
-				elLabel.text = "BOT";
 			}
 
 			                                    
@@ -1850,7 +1841,7 @@ var Scoreboard = ( function()
 				var SetContainerId = "id-sb-row__set-container";
 
 				var elSetContainer = oPlayer.m_elPlayer.FindChildTraverse( SetContainerId );
-				if ( !elSetContainer )
+				if ( !elSetContainer || !elSetContainer.IsValid() )
 				{
 					elSetContainer = $.CreatePanel( "Panel", oPlayer.m_elPlayer, SetContainerId );
 					oPlayer.m_elPlayer.MoveChildBefore( elSetContainer, elStatCell );
@@ -1859,7 +1850,7 @@ var Scoreboard = ( function()
 				                    
 				var setId = "id-sb-set-" + set;
 				var elSet = elSetContainer.FindChildTraverse( setId );
-				if ( !elSet )
+				if ( !elSet || !elSet.IsValid )
 				{
 					                           
 					elSet = $.CreatePanel( "Panel", elSetContainer, setId );
@@ -1877,7 +1868,10 @@ var Scoreboard = ( function()
 				}
 			}
 
-			_CreateStatUpdateFn( stat );
+			if ( !isHidden )
+			{
+				_CreateStatUpdateFn( stat );
+			}
 
 		}
 
@@ -1886,6 +1880,10 @@ var Scoreboard = ( function()
 		_CreateStatUpdateFn( 'musickit' );
 		_CreateStatUpdateFn( 'status' );
 		_CreateStatUpdateFn( 'skillgroup' );
+
+		_CreateStatUpdateFn( 'leader' );
+		_CreateStatUpdateFn( 'teacher' );
+		_CreateStatUpdateFn( 'friendly' );
 
 		                     
 		                                     
@@ -1904,16 +1902,6 @@ var Scoreboard = ( function()
 		oPlayer.m_oStats = {};                       
 
 		oPlayer.m_oStats[ 'idx' ] = GameStateAPI.GetPlayerIndex( oPlayer.m_xuid );
-
-		oPlayer.m_oStats[ 'friendly' ] = 0;
-		oPlayer.m_oStats[ 'leader' ] = 0;
-		oPlayer.m_oStats[ 'teacher' ] = 0;
-
-		                           
-		if ( oPlayer.m_xuid === GetLocalPlayerId() )
-		{
-			oPlayer.m_elPlayer.AddClass( "sb-row--localplayer" );
-		}
 
 		               
 
@@ -1964,13 +1952,13 @@ var Scoreboard = ( function()
 		}
 	}
 
-	       
+	          
 	                                     
 	 
 		                                          
 			       
 
-		                                                                                 
+		                                                                          
 		 
 			         
 				                                                                                        
@@ -1991,24 +1979,25 @@ var Scoreboard = ( function()
 				      
 		 
 	 
-	       
+	          
 
-	       
+	          
 	                                
 	 
-		                                                                      
+		                                                                          
 
 		                            
 	 
-	       
+	          
 
 
 
 	function _UpdateMatchInfo ()
 	{
+
 		if ( !_m_bInit )
 			return;
-
+		
 		                                            
 
 
@@ -2019,7 +2008,7 @@ var Scoreboard = ( function()
 
 		var elMapLabel = _m_cP.FindChildTraverse( "id-sb-meta__labels__mode-map" );
 
-		if ( elMapLabel && elMapLabel.text == "" )
+		if ( elMapLabel && elMapLabel.IsValid() && elMapLabel.text == "" )
 		{
 			if ( MatchStatsAPI.IsTournamentMatch() )
 			{
@@ -2031,46 +2020,193 @@ var Scoreboard = ( function()
 			}
 		}
 
-		
-
 		if ( $( "#id-sb-meta__mode__image" ) )
 		    $( "#id-sb-meta__mode__image" ).SetImage( GameStateAPI.GetGameModeImagePath() );
 
 		if ( $( "#sb-meta__labels__map" ) )
 			$( "#sb-meta__labels__map" ).SetImage( "file://{images}/map_icons/map_icon_" + GameStateAPI.GetMapBSPName() + ".svg" );
 
-		       
+	              
 		                            
-		       
+	              
+
+		if ( !GameStateAPI.IsDemoOrHltv() )
+		{
+			var localTeamName = GameStateAPI.GetPlayerTeamName( GetLocalPlayerId() );
+			if ( _m_oTeams[ localTeamName ] )
+				_m_oTeams[ localTeamName ].CalculateAllCommends();
+		}
+
+		                    
+
+		var bind = GameInterfaceAPI.GetSettingString( "cl_scoreboard_mouse_enable_binding" );
+
+		                                                                                 
+		if ( bind.charAt( 0 ) == '+' || bind.charAt( 0 ) == '-' )
+			bind = bind.substring( 1 );
+	
+		
+		var elMouseBinding = _m_cP.FindChildInLayoutFile( "id-sb-mouse-instructions" );
+		if ( elMouseBinding && elMouseBinding.IsValid() )
+		{
+			bind = "{v:csgo_bind:bind_" + bind + "}";
+
+			bind = $.Localize( bind, elMouseBinding );
+	
+			elMouseBinding.SetDialogVariable( "scoreboard_mouse_enable_bind", bind );
+			elMouseBinding.text =  $.Localize( "#Scoreboard_Mouse_Enable_Instruction", elMouseBinding );
+		}
+
+
+		var elFooterWebsite = _m_cP.FindChildInLayoutFile( "id-sb-footer-server-website" );
+		if ( elFooterWebsite && elFooterWebsite.IsValid() )
+		{
+			var strWebsiteURL = MatchStatsAPI.GetServerWebsiteURL();
+			if ( strWebsiteURL )
+			{
+				elFooterWebsite.RemoveClass( 'hidden' );
+
+				elFooterWebsite.SetPanelEvent( 'onmouseover', function() {
+					UiToolkitAPI.ShowTextTooltip( 'id-sb-footer-server-website', strWebsiteURL );
+				} );
+				elFooterWebsite.SetPanelEvent( 'onmouseout', function () {
+					UiToolkitAPI.HideTextTooltip();
+				} );
+			}
+			else
+			{
+				elFooterWebsite.AddClass( 'hidden' );
+			}
+		}
 	}
 
-	function _UpdateRound ( rnd )
+	function _UpdateHLTVViewerNumber( nViewers )
 	{
-		var oScoreData = GameStateAPI.GetScoreDataJSO();
-		var jsoTime = GameStateAPI.GetTimeDataJSO();
 
+		var elViewers = _m_cP.FindChildTraverse( "id-viewers" );
+
+		if ( elViewers && elViewers.IsValid() )
+		{
+			if ( nViewers > 0 )
+			{
+				elViewers.RemoveClass( "hidden" );
+				elViewers.SetDialogVariableInt( "viewers", nViewers )
+			}
+			else
+			{
+				elViewers.AddClass( "hidden" );
+			}
+		}
+	}
+
+	function _UpdateRound ( rnd, oScoreData, jsoTime )
+	{
+		if ( !_SupportsTimeline( jsoTime ) )
+			return;
+		
 		if ( !oScoreData )
 			return;
-
+		
+		if ( !jsoTime )
+			return;
+			
 		if ( !( "teamdata" in oScoreData ) )
 			return;
 
 		var elTimeline = _m_cP.FindChildInLayoutFile( "id-sb-timeline__segments" );
-		if ( !elTimeline )
+		if ( !elTimeline || !elTimeline.IsValid() )
 			return;
 
 		var elRnd = elTimeline.FindChildTraverse( rnd );
-		if ( !elRnd )
-			return;
-
-		if ( rnd > Object.keys( oScoreData[ "rounddata" ] ).length )
+		if ( !elRnd || !elRnd.IsValid() )
 			return;
 
 		var elRndTop = elRnd.FindChildTraverse( "id-sb-timeline__segment__round--top" );
 		var elRndBot = elRnd.FindChildTraverse( "id-sb-timeline__segment__round--bot" );
 
+		elRndTop.FindChildTraverse( "result" ).SetImage( "" );
+		elRndBot.FindChildTraverse( "result" ).SetImage( "" );
+
+		elRndTop.SetDialogVariable( "sb_clinch", "" );
+		elRndBot.SetDialogVariable( "sb_clinch", "" );
+
+  		                                 
+
+		var elTick = elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick" );
+		if ( elTick && elTick.IsValid() )
+		{
+			elTick.SetHasClass( "hilite", rnd <= jsoTime[ "rounds_played" ] + 1 );
+		}
+		
+		                                                                               
+		if ( rnd > jsoTime[ "rounds_played" ] )
+		{
+			var bCanClinch = jsoTime[ "can_clinch" ];
+			if ( bCanClinch )
+			{
+				var numToClinch = jsoTime[ "num_wins_to_clinch" ];
+
+				var topClinchRound = jsoTime[ "rounds_played" ] + numToClinch - m_topScore;
+				var bThisRoundIsClinchTop = rnd == topClinchRound;
+
+				var botClinchRound = jsoTime[ "rounds_played" ] + numToClinch - m_botScore;
+				var bThisRoundIsClinchBot = rnd == botClinchRound;
+
+				var bShowClinchTop = ( bThisRoundIsClinchTop && topClinchRound <= botClinchRound );
+				var bShowClinchBot = ( bThisRoundIsClinchBot &&  botClinchRound <= topClinchRound );
+
+				var thisRoundIsClinchAndShowIt = false;
+
+				if ( bShowClinchTop )
+				{
+					elRndTop.FindChildTraverse( "result" ).SetImage( dictRoundResultImage[ "win" ] );
+					thisRoundIsClinchAndShowIt = true;
+				}
+
+				if ( bShowClinchBot )
+				{
+					elRndBot.FindChildTraverse( "result" ).SetImage( dictRoundResultImage[ "win" ] );
+					thisRoundIsClinchAndShowIt = true;
+				}
+
+				var roundIsPastClinch = ( rnd > topClinchRound || rnd > botClinchRound );
+
+				elRnd.SetHasClass( "past-clinch", roundIsPastClinch );
+				elRnd.SetHasClass( "clinch-round", thisRoundIsClinchAndShowIt );
+				
+			}
+
+			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick" ).RemoveClass( "sb-team--CT" );
+			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).RemoveClass( "sb-team--CT" );
+			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick" ).RemoveClass( "sb-team--TERRORIST" );
+			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).RemoveClass( "sb-team--TERRORIST" );
+
+			var _ClearCasualties = function( elRnd )
+			{
+
+				for ( var i = 1; i <= 5; i++ )
+				{
+					var img = elRnd.FindChildTraverse( "casualty-" + i );
+					if ( !img )
+						break;
+
+					img.AddClass( "hidden" );
+				}
+				
+			}
+
+			_ClearCasualties( elRndTop );
+			_ClearCasualties( elRndBot );
+			
+
+			return;
+		}
+
+		var bFlippedSides = false;
+
 		if ( GameStateAPI.AreTeamsPlayingSwitchedSides() !== GameStateAPI.AreTeamsPlayingSwitchedSidesInRound( rnd ) )
 		{
+			bFlippedSides = true;
 			var elTemp = elRndTop;
 			elRndTop = elRndBot;
 			elRndBot = elTemp;
@@ -2080,13 +2216,35 @@ var Scoreboard = ( function()
 		elRndTop.AddClass( "sb-team--CT" );
 		elRndBot.AddClass( "sb-team--TERRORIST" );
 
-		var result = oScoreData[ "rounddata" ][ rnd ][ "result" ].replace( /^(ct_|t_)/, "" );
+
+		var idx;
+
+		if ( MatchStatsAPI.DoesSupportOvertimeStats() )
+		{
+			idx = rnd - jsoTime[ "first_round_this_period" ] + 1;
+		}
+		else
+		{
+			idx = rnd;
+		}
+
+
+		if ( typeof oScoreData[ "rounddata" ][ idx ] !== "object" )
+			return;
+
+		var result = oScoreData[ "rounddata" ][ idx ][ "result" ].replace( /^(ct_|t_)/, "" );
+
 
 		                
-		if ( oScoreData[ "rounddata" ][ rnd ][ "result" ].charAt( 0 ) === "c" )
+		if ( oScoreData[ "rounddata" ][ idx ][ "result" ].charAt( 0 ) === "c" )
 		{
+			bFlippedSides ? m_botScore++ : m_topScore++;
+
 			elRndTop.FindChildTraverse( "result" ).SetImage( dictRoundResultImage[ result ] );
 			elRndTop.FindChildTraverse( "result" ).AddClass( "sb-timeline__segment__round--active" );
+
+			elRndBot.FindChildTraverse( "result" ).SetImage( "" );
+			elRndBot.FindChildTraverse( "result" ).RemoveClass( "sb-timeline__segment__round--active" );
 
 			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick" ).AddClass( "sb-team--CT" );
 			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).AddClass( "sb-team--CT" );
@@ -2094,10 +2252,15 @@ var Scoreboard = ( function()
 			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).RemoveClass( "sb-team--TERRORIST" );
 
 		}
-		else if ( oScoreData[ "rounddata" ][ rnd ][ "result" ].charAt( 0 ) === "t" )
+		else if ( oScoreData[ "rounddata" ][ idx ][ "result" ].charAt( 0 ) === "t" )
 		{
+			bFlippedSides ? m_topScore++ : m_botScore++;
+
 			elRndBot.FindChildTraverse( "result" ).SetImage( dictRoundResultImage[ result ] );
 			elRndBot.FindChildTraverse( "result" ).AddClass( "sb-timeline__segment__round--active" );
+
+			elRndTop.FindChildTraverse( "result" ).SetImage( "" );
+			elRndTop.FindChildTraverse( "result" ).RemoveClass( "sb-timeline__segment__round--active" );			
 
 			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick" ).AddClass( "sb-team--TERRORIST" );
 			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).AddClass( "sb-team--TERRORIST" );
@@ -2105,18 +2268,20 @@ var Scoreboard = ( function()
 			elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).RemoveClass( "sb-team--CT" );
 		}
 
-		               
-		elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick" ).RemoveClass( "hilite" );
-
 		                                             
 		var _UpdateCasualties = function( teamName, elRnd )
 		{
 
 			if ( _m_oTeams[ teamName ] )
 			{
-				var livingCount = oScoreData[ "rounddata" ][ rnd ][ "players_alive_" + teamName ];
+				var livingCount = oScoreData[ "rounddata" ][ idx ][ "players_alive_" + teamName ];
 
-				for ( var i = 1; i <= 5; i++ )
+				var nPlayers = 5;
+
+				if ( GameStateAPI.GetGameModeInternalName( false ) == "scrimcomp2v2" )
+					nPlayers = 2;
+
+				for ( var i = 1; i <= nPlayers; i++ )
 				{
 					var img = elRnd.FindChildTraverse( "casualty-" + i );
 					if ( !img )
@@ -2144,17 +2309,20 @@ var Scoreboard = ( function()
 	}
 
 
-
-	function _Casualties_OnMouseOver ()
+	function _ShowSurvivors ( hide = false )
 	{
+		
 		var elTimeline = _m_cP.FindChildInLayoutFile( "id-sb-timeline__segments" );
-		if ( !elTimeline )
+		if ( !elTimeline || !elTimeline.IsValid() )
 			return;
 
 		var arrPanelsToToggleTransparency = [];
 
 		function CollectPanelsToToggleTransparency ( el )
 		{
+			if ( !el || !el.IsValid() )
+				return;
+			
 			if ( el.Children() )
 				el.Children().forEach( CollectPanelsToToggleTransparency );
 
@@ -2164,31 +2332,24 @@ var Scoreboard = ( function()
 
 		elTimeline.Children().forEach( CollectPanelsToToggleTransparency );
 
-		arrPanelsToToggleTransparency.forEach( el => el.RemoveClass( "transparent" ) );
+		arrPanelsToToggleTransparency.forEach( el => el.SetHasClass( "transparent", hide ) );
+	}
+
+
+	function _Casualties_OnMouseOver ()
+	{
+		                                    
+		if ( GameInterfaceAPI.GetSettingString( "cl_scoreboard_survivors_always_on" ) == "0" )
+			_ShowSurvivors();
 
 		UiToolkitAPI.ShowCustomLayoutTooltipStyled( '1', 'id-tooltip-sb-casualties', 'file://{resources}/layout/tooltips/tooltip_scoreboard_casualties.xml', 'Tooltip_NoArrow' );
 	}
 
 	function _Casualties_OnMouseOut ()
 	{
-		var elTimeline = _m_cP.FindChildInLayoutFile( "id-sb-timeline__segments" );
-		if ( !elTimeline )
-			return;
-
-		var arrPanelsToToggleTransparency = [];
-
-		function CollectPanelsToToggleTransparency ( el )
-		{
-			if ( el.Children() )
-				el.Children().forEach( CollectPanelsToToggleTransparency );
-
-			if ( el.GetAttributeString( "data-casualty-mouse-over-toggle-transparency", "false" ) == "true" )
-				arrPanelsToToggleTransparency.push( el );
-		}
-
-		elTimeline.Children().forEach( CollectPanelsToToggleTransparency );
-
-		arrPanelsToToggleTransparency.forEach( el => el.AddClass( "transparent" ) );
+		                                    
+		if ( GameInterfaceAPI.GetSettingString( "cl_scoreboard_survivors_always_on" ) == "0" )
+			_ShowSurvivors( true );
 
 		UiToolkitAPI.HideCustomLayoutTooltip( 'id-tooltip-sb-casualties' );
 	}
@@ -2197,7 +2358,7 @@ var Scoreboard = ( function()
 	function _UpdateTeamInfo ( team )
 	{
 
-		if ( !_m_oTeams[ team ] )
+		if ( !(team in _m_oTeams) )
 		{
 			_m_oTeams[ team ] = new team_t( team );
 		}	
@@ -2206,18 +2367,22 @@ var Scoreboard = ( function()
 		_m_oTeams[ team ].m_teamClanName = GameStateAPI.GetTeamClanName( team );
 		_m_cP.SetDialogVariable( "sb_team_name--" + team, _m_oTeams[ team ].m_teamClanName );
 
-		       
-		_m_oTeams[ team ].m_teamLogoImagePath = GameStateAPI.GetTeamLogoImagePath( team );
-
-		_m_cP.FindChildrenWithClassTraverse( "sb-team-logo-background--" + team ).forEach( function( el )
+		if ( GameStateAPI.GetTeamLogoImagePath( team ) != "" )
 		{
-			el.style.backgroundImage = 'url("file://{images}' + _m_oTeams[ team ].m_teamLogoImagePath + '")';
-			el.style.backgroundSize = 'contain';
-			el.style.backgroundRepeat = 'no-repeat';
+			       
+			_m_oTeams[ team ].m_teamLogoImagePath = GameStateAPI.GetTeamLogoImagePath( team );
 
-			el.AddClass( "sb-team-logo-bg" );
-		} );
+			_m_cP.FindChildrenWithClassTraverse( "sb-team-logo-background--" + team ).forEach( function( el )
+			{
+				el.style.backgroundImage = 'url("file://{images}' + _m_oTeams[ team ].m_teamLogoImagePath + '")';
+				el.AddClass( "sb-team-logo-bg" );
+			} );
+		}
 
+		          
+
+		_m_cP.SetDialogVariableInt( team + '_alive', GameStateAPI.GetTeamLivingPlayerCount( team ) );
+		_m_cP.SetDialogVariableInt( team + '_total', GameStateAPI.GetTeamTotalPlayerCount( team ) );
 
 	}
 	function _UpdateTeams ()
@@ -2250,6 +2415,19 @@ var Scoreboard = ( function()
 			{
 				_m_cP.SetDialogVariableInt( "sb_team_score_3--" + team, oScoreData[ "teamdata" ][ team ][ "score_2h" ] );
 			}
+
+			if ( "score_ot" in oScoreData[ "teamdata" ][ team ] )
+			{
+				_m_cP.SetDialogVariableInt( "sb_team_score_ot--" + team, oScoreData[ "teamdata" ][ team ][ "score_ot" ] );
+			}
+
+			var elOTScore = _m_cP.FindChildTraverse( "id-sb-timeline__score_ot" )
+			if ( elOTScore && elOTScore.IsValid() )
+			{
+				elOTScore.SetHasClass( "hidden", !( "score_ot" in oScoreData[ "teamdata" ][ team ] ) );
+				elOTScore.SetHasClass( "fade", !( "score_ot" in oScoreData[ "teamdata" ][ team ] ) );
+			}
+
 		}
 	}
 
@@ -2259,7 +2437,52 @@ var Scoreboard = ( function()
 		_UpdateTeamInfo( "CT" );
 	}
 
-	function _UpdateScore_Classic ()
+	var m_topScore;
+	var m_botScore;
+
+	function _UpdateAllRounds ()
+	{
+		var jsoTime = GameStateAPI.GetTimeDataJSO();
+		var oScoreData = GameStateAPI.GetScoreDataJSO();
+
+		if ( !jsoTime )
+			return;
+		
+		if ( !oScoreData )
+			return;
+		
+		if ( !_SupportsTimeline( jsoTime ) )
+			return;
+		
+		var lastRound;
+
+		if ( MatchStatsAPI.DoesSupportOvertimeStats() )
+		{
+			lastRound = jsoTime[ "last_round_this_period" ];
+		}
+		else
+		{
+			lastRound = jsoTime[ "maxrounds" ];
+		}
+
+		m_topScore = 0;
+		m_botScore = 0;
+
+		                                                                                                                                
+		if ( jsoTime[ "overtime" ] > 0 )
+		{
+			m_topScore = (jsoTime[ "maxrounds"] + ( jsoTime[ "overtime"] - 1 ) * jsoTime[ "maxrounds_overtime"] ) / 2;
+			m_botScore = (jsoTime[ "maxrounds"] + ( jsoTime[ "overtime"] - 1 ) * jsoTime[ "maxrounds_overtime"] ) / 2;			
+		}
+
+
+		for ( var rnd = 1; rnd <= lastRound; rnd++ )
+		{
+			_UpdateRound( rnd, oScoreData, jsoTime );
+		}
+	}
+
+	function _UpdateScore_Classic()
 	{
 
 		                                                                                    
@@ -2270,72 +2493,93 @@ var Scoreboard = ( function()
 
 		_UpdateTeams();
 
-		
 
 		             
 		var jsoTime = GameStateAPI.GetTimeDataJSO();
 
 		if ( !jsoTime )
 			return;
+		
+		var currentRound = jsoTime[ "rounds_played" ] + 1;
 
 		_m_cP.SetDialogVariable( "match_phase", $.Localize( "gamephase_" + jsoTime[ "gamephase" ] ) );
 		_m_cP.SetDialogVariable( "rounds_remaining", jsoTime[ "rounds_remaining" ] );
+		_m_cP.SetDialogVariableInt( "scoreboard_ot", jsoTime[ "overtime" ] );
 
+		_m_cP.SetHasClass( "sb-tournament-match", MatchStatsAPI.IsTournamentMatch() );
 
 		                                                                                               
+			
+		var bResetTimeline = false;
 
-		var bResetTimelines = false;
-		                           
-
+		if ( _m_maxRounds != jsoTime[ "maxrounds_this_period" ] )
+		{
+			bResetTimeline = true;
+			_m_maxRounds = jsoTime[ "maxrounds_this_period" ];
+		}
+		
 		if ( _m_areTeamsSwapped !== GameStateAPI.AreTeamsPlayingSwitchedSides() )
 		{
-			bResetTimelines = true;
-			                      
-			_m_areTeamsSwapped = GameStateAPI.AreTeamsPlayingSwitchedSides()
+			bResetTimeline = true;
+			_m_areTeamsSwapped = GameStateAPI.AreTeamsPlayingSwitchedSides();
 		}
 
-		if ( _m_maxRounds != jsoTime[ "maxrounds" ] )
+		if ( !_SupportsTimeline( jsoTime ) )
 		{
-			bResetTimelines = true;
-			_m_maxRounds = jsoTime[ "maxrounds" ];
+			bResetTimeline = true;
 		}
 
-		if ( bResetTimelines )
+		if ( _m_overtime != jsoTime[ "overtime" ] )
 		{
-			_ResetTimeline();
+			_m_overtime = jsoTime[ "overtime" ];
+			bResetTimeline = true;
 		}
-
-		                                             
-		for ( var rnd = 1; rnd <= jsoTime[ "rounds_played" ]; rnd++ )
+	
+		                               
+		if ( bResetTimeline || !( currentRound in _m_RoundUpdated ) )
 		{
-			_UpdateRound( rnd );
-		}
 
-		var _HighlightCurrentTimelineRound = function()
+			if ( bResetTimeline )
+			{
+				_ResetTimeline();
+			}
+
+			_UpdateAllRounds();
+
+			_m_RoundUpdated[ currentRound ] = true;
+
+		}
+		else
 		{
-			var elTimeline = _m_cP.FindChildInLayoutFile( "id-sb-timeline__segments" );
+			                                            
 
-			if ( !elTimeline )
-				return;
+			var oScoreData = GameStateAPI.GetScoreDataJSO();
 
-			var jsoTime = GameStateAPI.GetTimeDataJSO();
-
-			var currentRound = jsoTime[ "rounds_played" ] + 1;
-
-			var elCurRnd = elTimeline.FindChildTraverse( currentRound );
-
-			if ( elCurRnd )
-				elCurRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick" ).AddClass( "hilite" );
+			if ( oScoreData )
+			{
+				_UpdateRound( currentRound - 1, oScoreData, jsoTime );
+			}
 		}
-
-		_HighlightCurrentTimelineRound();
+		
 	};
+
+	function _InsertTimelineDivider ()
+	{
+		var elTimeline = _m_cP.FindChildInLayoutFile( "id-sb-timeline__segments" );
+
+		if ( !elTimeline || !elTimeline.IsValid() )
+			return;
+
+		var elDivider = $.CreatePanel( "Panel", elTimeline, "id-sb-timeline__divider" );
+		elDivider.AddClass( "sb-timeline__divider" );
+	}
+
 
 	function _InitTimelineSegment ( startRound, endRound, phase )
 	{
 		var elTimeline = _m_cP.FindChildInLayoutFile( "id-sb-timeline__segments" );
 
-		if ( !elTimeline )
+		if ( !elTimeline || !elTimeline.IsValid() )
 			return;
 
 		elTimeline.AddClass( "sb-team-tint" );                                                                       
@@ -2344,37 +2588,36 @@ var Scoreboard = ( function()
 
 		var elSegment = elTimeline.FindChildTraverse( id );
 
-		if ( !elSegment )
+		if ( !elSegment || !elSegment.IsValid() )
 		{
 			elSegment = $.CreatePanel( "Panel", elTimeline, id );
-			elSegment.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment--" + phase );
+			elSegment.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment");
 		}
 
-		                    
-		for ( var rnd = startRound; rnd <= endRound; rnd++ )
+		var elRoundContainer = elSegment.FindChildTraverse( "id-sb-timeline__round-container" );
+		if ( elRoundContainer && elRoundContainer.IsValid() )
 		{
-			var elRnd = elSegment.FindChildTraverse( rnd );
-			if ( !elRnd )
+			                    
+			for ( var rnd = startRound; rnd <= endRound; rnd++ )
 			{
-				elRnd = $.CreatePanel( "Panel", elSegment, rnd );
-				var elScoreContainer = elSegment.FindChildTraverse( "id-sb-timeline__segment__score" );
-				if ( elScoreContainer )
+				var elRnd = elSegment.FindChildTraverse( rnd );
+				if ( !elRnd || !elRnd.IsValid() )
 				{
-					elSegment.MoveChildBefore( elRnd, elScoreContainer );
-				}
+					elRnd = $.CreatePanel( "Panel", elRoundContainer, rnd );
 
-				elRnd.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment__round" );
+					elRnd.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment__round" );
 
-				var elTop = elRnd.FindChildTraverse( "id-sb-timeline__segment__round--top" );
-				elTop.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment__round__data" );
+					var elTop = elRnd.FindChildTraverse( "id-sb-timeline__segment__round--top" );
+					elTop.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment__round__data" );
 
-				var elBot = elRnd.FindChildTraverse( "id-sb-timeline__segment__round--bot" );
-				elBot.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment__round__data" );
+					var elBot = elRnd.FindChildTraverse( "id-sb-timeline__segment__round--bot" );
+					elBot.BLoadLayoutSnippet( "snippet_scoreboard-classic__timeline__segment__round__data" );
 
-				                                 
-				if ( ( rnd - startRound + 1 ) % 5 == 0 )
-				{
-					elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).text = rnd - startRound + 1;
+					                                 
+					if ( rnd % 5 == 0 )
+					{
+						elRnd.FindChildTraverse( "id-sb-timeline__segment__round__tick__label" ).text = rnd;
+					}
 				}
 			}
 		}
@@ -2385,13 +2628,13 @@ var Scoreboard = ( function()
 			var elCTScore = elSegment.FindChildTraverse( "id-sb-timeline__segment__score__ct" );
 			var elTScore = elSegment.FindChildTraverse( "id-sb-timeline__segment__score__t" );
 
-			if ( elCTScore != null )
+			if ( elCTScore && elCTScore.IsValid() )
 			{
 				elCTScore.RemoveClass( "sb-color--CT" );
 				elCTScore.AddClass( "sb-color--TERRORIST" );
 			}
 
-			if ( elTScore != null )
+			if ( elTScore && elTScore.IsValid() )
 			{
 				elTScore.RemoveClass( "sb-color--TERRORIST" );
 				elTScore.AddClass( "sb-color--CT" );
@@ -2399,13 +2642,33 @@ var Scoreboard = ( function()
 		}
 	};
 
+	function _SupportsTimeline ( jsoTime )
+	{
+		if ( jsoTime == undefined )
+			jsoTime = GameStateAPI.GetTimeDataJSO();
+
+		var roundCountToEvaluate;
+
+		if ( MatchStatsAPI.DoesSupportOvertimeStats() )
+		{
+			roundCountToEvaluate = jsoTime[ "maxrounds_this_period" ];
+		}
+		else
+		{
+			roundCountToEvaluate = jsoTime[ "maxrounds" ];
+
+		}
+		
+		return ( roundCountToEvaluate <= 30 );
+	}
+
 	function _ResetTimeline ()
 	{
 		                                      
 
 		var elTimeline = _m_cP.FindChildInLayoutFile( "id-sb-timeline__segments" );
 
-		if ( !elTimeline )
+		if ( !elTimeline || !elTimeline.IsValid() )
 			return;
 
 		                     
@@ -2414,31 +2677,174 @@ var Scoreboard = ( function()
 		var jsoTime = GameStateAPI.GetTimeDataJSO();
 		if ( !jsoTime )
 			return;
+		
+		if ( !_SupportsTimeline( jsoTime ) )
+			return;
+		
 
-		if ( ( MatchStatsAPI.GetGameMode() === "competitive" ) ||
-			( MatchStatsAPI.GetGameMode() === "gungametrbomb" ) )
+		                                           
+
+		var firstRound;
+		var lastRound;
+		var midRound; 
+
+		if ( MatchStatsAPI.DoesSupportOvertimeStats() )
 		{
-			var midRound = Math.ceil( jsoTime[ "maxrounds" ] / 2 );
-			var lastRound = jsoTime[ "maxrounds" ];
+			firstRound = jsoTime[ "first_round_this_period" ];
+			lastRound = jsoTime[ "last_round_this_period" ];	
+			
+			var elLabel = _m_cP.FindChildTraverse( "id-sb-timeline__round-label" );
+			if ( elLabel && elLabel.IsValid() )
+			{
+				elLabel.SetHasClass( 'hidden', jsoTime[ "overtime" ] == 0 );
+			}
+		}
+		else
+		{
+			firstRound = 1;
+			lastRound = jsoTime[ "maxrounds" ];
+		}
 
-			_InitTimelineSegment( 1, midRound, "2" );                  
-			_InitTimelineSegment( midRound + 1, lastRound, "3" );                   
+		midRound = firstRound + Math.ceil( ( lastRound - firstRound ) / 2 ) - 1; 	
+
+		
+		if ( GameStateAPI.HasHalfTime() )
+		{
+			_InitTimelineSegment( firstRound, midRound, "first-half" );
+			_InsertTimelineDivider();
+			_InitTimelineSegment( midRound + 1, lastRound, "second-half" );
 
 		}
-		else if ( jsoTime[ "maxrounds" ] <= 15 )                     
+		else                     
 		{
-			_InitTimelineSegment( 1, jsoTime[ "maxrounds" ], "1" );                
+			_InitTimelineSegment( firstRound, lastRound, "no-halves" );
 		}
+
+		_UpdateAllRounds();
+
+		if ( GameInterfaceAPI.GetSettingString( "cl_scoreboard_survivors_always_on" ) == "1" )
+			_ShowSurvivors();
 	};
 
 	function _UnborrowMusicKit ()
 	{
-		GameInterfaceAPI.ConsoleCommand( 'cl_borrow_music_from_player_index 0' );
+		GameInterfaceAPI.SetSettingString( "cl_borrow_music_from_player_index", "0" );
 
-		var oLocalPlayer = _m_oPlayers.GetPlayerByXuid( GameStateAPI.GetLocalPlayerXuid() );
+		var oLocalPlayer = _m_oPlayers.GetPlayerByXuid( GetLocalPlayerId() );
 		_m_oUpdateStatFns[ 'musickit' ]( oLocalPlayer, true );
 	}
 
+	function UpdateCasterButtons()
+	{
+	    for ( var i = 0; i < 4; i++ )
+	    {
+	        var buttonName = "#spec-button" + (i+1);
+	        var bActive = true;
+
+	        switch ( i )
+	        {
+	            default:
+	            case 0:
+	                bActive = !!GetCasterIsCameraman(); break;
+
+	            case 1:
+	                bActive = !!GetCasterIsHeard(); break;
+
+	            case 2:
+	                bActive = !!GetCasterControlsXray(); break;
+
+	            case 3:
+	                bActive = !!GetCasterControlsUI(); break;
+	        }
+
+	        ToggleCasterButtonActive( buttonName, bActive );
+	    }
+	}
+
+	function ToggleCasterButtonActive( buttonName, bActive )
+	{
+	    var button = $( buttonName );
+	    if ( button == null )
+	        return;
+
+	    if ( bActive == false && button.BHasClass( 'sb-spectator-control-button-notactive' ) == false )
+	    {
+	        button.AddClass( 'sb-spectator-control-button-notactive' );
+	    }
+	    else if ( bActive == true && button.BHasClass( 'sb-spectator-control-button-notactive' ) == true )
+	    {
+	        button.RemoveClass( 'sb-spectator-control-button-notactive' );
+	    }
+	}
+
+
+	function _ToggleSetCasterIsCameraman( val )
+	{
+	    $.DispatchEvent( 'PlaySoundEffect', 'generic_button_press', 'MOUSE' );
+
+	    var nCameraMan = parseInt( GameInterfaceAPI.GetSettingString( "spec_autodirector_cameraman" ) );
+	    if ( GetCasterIsCameraman() )
+	    {
+	        GameStateAPI.SetCasterIsCameraman( 0 );
+	    }
+	    else
+	    {
+	        GameStateAPI.SetCasterIsCameraman( nCameraMan );
+	    }	    
+
+	    UpdateCasterButtons();
+	}
+
+	function _ToggleSetCasterIsHeard( val )
+	{
+	    $.DispatchEvent( 'PlaySoundEffect', 'generic_button_press', 'MOUSE' );
+
+	    var nCameraMan = parseInt( GameInterfaceAPI.GetSettingString( "spec_autodirector_cameraman" ) );
+	    if ( GetCasterIsHeard() )
+	    {
+	        GameStateAPI.SetCasterIsHeard( 0 );
+	    }
+	    else
+	    {
+	        GameStateAPI.SetCasterIsHeard( nCameraMan );
+	    }
+
+	    UpdateCasterButtons();
+	}
+
+	function _ToggleSetCasterControlsXray( val )
+	{
+	    $.DispatchEvent( 'PlaySoundEffect', 'generic_button_press', 'MOUSE' );
+
+	    var nCameraMan = parseInt( GameInterfaceAPI.GetSettingString( "spec_autodirector_cameraman" ) );
+	    if ( GetCasterControlsXray() )
+	    {
+	        GameStateAPI.SetCasterControlsXray( 0 );
+	        ToggleCasterButtonActive( "#spec-button3", false );
+	    }
+	    else
+	    {
+	        GameStateAPI.SetCasterControlsXray( nCameraMan );
+	        ToggleCasterButtonActive( "#spec-button3", true );
+	    }    
+	}
+
+	function _ToggleSetCasterControlsUI( val )
+	{
+	    $.DispatchEvent( 'PlaySoundEffect', 'generic_button_press', 'MOUSE' );
+
+	    var nCameraMan = parseInt( GameInterfaceAPI.GetSettingString( "spec_autodirector_cameraman" ) );
+	    if ( GetCasterControlsUI() )
+	    {
+	        GameStateAPI.SetCasterControlsUI( 0 );
+	    }
+	    else
+	    {
+	        GameStateAPI.SetCasterControlsUI( nCameraMan );
+	    } 
+
+	    UpdateCasterButtons();
+	}
 
 	                                                
 	function _CycleStats ()
@@ -2478,10 +2884,10 @@ var Scoreboard = ( function()
 		{
 			var elPlayer = _m_oPlayers.GetPlayerByIndex( i ).m_elPlayer;
 
-			if ( elPlayer )
+			if ( elPlayer && elPlayer.IsValid() )
 			{
 				var elSetContainer = elPlayer.FindChildTraverse( "id-sb-row__set-container" );
-				if ( elSetContainer )
+				if ( elSetContainer && elSetContainer.IsValid() )
 				{
 					for ( var j = 0; j < elSetContainer.Children().length; j++ )
 					{
@@ -2503,6 +2909,9 @@ var Scoreboard = ( function()
 
 	function _CreateLabelsForRow ( el )
 	{
+		if ( !el || !el.IsValid() )
+			return;
+			
 		for ( var i = 0; i < el.Children().length; i++ )
 		{
 			_CreateLabelsForRow( el.Children()[ i ] );
@@ -2510,10 +2919,27 @@ var Scoreboard = ( function()
 
 		var stat = el.GetAttributeString( "data-stat", "" );
 		var set = el.GetAttributeString( "data-set", "" );
+		var isHidden = el.GetAttributeString( "data-hidden", "" );
 
 		if ( stat != "" )
-			_CreateLabelForStat( stat, set );
+			_CreateLabelForStat( stat, set, isHidden );
 		
+	}
+
+
+	function _GetSortOrderForMode ( mode )
+	{
+		switch ( mode )
+		{
+			case "gungameprogressive":            
+				return sortOrder_gg;
+
+			case "deathmatch":
+				return sortOrder_dm;
+
+			default:
+				return sortOrder_default;
+		}	
 	}
 	                                                
 	function _Initialize ()
@@ -2525,36 +2951,53 @@ var Scoreboard = ( function()
 		var jsoTime = GameStateAPI.GetTimeDataJSO();
 		if ( !jsoTime )
 			return;
+		
+		var scoreboardTemplate;
 
-		if ( MatchStatsAPI.GetGameMode() === "competitive" )
-		{
-			_Helper_LoadSnippet( _m_cP, ( "snippet_scoreboard-classic" ) );
+		var mode = GameStateAPI.GetGameModeInternalName( false );
+		var skirmish = GameStateAPI.GetGameModeInternalName( true );
 
+		       
+		if ( mode === 'survival' )
+		{
+			                                      
+			                                                         
+			return;
 		}
-		else if ( MatchStatsAPI.GetGameMode() === "deathmatch" )
+		       
+
+		switch ( mode )
 		{
-			_Helper_LoadSnippet( _m_cP, "snippet_scoreboard-deathmatch" );
-		}
-		else if ( MatchStatsAPI.GetGameMode() === "training" )
-		{
-			_Helper_LoadSnippet( _m_cP, "snippet_scoreboard-deathmatch" );
-		}			
-		else if ( MatchStatsAPI.GetGameMode() === "gungameprogressive" )
-		{
-			_Helper_LoadSnippet( _m_cP, "snippet_scoreboard-deathmatch" );
-		}
-		       	
-		                                                      
-		 
-			                                                              
-		 
-		       	
-		else                     
-		{
-			_Helper_LoadSnippet( _m_cP, "snippet_scoreboard-classic" );
+			case "competitive":
+			case "gungametrbomb":
+			case "scrimcomp2v2":
+				scoreboardTemplate = "snippet_scoreboard-classic--with-timeline--half-times";
+				break;
+			
+			case "training":
+			case "deathmatch":
+			case "gungameprogressive":
+				scoreboardTemplate = "snippet_scoreboard--no-teams";
+				break;
+
+			case "casual":
+				if ( skirmish == "flyingscoutsman" )
+				{
+					scoreboardTemplate = "snippet_scoreboard-classic--with-timeline--no-half-times";
+				}
+				else
+				{
+					scoreboardTemplate = "snippet_scoreboard-classic--no-timeline";
+				}
+				break;
+			
+			default:
+				scoreboardTemplate = "snippet_scoreboard-classic--no-timeline";
+				break;
 		}
 
-		_Helper_LoadSnippet( $( "#id-sb-meta" ), "snippet_sb-meta" );
+		_Helper_LoadSnippet( _m_cP, scoreboardTemplate );
+
 
 		                                                                               
 		  
@@ -2565,6 +3008,11 @@ var Scoreboard = ( function()
 		if ( MatchStatsAPI.IsTournamentMatch() )
 			_m_cP.AddClass( "IsTournamentMatch" );
 		
+		
+		                                          
+
+		_m_sortOrder = _GetSortOrderForMode( GameStateAPI.GetGameModeInternalName( false ) );
+
 
 		             
 
@@ -2583,17 +3031,26 @@ var Scoreboard = ( function()
 		_UpdateMatchInfo();
 	};
 
-	function _UpdateScore () 
+	function _RankRevealAll ()
 	{
-		switch ( MatchStatsAPI.GetGameMode() )
+		for ( var i = 0; i < _m_oPlayers.GetCount(); i++ )
+		{
+			var oPlayer = _m_oPlayers.GetPlayerByIndex( i );
+
+			if ( typeof ( _m_oUpdateStatFns[ 'skillgroup' ] ) === 'function' )
+				_m_oUpdateStatFns[ 'skillgroup' ]( oPlayer, true );
+		}
+
+	}
+
+	function _UpdateScore ( bForce ) 
+	{
+		switch ( GameStateAPI.GetGameModeInternalName( false ) )
 		{
 			case "competitive":
-				_UpdateScore_Classic();
+				_UpdateScore_Classic( bForce );
 				break;
 
-			       		
-			                
-			       
 			case "deathmatch":
 			case "gungameprogressive":
 				               
@@ -2601,32 +3058,16 @@ var Scoreboard = ( function()
 
 			default:
 			case "casual":
-				_UpdateScore_Classic();
+				_UpdateScore_Classic( bForce );
 				break;
 		}
 	};
 
 	function _UpdateJob () 
 	{
-		var GetCount = _m_stateGetCounter;
-
-		if ( GetCount == 0 )
-		{
-			_UpdateMatchInfo();
-		}
-		else if ( GetCount == 1 )
-		{
-			_UpdateScore();
-		}
-		else
-		{
-			_UpdateNextPlayer();
-		}
-
-		if ( _m_stateGetCounter++ >= _m_oPlayers.GetCount() + 2 )
-		{
-			_m_stateGetCounter = 0;
-		}
+		_UpdateMatchInfo();
+		_UpdateScore();
+		_UpdateNextPlayer();
 	};
 
 	function _UpdateEverything ()
@@ -2638,10 +3079,9 @@ var Scoreboard = ( function()
 		}
 
 		_UpdateMatchInfo();
-
 		_UpdateScore();
-
-		_UpdateAllPlayers( true );
+		_UpdateAllPlayers_delayed( true );
+		_UpdateSpectatorButtons();
 
 	};
 
@@ -2658,24 +3098,32 @@ var Scoreboard = ( function()
 	function _OnMouseActive ()
 	{
 		var elButtonPanel = _m_cP.FindChildTraverse( 'id-sb-meta__button-panel' );
-		if ( elButtonPanel )
+		if ( elButtonPanel && elButtonPanel.IsValid() )
 			elButtonPanel.RemoveClass( "hidden" );
 	}
 
 	function _OnMouseInactive ()
 	{
 		var elButtonPanel = _m_cP.FindChildTraverse( 'id-sb-meta__button-panel' );
-		if ( elButtonPanel )
+		if ( elButtonPanel && elButtonPanel.IsValid() )
 			elButtonPanel.AddClass( "hidden" );
 	}
 
 	                                                
 	function _CloseScoreboard ()
 	{
+		if( _m_updatePlayerHandler )
+		{
+			$.UnregisterForUnhandledEvent( "Scoreboard_UpdatePlayerByEntIndex", _m_updatePlayerHandler );
+			_m_updatePlayerHandler = null;
+		}
+
 		_CancelUpdateJob();
 
 		_m_cP.FindChildrenWithClassTraverse( "timer" ).forEach( el => el.active = false );
 
+		                               
+		$.DispatchEvent( 'DismissAllContextMenus' );
 
 		_OnMouseInactive();
 	};
@@ -2686,13 +3134,19 @@ var Scoreboard = ( function()
 		_UpdateEverything();
 
 		_m_cP.FindChildrenWithClassTraverse( "timer" ).forEach( el => el.active = true );
+
+		_ShowSurvivors( ( GameInterfaceAPI.GetSettingString( "cl_scoreboard_survivors_always_on" ) == "0" ) );
+
+		if( !_m_updatePlayerHandler )
+		{
+			_m_updatePlayerHandler = $.RegisterForUnhandledEvent( "Scoreboard_UpdatePlayerByEntIndex", Scoreboard.UpdatePlayerByEntIndex );
+		}
 	};
 
 	                                                
 
 	function _OnEndOfMatch ()
 	{
-		_Initialize();
 		_OpenScoreboard();
 	};
 
@@ -2702,7 +3156,7 @@ var Scoreboard = ( function()
 
 		var elTeam = _m_cP.FindChildInLayoutFile( "players-table-ANY" );
 
-		if ( elTeam )
+		if ( elTeam && elTeam.IsValid() )
 		{
 			var playerXuid_1 = elTeam.Children()[ 0 ] ? elTeam.Children()[ 0 ].m_xuid : '0';
 			var playerXuid_2 = elTeam.Children()[ 1 ] ? elTeam.Children()[ 1 ].m_xuid : '0';
@@ -2722,7 +3176,7 @@ var Scoreboard = ( function()
 		_UpdateEverything();
 
 		var elTeam = _m_cP.FindChildInLayoutFile( "players-table-ANY" );
-		if ( !elTeam )
+		if ( !elTeam || !elTeam.IsValid() )
 			return;
 
 		var returnVal = 0;
@@ -2737,13 +3191,59 @@ var Scoreboard = ( function()
 
 	}
 
+	function GetCasterIsCameraman()
+	{
+	    var nCameraMan = parseInt( GameInterfaceAPI.GetSettingString( "spec_autodirector_cameraman" ) );
+
+	    var bQ = ( GameStateAPI.IsDemoOrHltv() && nCameraMan != 0 && GameStateAPI.IsHLTVAutodirectorOn() )
+
+	    return bQ;
+	}
+
+	function GetCasterIsHeard()
+	{
+	    var bQ = false;
+
+	    if ( GameStateAPI.IsDemoOrHltv() )
+	    {
+	        var bVoiceCaster = parseInt( GameInterfaceAPI.GetSettingString( "voice_caster_enable" ) );
+	        bQ = bVoiceCaster;
+	    }
+
+	    return bQ;
+	}
+
+	function GetCasterControlIsDisabled()
+	{
+	    var bDisableWithControl = parseInt( GameInterfaceAPI.GetSettingString( "spec_cameraman_disable_with_user_control" ) );
+
+	    var bQ = ( GameStateAPI.IsDemoOrHltv() && bDisableWithControl && GameStateAPI.IsHLTVAutodirectorOn() == false );
+
+	    return bQ;
+	}
+
+	function GetCasterControlsXray()
+	{
+	    var bXRay = GameStateAPI.IsDemoOrHltv() && parseInt( GameInterfaceAPI.GetSettingString( "spec_cameraman_xray" ) );
+
+	    return bXRay;
+	}
+
+	function GetCasterControlsUI()
+	{
+	    var bSpecCameraMan = parseInt( GameInterfaceAPI.GetSettingString( "spec_cameraman_ui" ) );
+
+	    var bQ = ( GameStateAPI.IsDemoOrHltv() && bSpecCameraMan );
+
+	    return bQ;
+	}
 
 	                      
 	return {
 		OpenScoreboard: 					_OpenScoreboard,
 		CloseScoreboard: 					_CloseScoreboard,
 		UpdateMatchInfo: 					_UpdateMatchInfo,
-		UpdateAllPlayers: 					_UpdateAllPlayers,
+		UpdatePlayerByEntIndex: 			_UpdatePlayerByEntIndex_delayed,
 		UpdateEverything: 					_UpdateEverything,
 		ResetAndInit: 						_Initialize,
 		Casualties_OnMouseOver: 			_Casualties_OnMouseOver,
@@ -2754,11 +3254,25 @@ var Scoreboard = ( function()
 		OnEndOfMatch: 						_OnEndOfMatch,
 		GetFreeForAllTopThreePlayers: 		_GetFreeForAllTopThreePlayers,
 		GetFreeForAllPlayerPosition: 		_GetFreeForAllPlayerPosition,
-		UnborrowMusicKit: _UnborrowMusicKit,
-		       
-		                                
-		       
+		UnborrowMusicKit: 					_UnborrowMusicKit,
 
+		
+		UpdateHLTVViewerNumber:				_UpdateHLTVViewerNumber,
+
+		ToggleSetCasterIsCameraman:         _ToggleSetCasterIsCameraman,
+		ToggleSetCasterIsHeard:             _ToggleSetCasterIsHeard,
+		ToggleSetCasterControlsXray:        _ToggleSetCasterControlsXray,
+		ToggleSetCasterControlsUI:          _ToggleSetCasterControlsUI,
+
+		          
+		                                
+		          
+
+		RankRevealAll: _RankRevealAll,
+
+          		
+		                        	 		                         
+          
 	};
 
 
@@ -2792,10 +3306,23 @@ var Scoreboard = ( function()
 
 	$.RegisterForUnhandledEvent( "Scoreboard_UnborrowMusicKit", Scoreboard.UnborrowMusicKit );
 
-	       
+	$.RegisterForUnhandledEvent( "Scoreboard_ToggleSetCasterIsCameraman", Scoreboard.ToggleSetCasterIsCameraman );
+	$.RegisterForUnhandledEvent( "Scoreboard_ToggleSetCasterIsHeard", Scoreboard.ToggleSetCasterIsHeard );
+	$.RegisterForUnhandledEvent( "Scoreboard_ToggleSetCasterControlsXray", Scoreboard.ToggleSetCasterControlsXray );
+	$.RegisterForUnhandledEvent( "Scoreboard_ToggleSetCasterControlsUI", Scoreboard.ToggleSetCasterControlsUI );
+
+	          
 	                                                                                      
-	       
+	          
 
+	$.RegisterForUnhandledEvent( "GameState_RankRevealAll", Scoreboard.RankRevealAll );
 
+	$.RegisterForUnhandledEvent( "Scoreboard_UpdateHLTVViewers", Scoreboard.UpdateHLTVViewerNumber );
 
+	$.RegisterForUnhandledEvent( "Scoreboard_Casualties_OnMouseOver", Scoreboard.Casualties_OnMouseOver );
+	$.RegisterForUnhandledEvent( "Scoreboard_Casualties_OnMouseOut", Scoreboard.Casualties_OnMouseOut );
+
+          	
+	                                                                                            
+          
 } )();

@@ -27,11 +27,11 @@
 
 						<ItemPreviewPanel id="NameableNameTagModel" class="popup-nameable__model"
 										manifest="resource/ui/econ/ItemModelPanelCharWeaponInspect.res"
-										item="models/weapons/uid.mdl"
+										item="models/weapons/uid_create.mdl"
 										mouse_rotate="false"
 										hittest="false">
 						</ItemPreviewPanel>
-						<Label id="NameableItemName" class="popup-nameable__nametag-text hidden" text="NEW NAME HERE"/>
+						<Label id="NameableItemName" class="popup-nameable__nametag-text hidden" text=""/>
 					</Panel>
 					
 					<Frame id="PopUpCapabilityHeader" class='hidden' src="file://{resources}/layout/popups/popup_capability_header.xml" />

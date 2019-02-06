@@ -25,6 +25,11 @@ CSGOMainMenu,
 	-s2-mix-blend-mode: opaque;
 }
 
+CSGOMainMenu.PopupBackgroundBlur #MainMenuCore
+{
+	blur: none;
+}
+
 #MainMenuInput
 {
 	transition-property: blur;
@@ -159,8 +164,23 @@ CSGOMainMenu.PopupBackgroundBlur #MainMenuInput
 	width: 1920px;
 	height: 1080px;
 	overflow: noclip;
-
 }
+
+.AspectRatio4x3 .mainmenu-movie,
+.AspectRatio5x4 .mainmenu-movie,
+{
+	                                                                                                                                                               
+	transform: translateX( -17% );
+	overflow: noclip;
+}
+
+.AspectRatio16x10 .mainmenu-movie
+{
+	                                                                                                                                                               
+	transform: translateX( -10% );
+	overflow: noclip;
+}
+
 
 .AspectRatio21x9 .mainmenu-movie
 {
@@ -196,7 +216,7 @@ CSGOMainMenu.PopupBackgroundBlur #MainMenuInput
 	transform: translateX(0%) translateY(0);
 }
 
-.AspectRatio5x4 .mainmenu-vanity
+ .mainmenu-vanity
 {
 	transform: translateX(22%) translateY(0);
 	width: 1200px;
@@ -486,10 +506,7 @@ CSGOMainMenu.PopupBackgroundBlur #MainMenuInput
 
 .mainmenu-content--offscreen
 {
-	                                                                                              
-	                                                             
-
-	position: -99.9% 0% 0px;
+	position: -100% 0% 0px;
 	sound-trans: "";
 
 	transition-property: position, clip;
@@ -537,6 +554,12 @@ CSGOMainMenu.PopupBackgroundBlur #MainMenuInput
 	transition-property: opacity, transform;
 	transition-duration: .25s;
 	transition-timing-function: ease-in-out;
+}
+
+CSGOEndOfMatch.mainmenu-content__container
+{
+	padding-right: 0px;
+	padding-left: 0px;
 }
 
 .mainmenu-content__container--inspect
@@ -712,7 +735,7 @@ CSGOMainMenu.PopupBackgroundBlur #MainMenuInput
 .content-navbar__tabs DropDown, 
 .content-navbar__tabs ToggleButton, 
 .content-navbar__tabs TextButton,
-.content-navbar__tabs Button
+.content-navbar__tabs Button,
 {
 	margin: 0px 28px 0px 0px;
 	width: fit-children;
@@ -775,7 +798,6 @@ ToggleButton Label,
 	transition-duration: .25s;
 	transition-timing-function: ease-in-out;
 	sound-trans: "UIPanorama.submenu_dropdown_option_select";
-	sound-trans: "UIPanorama.submenu_leveloptions_slidein";
 }
 
 .content-navbar__tabs RadioButton:disabled,

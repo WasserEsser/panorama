@@ -21,7 +21,7 @@
 							manifest="resource/ui/econ/ItemModelPanelCharWeaponInspect.res"
 							item="img://inventory_4295015926"
 							mouse_rotate="true"/>
-				<ItemImage id="AcknowledgeItemImage" large="true" class="popup-acknowledge__item__image"/>
+				<ItemImage id="AcknowledgeItemImage" large="true" class="popup-acknowledge__item__image" acceptsfocus="true" />
 
 				<Panel id="AcknowledgeEquipBtn" class="popup-acknowledge__equip hidden"> 
 					                                           
@@ -54,7 +54,7 @@
 						useglobalcontext="true"
 						popupbackground="dim"
 						oncancel="AcknowledgeItems.AcknowledgeAllItems.OnActivate();"
-						onload="AcknowledgeItems.Init();"
+						onload="AcknowledgeItems.OnLoad();"
 						>
 		<Carousel id="AcknowledgeItemsCarousel" class="full-width" panels-visible="1" hittest="false">
 			                      
